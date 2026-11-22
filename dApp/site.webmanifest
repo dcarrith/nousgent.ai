@@ -1,11 +1,11 @@
 {
-  "name": "NOUSGENT // Cyber-Colosseum Raid Deck (nousgent.ai)",
-  "short_name": "NOUSGENT",
-  "description": "Cyber-Colosseum Raid Boss & Esports Co-Op HUD for Stage-V Bounded ASI on Chia L1 (nousgent.ai & ia.nousgent.ai).",
+  "name": "nousgent.ai — Antigravity 2001 Monolith & 4D Connectome",
+  "short_name": "nousgent.ai",
+  "description": "Collective Bounded ASI Open-Source on Chia — 1:4:9 Obsidian Monolith & 4D Holographic Connectome (nousgent.ai & ia.nousgent.ai).",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b0e19",
-  "theme_color": "#10131f",
+  "background_color": "#0e0d15",
+  "theme_color": "#13131b",
   "icons": [
     {
       "src": "/favicon.svg",

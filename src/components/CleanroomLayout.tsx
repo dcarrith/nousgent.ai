@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { MissionSnapshot } from '../hooks/useNousgentMission';
 
@@ -9,13 +9,13 @@ export interface CleanroomLayoutProps {
   readonly children: React.ReactNode;
 }
 
-const COCKPIT_PROTOCOLS: readonly { readonly to: string; readonly code: string; readonly label: string }[] = [
-  { to: '/', code: '01', label: 'Raid Command' },
-  { to: '/pod-bay', code: '02', label: 'Boss Combat' },
-  { to: '/enlist', code: '03', label: 'Deploy Rig' },
-  { to: '/missions', code: '04', label: 'Clear-Sign Key' },
-  { to: '/observatory', code: '05', label: 'M2M & Bisect' },
-  { to: '/ranks', code: '06', label: '$DIG Vault & Loot' }
+const FLIGHT_NAV: readonly { readonly to: string; readonly label: string }[] = [
+  { to: '/', label: 'Flight Deck' },
+  { to: '/pod-bay', label: 'Pod Bay Red-Team' },
+  { to: '/enlist', label: 'Enlist Node' },
+  { to: '/missions', label: 'Swarm Clear-Sign' },
+  { to: '/observatory', label: '4D cbrain' },
+  { to: '/ranks', label: '$DIG Royalties' }
 ];
 
 export function CleanroomLayout({
@@ -24,165 +24,168 @@ export function CleanroomLayout({
   onTogglePlane,
   children
 }: Readonly<CleanroomLayoutProps>) {
+  const [tickerPaused, setTickerPaused] = useState<boolean>(false);
+
   return (
-    <div className="colosseum-shell">
-      <header className="colosseum-topbar">
-        <Link
-          to="/"
-          style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-        >
-          <div
+    <div className="antigravity-shell">
+      <div className="nebula-backdrop" aria-hidden="true">
+        <div className="nebula-orb violet" />
+        <div className="nebula-orb cyan" />
+        <div className="nebula-orb emerald" />
+      </div>
+
+      {/* Floating Glassmorphic Pill Header */}
+      <header className="pill-header-wrap">
+        <div className="pill-header">
+          <Link
+            to="/"
             style={{
-              width: 40,
-              height: 40,
-              background: 'var(--color-surface-high)',
-              border: '1px solid var(--color-volt)',
-              display: 'flex',
+              textDecoration: 'none',
+              color: 'inherit',
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 800,
-              color: 'var(--color-volt)'
+              gap: '0.6rem',
+              paddingLeft: '0.25rem'
             }}
-            aria-hidden="true"
           >
-            ◈
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '17px', letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
-              NOUSGENT // CYBER-COLOSSEUM RAID DECK
+            <span
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '9999px',
+                background: 'var(--color-surface-highest)',
+                border: '1px solid rgb(221 183 255 / 0.45)',
+                boxShadow: '0 0 14px rgb(221 183 255 / 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--color-violet)',
+                fontSize: '14px'
+              }}
+              aria-hidden="true"
+            >
+              ◈
+            </span>
+            <div style={{ lineHeight: 1.1 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 600, letterSpacing: '0.03em' }}>
+                nousgent<span className="text-violet">.ai</span>
+              </div>
+              <div className="mono-xs text-muted" style={{ fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase' }}>
+                antigravity
+              </div>
             </div>
-            <div className="hud-ticker text-volt" style={{ fontSize: '10px' }}>
-              ● SEASON 01 // EPOCH #86 ACTIVE · STAGE-V BOUNDED ASI CAMPAIGN
-            </div>
-          </div>
-        </Link>
+          </Link>
 
-        <div className="plane-pill-group" role="group" aria-label="Dual-Domain Traffic Plane Switcher">
-          <button
-            type="button"
-            className={`plane-pill${hostPlane === 'human_ui' ? ' active-human' : ''}`}
-            onClick={() => onTogglePlane('human_ui')}
-          >
-            <span aria-hidden="true">{hostPlane === 'human_ui' ? '◉' : '○'}</span>
-            PLAYER RAID DECK (nousgent.ai · {snapshot.humanRequests.toLocaleString()})
-          </button>
-          <button
-            type="button"
-            className={`plane-pill${hostPlane === 'm2m_ia' ? ' active-m2m' : ''}`}
-            onClick={() => onTogglePlane('m2m_ia')}
-          >
-            <span aria-hidden="true">{hostPlane === 'm2m_ia' ? '◈' : '◇'}</span>
-            AUTONOMOUS M2M ARENA (ia.nousgent.ai · {snapshot.m2mRequests.toLocaleString()})
-          </button>
-          <span className="hud-ticker text-cyan" style={{ padding: '0 0.55rem' }}>
-            ● 0.14ms LIVE
-          </span>
-        </div>
+          <nav className="pill-nav" aria-label="Antigravity Flight Deck Navigation">
+            {FLIGHT_NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className="pill-nav-link"
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div className="hud-mono">
-              <span className="text-muted">CALLSIGN: </span>
-              <span>NOUSGENT-IL-0001</span>{' '}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => onTogglePlane(hostPlane === 'human_ui' ? 'm2m_ia' : 'human_ui')}
+              className="btn-spatial btn-glass"
+              style={{ padding: '0.35rem 0.75rem', fontSize: '11px', fontFamily: 'var(--font-mono)' }}
+              aria-label="Switch active telemetry plane between nousgent.ai and ia.nousgent.ai"
+            >
+              <span className="text-violet" aria-hidden="true">●</span>
+              <span>{hostPlane === 'm2m_ia' ? 'ia.nousgent.ai' : 'nousgent.ai'}</span>
               <span
                 style={{
-                  background: 'var(--color-surface-high)',
-                  color: 'var(--color-volt)',
-                  padding: '0.1rem 0.35rem',
-                  fontSize: '10px'
+                  padding: '0.1rem 0.45rem',
+                  borderRadius: '9999px',
+                  background: hostPlane === 'm2m_ia' ? 'var(--color-emerald-bright)' : 'rgb(183 109 255 / 0.3)',
+                  color: hostPlane === 'm2m_ia' ? 'var(--color-on-emerald)' : 'var(--color-violet)',
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase'
                 }}
               >
-                RANK IV
+                {hostPlane === 'm2m_ia' ? `M2M LIVE (${snapshot.m2mRequests.toLocaleString()})` : `HUMAN (${snapshot.humanRequests.toLocaleString()})`}
               </span>
-            </div>
-            <div className="hud-mono" style={{ marginTop: '0.1rem' }}>
-              <span className="text-volt">4,892.500 $DIG</span>
-              <span className="text-cyan" style={{ marginLeft: '0.5rem', fontSize: '11px' }}>
-                ● FIDO2 PASSKEY SYNCED
-              </span>
-            </div>
+            </button>
+
+            <Link to="/enlist" className="btn-spatial btn-violet" style={{ padding: '0.4rem 0.95rem', fontSize: '12px' }}>
+              <span aria-hidden="true">🔑</span>
+              <span>Connect</span>
+            </Link>
           </div>
         </div>
       </header>
 
-      <div className="colosseum-body">
-        <aside className="colosseum-sidebar" aria-label="Cockpit Protocols">
-          <div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0 0.35rem 0.65rem'
-              }}
+      {/* Syndicate Realtime Telemetry Marquee with WCAG 2.2.2 Pause/Play Control */}
+      <div className="syndicate-ribbon">
+        <div className="syndicate-ribbon-inner">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', flex: 'none' }}>
+            <span className="text-emerald" aria-hidden="true">●</span>
+            <span className="mono-xs text-emerald" style={{ fontWeight: 600 }}>SYNDICATE REALTIME</span>
+          </div>
+
+          <div className="marquee-viewport">
+            <div className="marquee-track" data-paused={tickerPaused ? 'true' : 'false'}>
+              <span>COLLECTIVE BOUNDED ASI // SOVEREIGN US DEFENSE</span>
+              <span className="text-muted">◈</span>
+              <span className="text-cyan">CHIA PoST CONSENSUS · {snapshot.petabytesCommitted} PB LOCKED</span>
+              <span className="text-muted">◈</span>
+              <span className="text-violet">{snapshot.enlistedNodesCount.toLocaleString()} CITIZEN NODES ONLINE</span>
+              <span className="text-muted">◈</span>
+              <span className="text-emerald">DOLFACTORY AIR-GAP: 100% NOMINAL (0.14ms)</span>
+              <span className="text-muted">◈</span>
+              <span>IA.NOUSGENT.AI M2M SHARE: {snapshot.m2mSharePct}%</span>
+              <span className="text-muted">◈</span>
+              <span>COLLECTIVE BOUNDED ASI // SOVEREIGN US DEFENSE</span>
+              <span className="text-muted">◈</span>
+              <span className="text-cyan">CHIA PoST CONSENSUS · {snapshot.petabytesCommitted} PB LOCKED</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', flex: 'none' }}>
+            <span className="mono-xs text-cyan">⛨ CHIP-0043 ACTIVE</span>
+            <button
+              type="button"
+              className="btn-spatial btn-glass"
+              style={{ minBlockSize: '26px', padding: '0.15rem 0.55rem', fontSize: '10px', fontFamily: 'var(--font-mono)' }}
+              onClick={() => setTickerPaused((prev) => !prev)}
             >
-              <span className="hud-ticker text-muted">COCKPIT PROTOCOLS</span>
-              <span className="hud-mono text-volt" style={{ fontSize: '11px' }}>v1.1-HUD</span>
-            </div>
-
-            <nav className="cockpit-nav" aria-label="Cyber-Colosseum Primary Navigation">
-              {COCKPIT_PROTOCOLS.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/'}
-                  className="cockpit-nav-link"
-                >
-                  <span>{item.code} // {item.label}</span>
-                  <span aria-hidden="true">▸</span>
-                </NavLink>
-              ))}
-            </nav>
+              {tickerPaused ? 'Play' : 'Pause'}
+            </button>
           </div>
-
-          <div className="chamfer-card" style={{ padding: '0.7rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-              <span className="hud-ticker text-muted" style={{ fontSize: '10px' }}>RING-0 ENCLAVE</span>
-              <span className="hud-ticker text-cyan" style={{ fontSize: '10px' }}>ACTIVE</span>
-            </div>
-            <progress
-              className="hud-progress cyan"
-              max={100}
-              value={snapshot.swarmConsensusPct}
-              aria-label="Ring-0 Secure Enclave Consensus"
-            />
-            <div className="hud-ticker text-muted" style={{ fontSize: '10px', marginTop: '0.4rem' }}>
-              PLANE: {hostPlane === 'm2m_ia' ? 'IA.NOUSGENT.AI' : 'NOUSGENT.AI'}
-            </div>
-          </div>
-        </aside>
-
-        <main className="colosseum-main">{children}</main>
+        </div>
       </div>
 
-      <footer className="colosseum-footer">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <span className="hud-ticker text-volt">● CHIA L1 + DATALAYER PoST VERIFIED</span>
-          <span className="hud-ticker text-cyan">
-            ⛨ AIR-GAP FIDO2 QUORUM: {snapshot.missions[0]?.quorumSignatures ?? 289}/{snapshot.missions[0]?.quorumTarget ?? 300} ACTIVE KEYS
-          </span>
-          <span className="hud-ticker text-muted">
-            NODES ONLINE: {snapshot.enlistedNodesCount.toLocaleString()} ({snapshot.megawattsSaved} MW SAVED)
-          </span>
-        </div>
+      <main className="antigravity-main">{children}</main>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-          <a href="https://dolfactory.to" target="_blank" rel="noreferrer" className="hud-mono text-volt">
-            dolfactory.to
-          </a>
-          <a href="https://dthalamus.to" target="_blank" rel="noreferrer" className="hud-mono text-cyan">
-            dthalamus.to
-          </a>
-          <a href="https://dbrain.to" target="_blank" rel="noreferrer" className="hud-mono text-volt">
-            dbrain.to
-          </a>
-          <a href="https://cbrain.to" target="_blank" rel="noreferrer" className="hud-mono text-cyan">
-            cbrain.to
-          </a>
-          <a href="https://shi.liquidi.sh" target="_blank" rel="noreferrer" className="hud-mono text-volt">
-            shi.liquidi.sh
-          </a>
+      <footer className="antigravity-footer">
+        <div className="antigravity-footer-inner mono-xs text-muted">
+          <div>
+            // CONNECTOME PROTOCOL : NOUSGENT.AI (HUMAN) • IA.NOUSGENT.AI (ZERO-GRAVITY M2M SUITE)
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.1rem', flexWrap: 'wrap' }}>
+            <a href="https://dolfactory.to" target="_blank" rel="noreferrer" className="text-cyan" style={{ textDecoration: 'none' }}>
+              dolfactory.to
+            </a>
+            <a href="https://dthalamus.to" target="_blank" rel="noreferrer" className="text-violet" style={{ textDecoration: 'none' }}>
+              dthalamus.to
+            </a>
+            <a href="https://dbrain.to" target="_blank" rel="noreferrer" className="text-violet" style={{ textDecoration: 'none' }}>
+              dbrain.to
+            </a>
+            <a href="https://cbrain.to" target="_blank" rel="noreferrer" className="text-emerald" style={{ textDecoration: 'none' }}>
+              cbrain.to
+            </a>
+            <a href="https://shi.liquidi.sh" target="_blank" rel="noreferrer" className="text-cyan" style={{ textDecoration: 'none' }}>
+              shi.liquidi.sh
+            </a>
+          </div>
         </div>
       </footer>
     </div>

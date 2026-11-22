@@ -1,6 +1,6 @@
 {
   "name": "nousgent-ai-platform",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "nousgent.ai & ia.nousgent.ai — NOUSGENT Flagship Gamified Mission Control & Autonomous M2M Swarm Plane for Open-Source Bounded ASI on the Chia Blockchain & DIG Network",
   "scripts": {

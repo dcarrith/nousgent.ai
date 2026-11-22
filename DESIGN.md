@@ -1,32 +1,25 @@
-# DESIGN.md — Cyber-Colosseum Esports & Raid HUD (`nousgent.ai` & `ia.nousgent.ai`)
+# DESIGN.md — Antigravity 2001 Monolith & 4D Holographic Connectome (`nousgent.ai` & `ia.nousgent.ai`)
 
-- **Selected Stitch Screen**: `projects/3180979899126194505/screens/18f0e8e49a3d4f86bd9af4c138933f0f` (*Design 5 — Cyber-Colosseum Raid Boss & Esports Co-Op HUD*)
-- **Stitch Design System Asset**: `assets/79446cee3be744fb8dba5932b8943e8b` (*Cyber-Colosseum Esports & Raid HUD*)
+- **Selected Stitch Screen**: `projects/3180979899126194505/screens/01d8c85cb20c44f4ba4fdcc9fd44b186` (*Design 3 — Antigravity 2001 Monolith & 4D Holographic Connectome*)
+- **Stitch Design System Asset**: `assets/d266c3037b084b6f8b8b20260e0fd4ea` (*Antigravity Connectome*)
 
 ## 1. Visual North Star
-An electric Helldivers 2 × Valorant × 1968 HAL-9000 Cyber-Colosseum Raid Deck built for maximum viral participation, Twitch/YouTube raid events, and cooperative 50-state guild warfare on the American Chia Blockchain (`nousgent.ai` for Human Raiders, `ia.nousgent.ai` for Autonomous M2M Swarm Bots).
+Weightless cosmic glassmorphism inspired by Stanley Kubrick's `1:4:9` TMA-1 Obsidian Monolith and Google Antigravity spatial UI. A central `1:4:9` obsidian slab housing the Sapphire-Violet `NOUSGENT` optical iris and live `cbrain.to` 4D 5-lobe connectome floats in zero gravity, tethered by glowing synaptic splines to 5 orbiting organ satellites (`dolfactory.to`, `dthalamus.to`, `dbrain.to`, `cbrain.to`, `shi.liquidi.sh`) above a 4-enclave Spatial Consensus Bento Matrix.
 
-## 2. Palette & Surface Tokens (`color-scheme: dark`)
-- **Obsidian Colosseum Surfaces**:
-  - `--color-surface`: `#10131f`
-  - `--color-surface-lowest`: `#0b0e19`
-  - `--color-surface-low`: `#181b27`
-  - `--color-surface-container`: `#1c1f2b`
-  - `--color-surface-high`: `#262936`
-  - `--color-surface-highest`: `#313441`
-- **Kinetic Accents**:
-  - `--color-volt`: `#c3f400` (`--color-volt-dim`: `#abd600`, `--color-on-volt`: `#161f00`) — Chia PoST Power, Raid Progress & Primary CTAs
-  - `--color-cyan`: `#00e3fd` (`--color-cyan-soft`: `#9cf0ff`, `--color-on-cyan`: `#00363d`) — `ia.nousgent.ai` M2M Swarm & Ring-0 Biba Shield
-  - `--color-crimson`: `#c90043` (`--color-crimson-dark`: `#93000a`, `--color-crimson-soft`: `#ffb2b9`) — Boss Reticle, `DEFCON-2` & Red-Team Injection
-- **HUD Typography & Borders**:
-  - `--color-ink`: `#e0e1f3`
-  - `--color-ink-muted`: `#c4c9ad`
-  - `--color-outline`: `#444933`
-  - Display & Headlines: `Space Grotesk` (`600`–`700`, tight uppercase tracking)
-  - Telemetry & Tickers: `JetBrains Mono` (`500`–`700`, `0.08em`–`0.15em` uppercase tracking)
-
-## 3. Structural Motifs
-- **Fixed Top Raid Header + Left Cockpit Protocol Rail (`256px` desktop, responsive top bar on mobile) + Bottom Telemetry Status Bar**.
-- **Chamfered Polygon Armor Plates**: `clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))`.
-- **5-Stage Segmented World Campaign Convergence Meter** (`STG I: URBANA` -> `STG II: AIRGAP` -> `STG III: CHIA PoST` -> `STG IV: QUORUM` -> `STG V: ASI`) + real-time **Kill/Mint Feed** ticker.
-- **Armored Dual-Ring Rotating Optical Boss Reticle (`HAL-9000 VETO`)** paired with native `<progress>` Odor Plume (`99.8%`) & Biba Veto (`100.0%`) armor bars.
+## 2. Palette & Spatial Tokens (`color-scheme: dark`)
+- **Cosmic Void & Glassmorphic Surfaces**:
+  - `--color-void`: `#0e0d15` (`surface-container-lowest`)
+  - `--color-surface`: `#13131b`
+  - `--color-surface-low`: `#1b1b23`
+  - `--color-surface-container`: `#1f1f27`
+  - `--color-surface-high`: `#2a2932`
+  - `--color-surface-highest`: `#34343d`
+- **Bioluminescent Synaptic Accents**:
+  - `--color-violet`: `#ddb7ff` (`--color-violet-bright`: `#b76dff`, `--color-on-violet`: `#400071`) — Prefrontal Cortex, Monolith Aura & Primary Actions
+  - `--color-cyan`: `#7bd0ff` (`--color-cyan-bright`: `#00a6e0`, `--color-on-cyan`: `#00354a`) — Thalamic Gate & `ia.nousgent.ai` M2M Stream
+  - `--color-emerald`: `#4edea3` (`--color-emerald-bright`: `#00a572`, `--color-on-emerald`: `#00311f`) — Chia PoST Finality, `cbrain.to` Telemetry & Deflection Purity
+  - `--color-rose`: `#f43f5e`, `--color-amber`: `#facc15` — Hippocampal & Olfactory Lobe Highlights
+- **Typography**:
+  - Display & Section Titles: `Space Grotesk` (`500`–`700`, `text-wrap: balance`)
+  - Body Copy & UI Controls: `Plus Jakarta Sans` (`400`–`600`, `text-wrap: pretty`)
+  - Telemetry, Hashes & CLI: `JetBrains Mono` (`400`–`600`)

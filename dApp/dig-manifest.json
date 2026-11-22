@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,11 +11,11 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-22T03:26:01.345Z",
+  "builtAt": "2026-11-22T04:01:48.933Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0xa9011a76ba2586ba201435715b81dc9f912ff4c5a909231d8dc88f5f44868e09",
+    "manifestTreeSha256": "0x86ec97b7a01d0901d507b273e16b0a1fd0ed613e8bf4b1e35c1bb1f4f58fadb9",
     "totalFiles": 13,
-    "totalBytes": 2292449
+    "totalBytes": 2173087
   },
   "files": [
     {
@@ -25,48 +25,48 @@
     },
     {
       "path": "apple-touch-icon.png",
-      "bytes": 35619,
-      "sha256": "3c3796f5cd50bd12bbe32821c5c02c757418200f574c96bcbbf1fb1ea33592b0"
+      "bytes": 35512,
+      "sha256": "2a18926fcdf5042a7f90d3ba3a91e68a85aedd367a221132af5c5cd4e36d46b9"
     },
     {
-      "path": "assets/index-D03koAY7.css",
-      "bytes": 12088,
-      "sha256": "6f34a57a05ac23def0c3dc2022e1844978abc606633e9dff91df93c463aa791d"
+      "path": "assets/index-D7i5x2A5.css",
+      "bytes": 13129,
+      "sha256": "ff78cd19e04acb14301287615e34c4b1a293e976492b17f2ca0b66ef7f8082d5"
     },
     {
-      "path": "assets/index-DIz2lv2W.js",
-      "bytes": 333484,
-      "sha256": "887fe93ce51efbaff9d4f9b9e50658acad4c9a4c98f55868ae116674d5981902"
+      "path": "assets/index-KUylH2Dk.js",
+      "bytes": 332062,
+      "sha256": "159a7da5265e2093f7ae1b35e0472e49a2226d5e0580748718a16487438b6db8"
     },
     {
       "path": "favicon.svg",
-      "bytes": 504,
-      "sha256": "e473ef488ca733dff7b2cf631b64ed4ce26c7ac848e6b25faf22f2d8b5178325"
+      "bytes": 690,
+      "sha256": "38ed92191deba89cf2a6d7e74dec2e04b30d0a9e3970084a6b5d933dbeee74f1"
     },
     {
       "path": "index.html",
-      "bytes": 5422,
-      "sha256": "0a64a989ff0f83f1168eb861d3e350fb9712db6092e37446233ec7d6ecd5189f"
+      "bytes": 5395,
+      "sha256": "cddf74b2f82ffcacc5ceeaed56a069549af5389da804c3dd19d55869035607eb"
     },
     {
       "path": "logo-wordmark.svg",
-      "bytes": 1180,
-      "sha256": "0439fd4eb8dd1c2a54e002bd7d6a55c8a057f3d6c251d1e09d0c105c804d5c14"
+      "bytes": 1356,
+      "sha256": "61fa070a7560072b391d1145d426516360c2a86145f8132cd1daed4200359812"
     },
     {
       "path": "og-image.jpg",
-      "bytes": 268698,
-      "sha256": "a557cd96c71b5e7c5baa7196be688513d135ae6f5a367a7c63b868e5d5491032"
+      "bytes": 216699,
+      "sha256": "9dae468cf61ab332653c015b6ee4a7b8e88d2c44b9c0c74bd45d9563626fe35c"
     },
     {
       "path": "og-image.png",
-      "bytes": 423833,
-      "sha256": "9080ea0d51cd4e2a1b156cd94a6ebc9b82231f500d83f7f22433a4626da884bc"
+      "bytes": 434341,
+      "sha256": "7ec36d41be35467c53c848a735d127e5e0c5433da4ecff2e701fa59eb2556450"
     },
     {
       "path": "og-square.jpg",
-      "bytes": 350069,
-      "sha256": "b42d85f72234ed622231948d51e456ed68f0fbd65c66c45382fff99895998a6b"
+      "bytes": 272324,
+      "sha256": "04e792892e62b5c9385e7f9c992af6b90be14c65f45ae5645600725d1ece845a"
     },
     {
       "path": "robots.txt",
@@ -75,8 +75,8 @@
     },
     {
       "path": "site.webmanifest",
-      "bytes": 551,
-      "sha256": "19845165be621c04afcf921300c4009041b061dcc41c9803916f7f24bd90191e"
+      "bytes": 578,
+      "sha256": "a091a71601ce5ac2ee46cc667a77b36592576e746e0f449eb4c7647d712aba18"
     },
     {
       "path": "sitemap.xml",

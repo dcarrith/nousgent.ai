@@ -10,7 +10,7 @@ export interface TwoKeyClearSignCellProps {
 
 export function TwoKeyClearSignCell({
   mission,
-  colClass = 'col-12',
+  colClass = 'col-5',
   onSigned
 }: Readonly<TwoKeyClearSignCellProps>) {
   const nativeSwitchSupported =
@@ -28,7 +28,7 @@ export function TwoKeyClearSignCell({
   async function handleExecuteClearSign(): Promise<void> {
     if (!keyAArmed || !keyBArmed) {
       playQuindarBeep(2475);
-      setStatusMessage('INTERLOCK HALT: Arm both KEY A (Raider FIDO2) and KEY B (Swarm BLS) switches first.');
+      setStatusMessage('INTERLOCK HALT: Enable both Key A (FIDO2 Passkey) and Key B (Swarm BLS) switches.');
       return;
     }
     playQuindarBeep(2525);
@@ -60,108 +60,144 @@ export function TwoKeyClearSignCell({
   }
 
   return (
-    <section className={`chamfer-plate ${colClass}`} aria-label="CHIP-0043 Two-Key Clear-Sign Quorum">
-      <div className="arena-header-strip cyan">
+    <section className={`glass-card cyan ${colClass}`} aria-label="CHIP-0043 Swarm Clear-Sign Ceremony">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600 }}>
+            <span className="text-cyan" aria-hidden="true">⛨ </span>
+            CHIP-0043 Clear-Sign
+          </h3>
+          <span className="pill-badge emerald">AIR-GAP SYNC</span>
+        </div>
+
+        <p className="text-muted" style={{ margin: 0 }}>
+          Decentralized air-gap validation ceremony for <strong>{mission.missionId}</strong> ({mission.rewardDig} $DIG). Co-sign weights using your hardware FIDO2 passkey via UR-encoded glyphs.
+        </p>
+
+        {/* Holographic Animated QR Visualizer Box */}
+        <div className="glass-well" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div
+            style={{
+              width: 128,
+              height: 128,
+              padding: '0.5rem',
+              borderRadius: '12px',
+              background: 'var(--color-surface-container)',
+              border: '1px solid rgb(123 208 255 / 0.35)',
+              boxShadow: '0 0 22px rgb(0 166 224 / 0.2)',
+              marginBottom: '0.55rem'
+            }}
+          >
+            <svg viewBox="0 0 100 100" width="100%" height="100%" fill="#7bd0ff" aria-hidden="true">
+              <rect x="5" y="5" width="25" height="25" rx="3" fill="none" stroke="#7bd0ff" strokeWidth="4" />
+              <rect x="11" y="11" width="13" height="13" rx="2" />
+              <rect x="70" y="5" width="25" height="25" rx="3" fill="none" stroke="#7bd0ff" strokeWidth="4" />
+              <rect x="76" y="11" width="13" height="13" rx="2" />
+              <rect x="5" y="70" width="25" height="25" rx="3" fill="none" stroke="#7bd0ff" strokeWidth="4" />
+              <rect x="11" y="76" width="13" height="13" rx="2" />
+              <rect x="38" y="10" width="8" height="8" />
+              <rect x="50" y="18" width="6" height="6" opacity="0.8" />
+              <rect x="36" y="36" width="28" height="28" rx="4" fill="#0e0d15" stroke="#7bd0ff" strokeWidth="2" />
+              <circle cx="50" cy="50" r="6" fill="#ddb7ff" />
+              <rect x="15" y="42" width="6" height="6" />
+              <rect x="72" y="40" width="8" height="8" />
+              <rect x="42" y="74" width="7" height="7" />
+              <rect x="56" y="70" width="6" height="6" />
+              <rect x="78" y="76" width="10" height="10" />
+            </svg>
+          </div>
+          <div className="mono-xs text-cyan" style={{ wordBreak: 'break-all' }}>
+            {mission.clearSignUr}
+          </div>
+        </div>
+
+        {/* Two-Key Native <input type="checkbox" switch> Toggles */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+          <label className="spatial-switch-label">
+            <div>
+              <div className="mono-xs text-violet" style={{ fontSize: '10px', fontWeight: 600 }}>KEY A · FIDO2</div>
+              <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>{keyAArmed ? '✓ Armed' : '✕ Locked'}</div>
+            </div>
+            <input
+              type="checkbox"
+              className={`spatial-switch-input${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
+              {...({ switch: '' } as Record<string, string>)}
+              role={nativeSwitchSupported ? undefined : 'switch'}
+              checked={keyAArmed}
+              onChange={(e) => setKeyAArmed(e.target.checked)}
+            />
+          </label>
+
+          <label className="spatial-switch-label">
+            <div>
+              <div className="mono-xs text-cyan" style={{ fontSize: '10px', fontWeight: 600 }}>KEY B · BLS G2</div>
+              <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>{keyBArmed ? '✓ Armed' : '✕ Locked'}</div>
+            </div>
+            <input
+              type="checkbox"
+              className={`spatial-switch-input cyan${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
+              {...({ switch: '' } as Record<string, string>)}
+              role={nativeSwitchSupported ? undefined : 'switch'}
+              checked={keyBArmed}
+              onChange={(e) => setKeyBArmed(e.target.checked)}
+            />
+          </label>
+        </div>
+
         <div>
-          <span className="hud-ticker text-cyan">FIDO2 PASSKEY + BLS12-381 AIRGAP INTERLOCK</span>
-          <h3 className="hud-headline">{mission.missionId}: {mission.title}</h3>
-        </div>
-        <span className="hud-mono text-volt">REWARD: {mission.rewardDig} $DIG</span>
-      </div>
-
-      <div className="grid-12" style={{ gap: '0.75rem' }}>
-        <label className="hud-switch-label col-6">
-          <div>
-            <div className="hud-ticker text-volt">KEY A // RAIDER FIDO2 PASSKEY</div>
-            <div className="hud-mono text-muted" style={{ marginTop: '0.2rem' }}>
-              {keyAArmed ? '✓ ARMED (WEBAUTHN P-256)' : '✕ SAFE / LOCKED'}
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '12px' }}>Signatures Collected</span>
+            <span className="mono-xs text-emerald" style={{ fontWeight: 700 }}>
+              {localQuorumSigs} / {mission.quorumTarget} ({quorumPct}%)
+            </span>
           </div>
-          <input
-            type="checkbox"
-            className={`hud-switch-input${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
-            {...({ switch: '' } as Record<string, string>)}
-            role={nativeSwitchSupported ? undefined : 'switch'}
-            checked={keyAArmed}
-            onChange={(e) => setKeyAArmed(e.target.checked)}
+          <progress
+            className="monolith-progress"
+            max={100}
+            value={quorumPct}
+            aria-label={`Signatures collected for ${mission.missionId}`}
           />
-        </label>
-
-        <label className="hud-switch-label col-6">
-          <div>
-            <div className="hud-ticker text-cyan">KEY B // SWARM BLS TELEMETRY</div>
-            <div className="hud-mono text-muted" style={{ marginTop: '0.2rem' }}>
-              {keyBArmed ? '✓ ARMED (BLS12-381 G2)' : '✕ SAFE / LOCKED'}
-            </div>
-          </div>
-          <input
-            type="checkbox"
-            className={`hud-switch-input cyan${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
-            {...({ switch: '' } as Record<string, string>)}
-            role={nativeSwitchSupported ? undefined : 'switch'}
-            checked={keyBArmed}
-            onChange={(e) => setKeyBArmed(e.target.checked)}
-          />
-        </label>
-      </div>
-
-      <div className="chamfer-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
-          <span className="hud-ticker">QUORUM CONVERGENCE</span>
-          <span className="hud-mono text-cyan">
-            {localQuorumSigs} / {mission.quorumTarget} KEYS ({quorumPct}%)
-          </span>
         </div>
-        <progress
-          className="hud-progress cyan"
-          max={100}
-          value={quorumPct}
-          aria-label={`CHIP-0043 Quorum Progress for ${mission.missionId}`}
-        />
-        <div className="hud-mono text-muted" style={{ marginTop: '0.4rem', fontSize: '11px', wordBreak: 'break-all' }}>
-          URI: {mission.clearSignUr}
-        </div>
-      </div>
 
-      <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+          {['IL SQUAD ✓', 'TX SQUAD ✓', 'WY VAULT ✓', 'CA SQUAD ✓', 'OH SQUAD ✓'].map((sq) => (
+            <span key={sq} className="pill-badge emerald" style={{ fontSize: '10px', padding: '0.15rem 0.55rem' }}>
+              {sq}
+            </span>
+          ))}
+        </div>
+
         <input
           type="text"
-          className="hud-input"
-          style={{ flex: '1 1 200px' }}
+          className="spatial-input"
           value={signerCallsign}
           onChange={(e) => setSignerCallsign(e.target.value)}
-          aria-label="Combatant Signer Callsign"
+          aria-label="Astronaut Signer Callsign"
         />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
         <button
           type="button"
-          className="btn-hud btn-volt"
-          style={{ flex: '2 1 280px', fontSize: '13px' }}
+          className="btn-spatial btn-aurora"
+          style={{ width: '100%', padding: '0.75rem 1rem' }}
           onClick={() => void handleExecuteClearSign()}
         >
-          🔑 TURN YOUR CHIP-0043 CLEAR-SIGN KEY ({localQuorumSigs}/{mission.quorumTarget})
+          <span aria-hidden="true">◉</span>
+          <span>CO-SIGN WITH PASSKEY (FIDO2)</span>
         </button>
-      </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <span className="hud-ticker text-volt" style={{ background: 'var(--color-surface-high)', padding: '0.2rem 0.45rem', fontSize: '10px' }}>IL SQUAD SIGNED</span>
-          <span className="hud-ticker text-cyan" style={{ background: 'var(--color-surface-high)', padding: '0.2rem 0.45rem', fontSize: '10px' }}>TX SQUAD SIGNED</span>
-          <span className="hud-ticker text-volt" style={{ background: 'var(--color-surface-high)', padding: '0.2rem 0.45rem', fontSize: '10px' }}>WY VAULT SIGNED</span>
-          <span className="hud-ticker" style={{ background: 'var(--color-surface-high)', padding: '0.2rem 0.45rem', fontSize: '10px' }}>CA SQUAD SIGNED</span>
-        </div>
-        <span className="hud-ticker text-cyan" style={{ fontSize: '10px' }}>FIDO2 QUORUM REQUIRED</span>
+        {statusMessage ? (
+          <div className="glass-well" role="status" style={{ padding: '0.65rem 0.8rem', borderColor: 'rgb(78 222 163 / 0.45)' }}>
+            <div className="mono-xs text-emerald">{statusMessage}</div>
+            {attestationHash ? (
+              <div className="mono-xs text-muted" style={{ marginTop: '0.2rem', fontSize: '10px', wordBreak: 'break-all' }}>
+                {attestationHash}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-
-      {statusMessage ? (
-        <div className="chamfer-card" role="status" style={{ borderColor: 'var(--color-volt)' }}>
-          <div className="hud-mono text-volt">{statusMessage}</div>
-          {attestationHash ? (
-            <div className="hud-mono text-muted" style={{ marginTop: '0.25rem', fontSize: '11px', wordBreak: 'break-all' }}>
-              ATTESTATION: {attestationHash}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </section>
   );
 }

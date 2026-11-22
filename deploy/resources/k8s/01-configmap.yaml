@@ -5,11 +5,11 @@ metadata:
   namespace: dbrain
   labels:
     app.kubernetes.io/name: nousgent
-    app.kubernetes.io/version: "1.1.0"
+    app.kubernetes.io/version: "1.2.0"
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  APP_VERSION: "1.1.0"
+  APP_VERSION: "1.2.0"
   CANONICAL_ORIGIN: "https://nousgent.ai"
   M2M_ORIGIN: "https://ia.nousgent.ai"
   NOUSGENT_STATE_DIR: "/var/lib/nousgent"

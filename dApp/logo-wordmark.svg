@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 96" width="720" height="96" role="img" aria-label="nousgent.ai — NOUSGENT Cyber-Colosseum Raid Deck">
-  <polygon points="0,0 704,0 720,16 720,96 16,96 0,80" fill="#0b0e19" stroke="#444933" stroke-width="2"/>
-  <polygon points="14,14 74,14 82,22 82,82 14,82" fill="#181b27" stroke="#c3f400" stroke-width="2"/>
-  <circle cx="48" cy="48" r="24" fill="none" stroke="#c90043" stroke-width="2" stroke-dasharray="5 3"/>
-  <circle cx="48" cy="48" r="16" fill="none" stroke="#00e3fd" stroke-width="2"/>
-  <circle cx="48" cy="48" r="7" fill="#c90043"/>
-  <circle cx="48" cy="48" r="2.8" fill="#ffffff"/>
-  <text x="102" y="44" fill="#e0e1f3" font-family="Space Grotesk, system-ui, sans-serif" font-size="28" font-weight="700" letter-spacing="0.5">NOUSGENT // CYBER-COLOSSEUM</text>
-  <text x="102" y="70" fill="#c3f400" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700" letter-spacing="1.4">PLAYER RAID DECK: NOUSGENT.AI · M2M ARENA: IA.NOUSGENT.AI · CHIA L1 + $DIG</text>
-  <rect x="684" y="18" width="16" height="16" fill="#c3f400"/>
-  <rect x="684" y="62" width="16" height="16" fill="#00e3fd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 96" width="720" height="96" role="img" aria-label="nousgent.ai — Antigravity 2001 Monolith & 4D Connectome">
+  <rect width="720" height="96" rx="24" fill="#0e0d15" stroke="#4d4354" stroke-width="1.5"/>
+  <rect x="24" y="12" width="36" height="72" rx="8" fill="#1b1b23" stroke="#ddb7ff" stroke-width="2"/>
+  <circle cx="42" cy="34" r="10" fill="#0e0d15" stroke="#7bd0ff" stroke-width="1.8"/>
+  <circle cx="42" cy="34" r="4.5" fill="#ddb7ff"/>
+  <circle cx="36" cy="60" r="2.5" fill="#ddb7ff"/>
+  <circle cx="42" cy="64" r="3" fill="#7bd0ff"/>
+  <circle cx="48" cy="59" r="2.5" fill="#4edea3"/>
+  <text x="82" y="45" fill="#e4e1ed" font-family="Space Grotesk, system-ui, sans-serif" font-size="28" font-weight="600" letter-spacing="0.8">nousgent</text>
+  <text x="216" y="45" fill="#ddb7ff" font-family="Space Grotesk, system-ui, sans-serif" font-size="28" font-weight="600" letter-spacing="0.8">.ai</text>
+  <text x="272" y="44" fill="#4edea3" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" letter-spacing="2">// ANTIGRAVITY MONOLITH 4D</text>
+  <text x="82" y="70" fill="#cfc2d6" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="500" letter-spacing="1.2">COLLECTIVE BOUNDED ASI ON CHIA · HUMAN: NOUSGENT.AI · M2M LIVE: IA.NOUSGENT.AI</text>
 </svg>
