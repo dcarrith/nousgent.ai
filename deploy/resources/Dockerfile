@@ -16,7 +16,7 @@ RUN mkdir -p /out && \
 
 FROM node:22-alpine AS production
 
-ARG APP_VERSION=1.2.0
+ARG APP_VERSION=1.7.0
 LABEL org.opencontainers.image.title="nousgent-web" \
       org.opencontainers.image.description="nousgent.ai & ia.nousgent.ai — NOUSGENT Flagship Gamified Mission Control & M2M Swarm Plane for Bounded ASI on the Chia Blockchain" \
       org.opencontainers.image.version="${APP_VERSION}" \

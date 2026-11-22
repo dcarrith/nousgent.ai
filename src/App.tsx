@@ -19,7 +19,7 @@ export function App() {
           <Route path="/pod-bay" element={<PodBayArenaPage onDeflectionRecorded={() => void refreshStatus()} />} />
           <Route path="/enlist" element={<EnlistNodePage snapshot={snapshot} onEnlisted={() => void refreshStatus()} />} />
           <Route path="/missions" element={<MissionsQuorumPage snapshot={snapshot} onRefresh={() => void refreshStatus()} />} />
-          <Route path="/observatory" element={<ObservatoryBisectPage />} />
+          <Route path="/observatory" element={<ObservatoryBisectPage snapshot={snapshot} />} />
           <Route path="/ranks" element={<DossierAndDocsPage snapshot={snapshot} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

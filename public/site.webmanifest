@@ -1,11 +1,11 @@
 {
-  "name": "nousgent.ai — Antigravity 2001 Monolith & 4D Connectome",
+  "name": "nousgent.ai — Morphic Intelligence Field & Autonomous Bounded RSI Studio",
   "short_name": "nousgent.ai",
-  "description": "Collective Bounded ASI Open-Source on Chia — 1:4:9 Obsidian Monolith & 4D Holographic Connectome (nousgent.ai & ia.nousgent.ai).",
+  "description": "Witness NOUSGENT's live 3D persona evolve as community dbrain.to Second Brains feed the Morphic Intelligence Field and NOUSGENT runs 24/7 autonomous Bounded RSI toward Bounded ASI on Chia.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0e0d15",
-  "theme_color": "#13131b",
+  "background_color": "#0e0806",
+  "theme_color": "#120a07",
   "icons": [
     {
       "src": "/favicon.svg",
@@ -16,6 +16,18 @@
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

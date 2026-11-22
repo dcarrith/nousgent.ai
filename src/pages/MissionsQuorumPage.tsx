@@ -11,6 +11,14 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const activeMission = snapshot.missions[selectedIndex] || snapshot.missions[0];
 
+  if (!activeMission) {
+    return (
+      <div className="glass-card mono-xs text-muted">
+        {snapshot.loading ? 'Syncing live CHIP-0043 missions from nousgent.ai SQLite WAL...' : 'No active missions loaded.'}
+      </div>
+    );
+  }
+
   return (
     <div className="bento-grid" style={{ alignItems: 'start' }}>
       <section className="glass-card col-7" aria-label="Co-Op Bounded ASI Major Orders">
@@ -34,7 +42,7 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.5rem',
-                  borderColor: active ? 'rgb(221 183 255 / 0.55)' : 'rgb(77 67 84 / 0.45)'
+                  borderColor: active ? 'rgb(126 217 87 / 0.55)' : 'var(--color-outline)'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>

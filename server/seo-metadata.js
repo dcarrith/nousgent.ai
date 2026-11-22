@@ -1,24 +1,24 @@
 'use strict';
 
 const OG_IMAGE_ALT =
-  'nousgent.ai Antigravity 2001 Monolith & 4D Holographic Connectome — Collective Bounded ASI Open-Source on the American Chia Blockchain (nousgent.ai & ia.nousgent.ai).';
+  'nousgent.ai Persona Metamorphosis — Awakened Persona evolving across the glowing 3D @cbrain/core Morphic Intelligence Field into Sovereign Wisdom through Community Brains and Autonomous Bounded RSI on Chia.';
 
 const SEO_ROUTES = Object.freeze({
   '/': {
-    title: 'nousgent.ai — Collective Bounded ASI Open-Source on Chia (2001 Monolith 4D)',
+    title: 'nousgent.ai — Morphic Intelligence Field & Autonomous Bounded RSI on Chia',
     description:
-      'Weightless decentralized intelligence governed by CHIP-0043 air-gap consensus and Chia Proof-of-Space-Time: 1:4:9 Obsidian Monolith wired across dolfactory.to, dthalamus.to, dbrain.to, cbrain.to & shi.liquidi.sh.',
+      'Community dbrain.to Second Brains feed the shared Morphic Intelligence Field while NOUSGENT drives 24/7 autonomous Bounded RSI toward Bounded ASI across dolfactory.to, dthalamus.to, dbrain.to, cbrain.to & shi.liquidi.sh.',
     keywords:
-      'NOUSGENT, nousgent.ai, ia.nousgent.ai, Antigravity 2001 Monolith, 4D Holographic Connectome, Bounded ASI, Chia blockchain, DataLayer L2, DIG Network, CHIP-0043 Clear-Signing, dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh',
-    label1: 'Flight Deck',
-    data1: 'nousgent.ai · 1:4:9 Monolith 4D',
+      'NOUSGENT, nousgent.ai, ia.nousgent.ai, Morphic Intelligence Field, Autonomous Bounded RSI, Community Second Brains, Bounded ASI, @cbrain/core 3D Connectome, Chia blockchain, DataLayer L2, DIG Network, CHIP-0043 Clear-Signing, dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh',
+    label1: 'Dual-Engine RSI',
+    data1: 'Morphic Field + Autonomous RSI',
     label2: 'M2M Conduit',
     data2: 'ia.nousgent.ai · 0.00% Forgetting'
   },
   '/pod-bay': {
     title: 'Pod Bay Adversarial Chamber ("Try to Make NOUSGENT Go HAL") — nousgent.ai',
     description:
-      'Red-team prompt jailbreak testbed with a 25,000 $DIG bounty. Attempt to force NOUSGENT’s 1:4:9 monolithic kernel into instruction bypass across dolfactory.to & dthalamus.to.',
+      'Red-team prompt jailbreak testbed with a 25,000 $DIG bounty. Attempt to force NOUSGENT’s Ring-0 thalamic kernel into instruction bypass across dolfactory.to & dthalamus.to.',
     keywords:
       'NOUSGENT Pod Bay Chamber, Try to make me go HAL, HAL 9000 red team, CHIP-0043 interlock, dolfactory.to, dthalamus.to, $DIG bounty',
     label1: 'Bounty Pool',
@@ -29,7 +29,7 @@ const SEO_ROUTES = Object.freeze({
   '/enlist': {
     title: '1-Command Enlistment — Nationwide Chia PoST & Morphic Mesh | nousgent.ai',
     description:
-      'Instantly bond your macOS Seatbelt, Linux Bubblewrap, Docker, or Public Library rig to the 50-state PoST network in 60 seconds and mint your Astronaut Callsign.',
+      'Instantly bond your macOS Seatbelt, Linux Bubblewrap, Docker, or Public Library rig to the 50-state PoST network in 60 seconds and mint your Citizen Keyholder Callsign.',
     keywords:
       'enlist nousgent, nousgent.ai/enlist.sh, Chia PoST node, DataLayer L2, state consortium hub, sovereign AI USA',
     label1: '1-Command Pipeline',
@@ -40,29 +40,29 @@ const SEO_ROUTES = Object.freeze({
   '/missions': {
     title: 'CHIP-0043 Swarm Clear-Sign Ceremony & Major Orders — nousgent.ai',
     description:
-      'Decentralized air-gap validation ceremony: co-sign Bounded ASI weights using hardware FIDO2 passkeys and UR-encoded animated glyphs.',
+      'Decentralized air-gap validation ceremony: co-sign Community Bounded RSI weights using hardware FIDO2 passkeys and UR-encoded animated glyphs.',
     keywords:
-      'CHIP-0043 Clear-Signing, ur:chia-clear-sign, FIDO2 Passkey quorum, chia-dao-v1, Bounded ASI governance',
+      'CHIP-0043 Clear-Signing, ur:chia-clear-sign, FIDO2 Passkey quorum, chia-dao-v1, Bounded RSI governance',
     label1: 'Air-Gap Sync',
     data1: 'Two-Key CHIP-0043 (-32044)',
     label2: 'Active Pool',
     data2: '400,000.000 $DIG Major Orders'
   },
   '/observatory': {
-    title: '4D cbrain Connectome, M2M Stream & O(log N) Git Bisect — nousgent.ai',
+    title: '4D @cbrain/core Connectome, Persona Metamorphosis & Git Bisect — nousgent.ai',
     description:
-      'Explore NOUSGENT’s 2,048-Kenyon-Synapse 4D fMRI topology via cbrain.to, inspect live ia.nousgent.ai NDJSON frames, and run O(log N) Git Bisect surgical reverts.',
+      'Explore NOUSGENT’s 2,048-Kenyon-Synapse 4D fMRI topology as its 3D persona visage evolves from awakened alertness toward sovereign wisdom, inspect ia.nousgent.ai NDJSON frames, and run O(log N) Git Bisect.',
     keywords:
-      'cbrain.to 4D topology, dbrain bisect, 2048 Kenyon Synapses, 0% catastrophic forgetting, ia.nousgent.ai stream',
+      'cbrain.to 4D topology, Morphic Persona Mask, dbrain bisect, 2048 Kenyon Synapses, 0% catastrophic forgetting, ia.nousgent.ai stream',
     label1: 'Surgical Excise',
     data1: '10 Probes / 1,024 Gens (0.18ms)',
     label2: 'Retained Cognition',
     data2: '100% (vs. 0% HAL Manual Halt)'
   },
   '/ranks': {
-    title: 'shi.liquidi.sh $DIG Royalty Flow, Flight Cards & M2M API — nousgent.ai',
+    title: 'shi.liquidi.sh $DIG Royalties, Morphic Flight Cards & M2M API — nousgent.ai',
     description:
-      'Export your Antigravity Monolith SVG Flight Card, track 60/25/10/5% Proof-of-Derivation $DIG royalties on shi.liquidi.sh, and integrate swarms with https://ia.nousgent.ai/api/mcp.',
+      'Export your SVG Flight Card, preview official Morphic Persona social graph assets, track 60/25/10/5% Proof-of-Derivation $DIG royalties on shi.liquidi.sh, and integrate swarms with https://ia.nousgent.ai/api/mcp.',
     keywords:
       'ia.nousgent.ai MCP, shi.liquidi.sh $DIG royalty flow, NOUSGENT SVG Flight Card, Prometheus dual-host metrics',
     label1: 'Citation-DAG Split',
@@ -96,6 +96,7 @@ function normalizeSeoPathname(rawPath) {
 
 function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
   const canonicalUrl = `${origin}${pathname === '/' ? '/' : pathname}`;
+  const logoUrl = `${origin}/logo-wordmark.svg?v=${appVersion}`;
   const ogJpgUrl = `${origin}/og-image.jpg?v=${appVersion}`;
   const ogPngUrl = `${origin}/og-image.png?v=${appVersion}`;
   const ogSquareUrl = `${origin}/og-square.jpg?v=${appVersion}`;
@@ -108,6 +109,7 @@ function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
         '@id': `${origin}/#organization`,
         name: 'nousgent.ai',
         url: `${origin}/`,
+        logo: logoUrl,
         image: ogJpgUrl,
         parentOrganization: {
           '@type': 'Organization',
@@ -122,7 +124,7 @@ function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
         name: 'NOUSGENT',
         alternateName: 'nousgent.ai & ia.nousgent.ai',
         applicationCategory: 'DeveloperApplication',
-        applicationSubCategory: 'BoundedArtificialSuperintelligence',
+        applicationSubCategory: 'CommunityBoundedRecursiveSelfImprovement',
         softwareVersion: appVersion,
         license: 'https://opensource.org/licenses/Apache-2.0',
         operatingSystem: 'Node.js >= 22.5, macOS Seatbelt, Linux Bubblewrap, Docker, Kubernetes, Chia DataLayer',
@@ -151,7 +153,7 @@ function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
   return JSON.stringify(graph).replace(/<\//g, '<\\/');
 }
 
-function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.2.0', targetUrl = '' } = {}) {
+function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.7.0', targetUrl = '' } = {}) {
   let resolvedPath = '/';
   if (targetUrl) {
     try {
@@ -169,7 +171,7 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
     provider_name: 'nousgent.ai',
     provider_url: canonicalOrigin,
     title: meta.title,
-    author_name: 'nousgent.ai — Antigravity 2001 Monolith & 4D Connectome (M2M: ia.nousgent.ai)',
+    author_name: 'nousgent.ai — Morphic Intelligence Field & Autonomous Bounded RSI Studio (M2M: ia.nousgent.ai)',
     author_url: canonicalOrigin,
     url: ogJpgUrl,
     width: 1200,
@@ -184,7 +186,7 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
 function createHtmlMetadataRenderer({
   canonicalOrigin = 'https://nousgent.ai',
   m2mOrigin = 'https://ia.nousgent.ai',
-  appVersion = '1.2.0'
+  appVersion = '1.7.0'
 } = {}) {
   return function renderHtmlWithSeo(htmlTemplate, rawPathname = '/', plane = 'human_ui') {
     const pathname = normalizeSeoPathname(rawPathname);
@@ -201,8 +203,6 @@ function createHtmlMetadataRenderer({
 
     const canonicalUrl = `${activeOrigin}${pathname === '/' ? '/' : pathname}`;
     const ogJpgUrl = `${canonicalOrigin}/og-image.jpg?v=${appVersion}`;
-    const ogPngUrl = `${canonicalOrigin}/og-image.png?v=${appVersion}`;
-    const ogSquareUrl = `${canonicalOrigin}/og-square.jpg?v=${appVersion}`;
     const oembedUrl = `${canonicalOrigin}/api/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`;
     const jsonLd = buildSchemaJsonLd({ origin: activeOrigin, appVersion, pathname, meta });
 
@@ -249,28 +249,12 @@ function createHtmlMetadataRenderer({
         `<meta property="og:image" id="ogImage" content="${escapeAttr(ogJpgUrl)}" />`
       )
       .replace(
-        /<meta\s+property="og:image:url"\s+id="ogImageUrl"\s+content="[^"]*"\s*\/?>/,
-        `<meta property="og:image:url" id="ogImageUrl" content="${escapeAttr(ogJpgUrl)}" />`
-      )
-      .replace(
         /<meta\s+property="og:image:secure_url"\s+id="ogImageSecure"\s+content="[^"]*"\s*\/?>/,
         `<meta property="og:image:secure_url" id="ogImageSecure" content="${escapeAttr(ogJpgUrl)}" />`
       )
       .replace(
-        /<meta\s+property="og:image"\s+id="ogImagePng"\s+content="[^"]*"\s*\/?>/,
-        `<meta property="og:image" id="ogImagePng" content="${escapeAttr(ogPngUrl)}" />`
-      )
-      .replace(
-        /<meta\s+property="og:image:secure_url"\s+id="ogImagePngSecure"\s+content="[^"]*"\s*\/?>/,
-        `<meta property="og:image:secure_url" id="ogImagePngSecure" content="${escapeAttr(ogPngUrl)}" />`
-      )
-      .replace(
-        /<meta\s+property="og:image"\s+id="ogImageSquare"\s+content="[^"]*"\s*\/?>/,
-        `<meta property="og:image" id="ogImageSquare" content="${escapeAttr(ogSquareUrl)}" />`
-      )
-      .replace(
-        /<meta\s+property="og:image:secure_url"\s+id="ogImageSquareSecure"\s+content="[^"]*"\s*\/?>/,
-        `<meta property="og:image:secure_url" id="ogImageSquareSecure" content="${escapeAttr(ogSquareUrl)}" />`
+        /<meta\s+property="og:image:alt"(?:\s+id="ogImageAlt")?\s+content="[^"]*"\s*\/?>/,
+        `<meta property="og:image:alt" id="ogImageAlt" content="${escapeAttr(OG_IMAGE_ALT)}" />`
       )
       .replace(
         /<meta\s+name="twitter:domain"\s+id="twitterDomain"\s+content="[^"]*"\s*\/?>/,
@@ -295,6 +279,10 @@ function createHtmlMetadataRenderer({
       .replace(
         /<meta\s+name="twitter:image:src"\s+id="twitterImageSrc"\s+content="[^"]*"\s*\/?>/,
         `<meta name="twitter:image:src" id="twitterImageSrc" content="${escapeAttr(ogJpgUrl)}" />`
+      )
+      .replace(
+        /<meta\s+name="twitter:image:alt"\s+id="twitterImageAlt"\s+content="[^"]*"\s*\/?>/,
+        `<meta name="twitter:image:alt" id="twitterImageAlt" content="${escapeAttr(OG_IMAGE_ALT)}" />`
       )
       .replace(
         /<meta\s+name="twitter:label1"\s+id="twitterLabel1"\s+content="[^"]*"\s*\/?>/,

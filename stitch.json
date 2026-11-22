@@ -1,7 +1,7 @@
 {
   "projectId": "3180979899126194505",
   "projectName": "projects/3180979899126194505",
-  "title": "nousgent.ai & ia.nousgent.ai — Flagship Gamified Bounded ASI Mission Control (5 Design Concepts)",
+  "title": "nousgent.ai & ia.nousgent.ai — Flagship Gamified Community Bounded RSI -> Bounded ASI Mission Control (9 Design Concepts)",
   "canonicalDomain": "nousgent.ai",
   "canonicalOrigin": "https://nousgent.ai",
   "redirectDomain": "www.nousgent.ai",
@@ -73,6 +73,58 @@
       "htmlCodeFile": "projects/3180979899126194505/files/b86fee08fed94e6db610c64353d2d870",
       "localHtml": "queue/nousgent-design-5-cyber-colosseum-hud.html",
       "localScreenshot": "queue/nousgent-design-5-cyber-colosseum-hud.png"
+    },
+    {
+      "id": "design-6",
+      "slug": "nousgent-design-6-sentient-prism-persona",
+      "name": "Design 6 — Sentient Prism 3D Persona Studio & Bounded RSI Flywheel",
+      "screenId": "f1b778de725e4f4aaf09a86caa502c7e",
+      "screenName": "projects/3180979899126194505/screens/f1b778de725e4f4aaf09a86caa502c7e",
+      "designSystemAsset": "assets/17250524027418838307",
+      "designSystemTitle": "Sentient Prism 3D Persona & Bounded RSI Studio",
+      "screenshotFile": "projects/3180979899126194505/files/d5f02b89d3934a379a7956b7d15d8217",
+      "htmlCodeFile": "projects/3180979899126194505/files/f17b42ce61ff4223b8602e813a839463",
+      "localHtml": "queue/nousgent-design-6-sentient-prism-persona.html",
+      "localScreenshot": "queue/nousgent-design-6-sentient-prism-persona.png"
+    },
+    {
+      "id": "design-7",
+      "slug": "nousgent-design-7-american-rsi-moonshot",
+      "name": "Design 7 — American RSI Moonshot Civic Atrium & Daylight 3D Gyroscope",
+      "screenId": "fe4b06dad0b04b6fb1b8e86f77615f3a",
+      "screenName": "projects/3180979899126194505/screens/fe4b06dad0b04b6fb1b8e86f77615f3a",
+      "designSystemAsset": "assets/3829705987302045063",
+      "designSystemTitle": "American RSI Moonshot Civic Atrium",
+      "screenshotFile": "projects/3180979899126194505/files/9474a04a3dd84fbca2d7ce25c580bcc2",
+      "htmlCodeFile": "projects/3180979899126194505/files/861ac3a694ad4049a4363fa089bae8ad",
+      "localHtml": "queue/nousgent-design-7-american-rsi-moonshot.html",
+      "localScreenshot": "queue/nousgent-design-7-american-rsi-moonshot.png"
+    },
+    {
+      "id": "design-8",
+      "slug": "nousgent-design-8-chrysalis-rsi-holodeck",
+      "name": "Design 8 — Project Chrysalis 3D Neural Holodeck & Co-Op Evolution Arena",
+      "screenId": "fec8a9a86a544735a83e77e367e4d20f",
+      "screenName": "projects/3180979899126194505/screens/fec8a9a86a544735a83e77e367e4d20f",
+      "designSystemAsset": "assets/7536903127713471696",
+      "designSystemTitle": "Chrysalis 3D Neural Holodeck & RSI Evolution Arena",
+      "screenshotFile": "projects/3180979899126194505/files/8a96e60c6c0c4592872233b105b20769",
+      "htmlCodeFile": "projects/3180979899126194505/files/350202cd76e1413991d2ea12138068f8",
+      "localHtml": "queue/nousgent-design-8-chrysalis-rsi-holodeck.html",
+      "localScreenshot": "queue/nousgent-design-8-chrysalis-rsi-holodeck.png"
+    },
+    {
+      "id": "design-9",
+      "slug": "nousgent-design-9-dubai-cacao-pistachio-cbrain-mask",
+      "name": "Design 9 — Dubai Cacao & Pistachio Persona Studio (@cbrain/core 3D Connectome + Translucent NOUSGENT Mask)",
+      "screenId": "dab8bf8ec54547fa8d03c6b8dfcd11f5",
+      "screenName": "projects/3180979899126194505/screens/dab8bf8ec54547fa8d03c6b8dfcd11f5",
+      "designSystemAsset": "assets/12254599783956412911",
+      "designSystemTitle": "Dubai Cacao & Pistachio cbrain Persona Studio",
+      "screenshotFile": "projects/3180979899126194505/files/bbac197d3b8745c9b83bd32e0a98baae",
+      "htmlCodeFile": "projects/3180979899126194505/files/20ae162db4004f2b8fa9a452d507d936",
+      "localHtml": "queue/nousgent-design-9-dubai-cacao-pistachio-cbrain-mask.html",
+      "localScreenshot": "queue/nousgent-design-9-dubai-cacao-pistachio-cbrain-mask.png"
     }
   ]
 }

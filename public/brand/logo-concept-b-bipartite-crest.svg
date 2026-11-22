@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="crestTitle crestDesc">
+  <title id="crestTitle">nousgent.ai Concept B — Bipartite Ceremonial Morphic Persona Crest</title>
+  <desc id="crestDesc">Heraldic bipartite persona emblem split between dark roasted cacao etched with pistachio circuits and toasted kataifi bronze etched with cardamom-jade synaptic pathways.</desc>
+  <rect width="256" height="256" rx="44" fill="#0e0806" stroke="#4a3025" stroke-width="3"/>
+  <circle cx="128" cy="140" r="96" fill="none" stroke="#2dd4bf" stroke-opacity="0.3" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <!-- Left Cacao Horn & Right Kataifi Horn -->
+  <path d="M 94 74 C 48 48, 48 14, 106 12 C 76 24, 76 50, 112 70 Z" fill="#23130d" stroke="#7ed957" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 162 74 C 208 48, 208 14, 150 12 C 180 24, 180 50, 144 70 Z" fill="#9e633c" stroke="#c88a58" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Bipartite Solar Disk -->
+  <path d="M 128 64 A 78 78 0 0 0 128 220 Z" fill="#1c100b"/>
+  <path d="M 128 64 A 78 78 0 0 1 128 220 Z" fill="#462819"/>
+  <circle cx="128" cy="142" r="78" fill="none" stroke="#c88a58" stroke-width="3.5"/>
+  <!-- Serrated Solar Rim Triangles Ring -->
+  <circle cx="128" cy="142" r="69" fill="none" stroke="#f5ebe4" stroke-width="6" stroke-dasharray="9 9"/>
+  <circle cx="128" cy="142" r="69" fill="none" stroke="#7ed957" stroke-width="6" stroke-dasharray="9 9" stroke-dashoffset="9"/>
+  <!-- Etched Neural Scarification Circuits -->
+  <path d="M 116 90 L 92 98 L 74 118 M 96 160 L 72 166 L 84 192" fill="none" stroke="#7ed957" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="74" cy="118" r="3" fill="#7ed957"/>
+  <circle cx="84" cy="192" r="3" fill="#7ed957"/>
+  <path d="M 140 90 L 164 98 L 182 118 M 160 160 L 184 166 L 172 192" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="182" cy="118" r="3" fill="#2dd4bf"/>
+  <circle cx="172" cy="192" r="3" fill="#2dd4bf"/>
+  <!-- Brow Arch & Sagittal Nose Spine -->
+  <path d="M 74 124 Q 101 98 128 120 Q 155 98 182 124" fill="none" stroke="#c88a58" stroke-width="4" stroke-linecap="round"/>
+  <line x1="128" y1="68" x2="128" y2="168" stroke="#c88a58" stroke-width="6" stroke-linecap="round"/>
+  <!-- Protruding Tubular Ringed Eyes -->
+  <circle cx="96" cy="136" r="16" fill="#0e0806" stroke="#f5ebe4" stroke-width="3.5"/>
+  <circle cx="96" cy="136" r="10" fill="none" stroke="#7ed957" stroke-width="3.5"/>
+  <circle cx="160" cy="136" r="16" fill="#0e0806" stroke="#f5ebe4" stroke-width="3.5"/>
+  <circle cx="160" cy="136" r="10" fill="none" stroke="#2dd4bf" stroke-width="3.5"/>
+  <!-- Rectangular Vertical-Toothed Mouth -->
+  <rect x="94" y="176" width="68" height="22" rx="4" fill="#0e0806" stroke="#c88a58" stroke-width="3"/>
+  <line x1="106" y1="179" x2="106" y2="195" stroke="#f5ebe4" stroke-width="3.2"/>
+  <line x1="117" y1="179" x2="117" y2="195" stroke="#7ed957" stroke-width="3.2"/>
+  <line x1="128" y1="179" x2="128" y2="195" stroke="#2dd4bf" stroke-width="3.2"/>
+  <line x1="139" y1="179" x2="139" y2="195" stroke="#7ed957" stroke-width="3.2"/>
+  <line x1="150" y1="179" x2="150" y2="195" stroke="#f5ebe4" stroke-width="3.2"/>
+</svg>

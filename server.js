@@ -14,6 +14,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const nousgent = require('./lib/nousgent-core.js');
+const { createLiveEcosystemClient } = require('./server/live-ecosystem-client.js');
 const {
   buildOembedPayload,
   createHtmlMetadataRenderer
@@ -32,6 +33,7 @@ const DAPP_DIR = path.join(__dirname, 'dApp');
 fs.mkdirSync(STATE_DIR, { recursive: true });
 
 const engine = nousgent.createNousgentEngine({ stateDir: STATE_DIR });
+const liveClient = createLiveEcosystemClient(process.env);
 
 const renderHtmlWithSeo = createHtmlMetadataRenderer({
   canonicalOrigin: CANONICAL_ORIGIN,
@@ -67,10 +69,10 @@ const NOUSGENT_ALERT_RULES_CATALOG = Object.freeze([
     expr: 'nousgent_bari_score_pct < 75'
   },
   {
-    alert: 'NousgentEnlistedMeshDegraded',
+    alert: 'NousgentUpstreamOrganDegraded',
     severity: 'warning',
     plane: 'morphic-mesh',
-    expr: 'nousgent_enlisted_nodes_total < 100'
+    expr: 'nousgent_upstream_organs_reachable < 5'
   },
   {
     alert: 'NousgentClearSignCeremonySpike',
@@ -97,10 +99,10 @@ const NOUSGENT_ALERT_RULES_CATALOG = Object.freeze([
     expr: 'process_resident_memory_bytes{job="nousgent-web"} > 900000000'
   },
   {
-    alert: 'NousgentSqliteWalPersistenceCheck',
+    alert: 'NousgentDbrainLiveCapsulesCheck',
     severity: 'info',
     plane: 'wal-storage',
-    expr: 'nousgent_enlisted_nodes_total >= 4108'
+    expr: 'nousgent_dbrain_live_capsules_total > 0'
   }
 ]);
 
@@ -155,10 +157,10 @@ const MIME_TYPES = Object.freeze({
 
 function isCrossOriginEmbeddable(pathname) {
   return (
-    pathname === '/og-image.jpg' ||
-    pathname === '/og-image.png' ||
-    pathname === '/og-square.jpg' ||
+    pathname.startsWith('/og-') ||
     pathname === '/apple-touch-icon.png' ||
+    pathname === '/icon-192.png' ||
+    pathname === '/icon-512.png' ||
     pathname === '/favicon.svg' ||
     pathname === '/logo-wordmark.svg' ||
     pathname === '/site.webmanifest' ||
@@ -168,6 +170,7 @@ function isCrossOriginEmbeddable(pathname) {
     pathname === '/llms-full.txt' ||
     pathname === '/enlist.sh' ||
     pathname === '/api/oembed' ||
+    pathname.startsWith('/brand/') ||
     pathname.startsWith('/.well-known/') ||
     pathname.startsWith('/api/nousgent/card/')
   );
@@ -178,7 +181,7 @@ function setSecurityHeaders(res, pathname = '/', plane = 'human_ui') {
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://nousgent.ai https://ia.nousgent.ai https://dolfactory.to https://dthalamus.to https://dbrain.to https://cbrain.to https://shi.liquidi.sh; frame-ancestors 'none'; base-uri 'self';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://nousgent.ai https://ia.nousgent.ai https://dolfactory.to https://dthalamus.to https://dbrain.to https://cbrain.to https://liquidi.sh https://shi.liquidi.sh; frame-ancestors 'none'; base-uri 'self';"
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -224,6 +227,36 @@ function readJsonBody(req, maxBytes = 262144) {
       }
     });
     req.on('error', reject);
+  });
+}
+
+async function runAskWithLiveOrgans(body = {}) {
+  const promptText = String(body.prompt || '');
+  if (Array.isArray(body.recalledCapsules)) {
+    const ecosystem = await liveClient.getLiveSnapshot();
+    return engine.askNousgent({
+      ...body,
+      liveGeneration: ecosystem.dbrain.primaryGeneration,
+      liveMerkleRoot: ecosystem.dbrain.verifiedMerkleRoot
+    });
+  }
+  const livePipe = await liveClient.runLiveOrganPromptPipeline(promptText);
+  const autoQuoteDig =
+    livePipe.liquidishAutoQuote?.quote?.priceDig !== undefined
+      ? Number(livePipe.liquidishAutoQuote.quote.priceDig).toFixed(3)
+      : undefined;
+  return engine.askNousgent({
+    ...body,
+    recalledCapsules: livePipe.recalledCapsules,
+    liveGeneration: livePipe.ecosystem.dbrain.primaryGeneration,
+    liveMerkleRoot: livePipe.ecosystem.dbrain.verifiedMerkleRoot,
+    liveAutoPriceDig: autoQuoteDig,
+    liveLatencies: {
+      dolfactoryMs: livePipe.dolfactoryLiveSniff?.latencyMs,
+      dthalamusMs: livePipe.dthalamusLiveGate?.latencyMs,
+      dbrainMs: livePipe.dbrainRecallLatencyMs ?? livePipe.ecosystem.dbrain.latencyMs,
+      liquidishMs: livePipe.liquidishAutoQuote?.latencyMs ?? livePipe.ecosystem.liquidish.latencyMs
+    }
   });
 }
 
@@ -324,10 +357,22 @@ const MCP_TOOLS = Object.freeze([
     name: 'nousgent_get_plane_telemetry',
     description: 'Return dedicated traffic segmentation between https://nousgent.ai (human_ui) and https://ia.nousgent.ai (m2m_ia).',
     inputSchema: { type: 'object', properties: {} }
+  },
+  {
+    name: 'nousgent_ask_persona',
+    description: 'Converse directly with NOUSGENT across live dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, and shi.liquidi.sh.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt: { type: 'string' },
+        callsign: { type: 'string' }
+      },
+      required: ['prompt']
+    }
   }
 ]);
 
-function handleMcpRpc(body) {
+async function handleMcpRpc(body) {
   const id = body && Object.prototype.hasOwnProperty.call(body, 'id') ? body.id : null;
   const method = body && body.method;
   const params = (body && body.params) || {};
@@ -358,13 +403,16 @@ function handleMcpRpc(body) {
     const name = params.name;
     const args = params.arguments || {};
     let data;
-    if (name === 'nousgent_get_bari_status') data = engine.getMissionStatus();
-    else if (name === 'nousgent_pod_bay_challenge') data = engine.runPodBayChallenge(args);
+    if (name === 'nousgent_get_bari_status') {
+      const liveEco = await liveClient.getLiveSnapshot();
+      data = engine.getMissionStatus(liveEco);
+    } else if (name === 'nousgent_pod_bay_challenge') data = engine.runPodBayChallenge(args);
     else if (name === 'nousgent_simulate_bisect') data = engine.simulateBisect(args);
     else if (name === 'nousgent_enlist_rig') data = engine.enlistRig(args);
     else if (name === 'nousgent_list_missions') data = { missions: engine.listMissions() };
     else if (name === 'nousgent_submit_clear_sign') data = engine.submitClearSignVote(args);
     else if (name === 'nousgent_get_plane_telemetry') data = engine.meshStore.getPlaneTelemetry();
+    else if (name === 'nousgent_ask_persona') data = await runAskWithLiveOrgans(args);
     else {
       return {
         jsonrpc: '2.0',
@@ -388,7 +436,7 @@ function handleMcpRpc(body) {
   };
 }
 
-function tryServeStaticFile(res, baseDir, relPath, pathname, plane) {
+function tryServeStaticFile(req, res, baseDir, relPath, pathname, plane) {
   const safeRel = relPath.replace(/^\/+/, '');
   const resolved = path.resolve(baseDir, safeRel);
   if (!resolved.startsWith(path.resolve(baseDir) + path.sep) && resolved !== path.resolve(baseDir)) {
@@ -397,13 +445,20 @@ function tryServeStaticFile(res, baseDir, relPath, pathname, plane) {
   if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
     return false;
   }
+  const stat = fs.statSync(resolved);
   const ext = path.extname(resolved).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
   setSecurityHeaders(res, pathname, plane);
   res.writeHead(200, {
     'Content-Type': contentType,
+    'Content-Length': String(stat.size),
+    'Accept-Ranges': 'bytes',
     'Cache-Control': pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
   });
+  if (req.method === 'HEAD') {
+    res.end();
+    return true;
+  }
   res.end(fs.readFileSync(resolved));
   return true;
 }
@@ -437,7 +492,7 @@ const server = http.createServer(async (req, res) => {
       setSecurityHeaders(res, pathname, activePlane);
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Nousgent-Plane'
       });
       res.end();
@@ -471,7 +526,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if ((pathname === '/metrics' || pathname === '/api/nousgent/metrics') && req.method === 'GET') {
-      const body = engine.renderPrometheusMetrics();
+      const liveEco = await liveClient.getLiveSnapshot();
+      const body = engine.renderPrometheusMetrics(liveEco);
       setSecurityHeaders(res, pathname, activePlane);
       res.writeHead(200, {
         'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
@@ -499,8 +555,11 @@ const server = http.createServer(async (req, res) => {
           protocol: 'A2A-AGENT-CARD-v1.0',
           name: 'NOUSGENT',
           version: APP_VERSION,
+          personaEmblem: 'Evolving Sculpted Persona Mask + @cbrain/core 4D Connectome',
+          logoUrl: `${CANONICAL_ORIGIN}/logo-wordmark.svg`,
+          imageUrl: `${CANONICAL_ORIGIN}/og-image.jpg?v=${APP_VERSION}`,
           description:
-            'Flagship Open-Source Bounded ASI Mission Control (1968 HAL 9000 reborn with a conscience) wired across dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, and shi.liquidi.sh on the Chia Blockchain.',
+            'Flagship Dual-Engine Bounded RSI -> Bounded ASI Mission Control uniting community dbrain.to Second Brains in the Morphic Intelligence Field with NOUSGENT’s 24/7 autonomous recursive self-improvement across dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, and shi.liquidi.sh on the Chia Blockchain.',
           humanPortalUrl: CANONICAL_ORIGIN,
           m2mSwarmBaseUrl: M2M_ORIGIN,
           mcpEndpoint: `${M2M_ORIGIN}/api/mcp`,
@@ -583,13 +642,22 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname === '/api/nousgent/status' && req.method === 'GET') {
-      sendJson(res, 200, engine.getMissionStatus(), pathname, activePlane);
+      const forceRefresh = parsedUrl.searchParams.get('refresh') === '1';
+      const liveEco = await liveClient.getLiveSnapshot({ forceRefresh });
+      sendJson(res, 200, engine.getMissionStatus(liveEco), pathname, activePlane);
       return;
     }
 
     if (pathname === '/api/nousgent/pod-bay/challenge' && req.method === 'POST') {
       const body = await readJsonBody(req);
+      await liveClient.runLiveOrganPromptPipeline(body.prompt || '');
       sendJson(res, 200, engine.runPodBayChallenge(body), pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/ask' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      sendJson(res, 200, await runAskWithLiveOrgans(body), pathname, activePlane);
       return;
     }
 
@@ -624,7 +692,8 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/nousgent/morphic/pulse' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      const status = engine.getMissionStatus();
+      const liveEco = await liveClient.getLiveSnapshot();
+      const status = engine.getMissionStatus(liveEco);
       sendJson(
         res,
         200,
@@ -643,7 +712,12 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname.startsWith('/api/nousgent/card/') && pathname.endsWith('.svg') && req.method === 'GET') {
       const rawCallsign = decodeURIComponent(pathname.slice('/api/nousgent/card/'.length, -4));
-      const svg = engine.renderFlightDossierSvg(rawCallsign);
+      const liveEco = await liveClient.getLiveSnapshot();
+      const svg = engine.renderFlightDossierSvg(rawCallsign, {
+        activeMorphicBrainsCount: liveEco.dbrain.activeMorphicBrainsCount,
+        liveCapsulesTotal: liveEco.dbrain.liveCapsulesTotal,
+        verifiedMerkleRoot: liveEco.dbrain.verifiedMerkleRoot
+      });
       setSecurityHeaders(res, pathname, activePlane);
       res.writeHead(200, {
         'Content-Type': 'image/svg+xml; charset=utf-8',
@@ -698,8 +772,10 @@ const server = http.createServer(async (req, res) => {
         'Cache-Control': 'no-cache, no-transform',
         'X-Accel-Buffering': 'no'
       });
-      const st = engine.getMissionStatus();
+      const liveEco = await liveClient.getLiveSnapshot();
+      const st = engine.getMissionStatus(liveEco);
       for (let i = 1; i <= frames; i += 1) {
+        const organObj = st.bari.organs[(i - 1) % st.bari.organs.length];
         const frame = {
           seq: i,
           ts: new Date().toISOString(),
@@ -708,10 +784,16 @@ const server = http.createServer(async (req, res) => {
           flagshipAgent: 'NOUSGENT',
           bariScorePct: st.bari.bariScorePct,
           catastrophicForgettingPct: st.bari.catastrophicForgettingPct,
-          kcWinners: 64,
+          dbrainGeneration: liveEco.dbrain.primaryGeneration,
+          dbrainMorphicBrains: liveEco.dbrain.activeMorphicBrainsCount,
+          dbrainLiveCapsules: liveEco.dbrain.liveCapsulesTotal,
+          liquidishRoyaltiesDig: liveEco.liquidish.royaltiesStreamedDig,
+          shiM2mRequests: liveEco.liquidish.shiM2mRequestsCount,
           humanRequests: st.planes.humanRequests,
           m2mRequests: st.planes.m2mRequests,
-          organ: st.bari.organs[(i - 1) % st.bari.organs.length].domain
+          organ: organObj.domain,
+          organStatus: organObj.status,
+          organLatencyMs: organObj.latencyMs
         };
         res.write(JSON.stringify(frame) + '\n');
       }
@@ -721,7 +803,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/mcp' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      const out = Array.isArray(body) ? body.map(handleMcpRpc) : handleMcpRpc(body);
+      const out = Array.isArray(body) ? await Promise.all(body.map(handleMcpRpc)) : await handleMcpRpc(body);
       sendJson(res, 200, out, pathname, activePlane);
       return;
     }
@@ -733,23 +815,29 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname.startsWith('/dApp/')) {
       const rel = pathname.slice('/dApp/'.length) || 'index.html';
-      if (tryServeStaticFile(res, DAPP_DIR, rel, pathname, activePlane)) return;
+      if (tryServeStaticFile(req, res, DAPP_DIR, rel, pathname, activePlane)) return;
     }
 
-    if (pathname !== '/' && tryServeStaticFile(res, DIST_DIR, pathname, pathname, activePlane)) return;
-    if (pathname !== '/' && tryServeStaticFile(res, PUBLIC_DIR, pathname, pathname, activePlane)) return;
+    if (pathname !== '/' && tryServeStaticFile(req, res, DIST_DIR, pathname, pathname, activePlane)) return;
+    if (pathname !== '/' && tryServeStaticFile(req, res, PUBLIC_DIR, pathname, pathname, activePlane)) return;
 
     const indexCandidate = fs.existsSync(path.join(DIST_DIR, 'index.html'))
       ? path.join(DIST_DIR, 'index.html')
       : path.join(__dirname, 'index.html');
     const rawHtml = fs.readFileSync(indexCandidate, 'utf8');
     const renderedHtml = renderHtmlWithSeo(rawHtml, pathname, activePlane);
+    const htmlBuf = Buffer.from(renderedHtml, 'utf8');
     setSecurityHeaders(res, pathname, activePlane);
     res.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
+      'Content-Length': String(htmlBuf.length),
       'Cache-Control': 'no-cache'
     });
-    res.end(renderedHtml);
+    if (req.method === 'HEAD') {
+      res.end();
+      return;
+    }
+    res.end(htmlBuf);
   } catch (err) {
     const code = Number(err && err.statusCode) || 500;
     sendJson(res, code, { error: err && err.message ? err.message : 'Internal Server Error' });

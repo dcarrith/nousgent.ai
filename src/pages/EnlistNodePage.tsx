@@ -21,8 +21,11 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
     readonly morphicPulseEndpoint: string;
   } | null>(null);
 
+  const [enlistError, setEnlistError] = useState<string>('');
+
   async function handleEnlistSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
+    setEnlistError('');
     playQuindarBeep(2525);
     const osOpt = ENLIST_OS_OPTIONS[activeOsIndex];
     try {
@@ -43,13 +46,11 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
           morphicPulseEndpoint: d.morphicPulseEndpoint
         });
         onEnlisted();
+      } else {
+        setEnlistError(`Enlistment request failed (HTTP ${res.status}).`);
       }
     } catch {
-      setEnlistResult({
-        callsign: `NOUSGENT-${selectedState}-0042`,
-        rankTitle: 'Rank I: Clavius Cadet',
-        morphicPulseEndpoint: 'https://ia.nousgent.ai/api/nousgent/morphic/pulse'
-      });
+      setEnlistError('Live enlistment API unreachable — no synthetic callsign issued.');
     }
   }
 
@@ -112,15 +113,16 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
                     if (!el) return;
                     const handler = () => setActiveOsIndex(idx);
                     el.addEventListener('beforematch', handler);
+                    return () => el.removeEventListener('beforematch', handler);
                   }}
                 >
                   <div className="tabpanel-inner">
-                    <div className="mono-xs text-violet" style={{ marginBottom: '0.5rem' }}>
+                    <div className="mono-xs text-violet" style={{ marginBottom: '0.5rem', overflowWrap: 'anywhere' }}>
                       SANDBOX PROFILE: {opt.envFlag.toUpperCase()}
                     </div>
                     <div className="cli-strip">
                       <span className="mono-sm chrome-glyph">$</span>
-                      <code id={cmdId} className="mono-xs" style={{ whiteSpace: 'nowrap', flex: 1 }}>
+                      <code id={cmdId} className="mono-xs">
                         {opt.command}
                       </code>
                       <CopyCommandButton targetId={cmdId} label="Copy" />
@@ -182,6 +184,12 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
             </button>
           </form>
 
+          {enlistError ? (
+            <div className="glass-well mono-xs text-rose" role="alert">
+              ⚠ {enlistError}
+            </div>
+          ) : null}
+
           {enlistResult ? (
             <div className="glass-well" role="status" style={{ borderColor: 'rgb(78 222 163 / 0.45)' }}>
               <div className="mono-xs text-emerald">✓ ASTRONAUT CALLSIGN ISSUED</div>
@@ -203,9 +211,9 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
             </div>
           ) : (
             <div className="glass-well">
-              <div className="mono-xs text-muted">GREEN AMERICAN PoST DIVIDEND</div>
+              <div className="mono-xs text-muted">LIVE CHIA PoST &amp; MESH TELEMETRY (DBRAIN.TO)</div>
               <div className="mono-sm text-emerald" style={{ marginTop: '0.25rem' }}>
-                {snapshot.megawattsSaved} MW SAVED · {snapshot.gallonsWaterSaved.toLocaleString()} GAL H2O SAVED/WK
+                NETSPACE: {snapshot.dbrainNetspaceLabel} · BLOCK #{snapshot.dbrainPeakHeight.toLocaleString()} · ENLISTED RIGS: {snapshot.enlistedNodesCount}
               </div>
             </div>
           )}

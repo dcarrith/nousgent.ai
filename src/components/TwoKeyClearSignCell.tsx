@@ -88,17 +88,17 @@ export function TwoKeyClearSignCell({
               marginBottom: '0.55rem'
             }}
           >
-            <svg viewBox="0 0 100 100" width="100%" height="100%" fill="#7bd0ff" aria-hidden="true">
-              <rect x="5" y="5" width="25" height="25" rx="3" fill="none" stroke="#7bd0ff" strokeWidth="4" />
+            <svg viewBox="0 0 100 100" width="100%" height="100%" fill="#2dd4bf" aria-hidden="true">
+              <rect x="5" y="5" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
               <rect x="11" y="11" width="13" height="13" rx="2" />
-              <rect x="70" y="5" width="25" height="25" rx="3" fill="none" stroke="#7bd0ff" strokeWidth="4" />
+              <rect x="70" y="5" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
               <rect x="76" y="11" width="13" height="13" rx="2" />
-              <rect x="5" y="70" width="25" height="25" rx="3" fill="none" stroke="#7bd0ff" strokeWidth="4" />
+              <rect x="5" y="70" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
               <rect x="11" y="76" width="13" height="13" rx="2" />
               <rect x="38" y="10" width="8" height="8" />
               <rect x="50" y="18" width="6" height="6" opacity="0.8" />
-              <rect x="36" y="36" width="28" height="28" rx="4" fill="#0e0d15" stroke="#7bd0ff" strokeWidth="2" />
-              <circle cx="50" cy="50" r="6" fill="#ddb7ff" />
+              <rect x="36" y="36" width="28" height="28" rx="4" fill="#120a07" stroke="#7ed957" strokeWidth="2" />
+              <circle cx="50" cy="50" r="6" fill="#7ed957" />
               <rect x="15" y="42" width="6" height="6" />
               <rect x="72" y="40" width="8" height="8" />
               <rect x="42" y="74" width="7" height="7" />

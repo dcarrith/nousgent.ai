@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="monoTitle monoDesc">
+  <title id="monoTitle">nousgent.ai Concept C — Monoline Merkle Wireframe Persona Glyph</title>
+  <desc id="monoDesc">Minimalist monoline vector glyph uniting sculpted horns, solar disk, and 5-lobe @cbrain/core Merkle graph for CLI, M2M ia.nousgent.ai headers, and CSS mask icons.</desc>
+  <rect width="256" height="256" rx="44" fill="#120a07" stroke="#2dd4bf" stroke-opacity="0.45" stroke-width="2.5"/>
+  <!-- Dual M2M / Human Antenna Horns -->
+  <path d="M 96 76 C 54 50, 56 18, 108 18" fill="none" stroke="#7ed957" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 160 76 C 202 50, 200 18, 148 18" fill="none" stroke="#2dd4bf" stroke-width="5" stroke-linecap="round"/>
+  <line x1="116" y1="18" x2="140" y2="18" stroke="#c88a58" stroke-width="3" stroke-dasharray="4 4"/>
+  <!-- Outer Solar Disk + Zigzag Rim -->
+  <circle cx="128" cy="144" r="76" fill="none" stroke="#7ed957" stroke-width="4"/>
+  <circle cx="128" cy="144" r="66" fill="none" stroke="#c88a58" stroke-width="2.5" stroke-dasharray="7 5"/>
+  <!-- 5-Lobe @cbrain/core Merkle Graph Inside the Persona Face -->
+  <line x1="96" y1="136" x2="128" y2="112" stroke="#2dd4bf" stroke-width="2"/>
+  <line x1="160" y1="136" x2="128" y2="112" stroke="#2dd4bf" stroke-width="2"/>
+  <line x1="96" y1="136" x2="128" y2="162" stroke="#7ed957" stroke-width="2"/>
+  <line x1="160" y1="136" x2="128" y2="162" stroke="#7ed957" stroke-width="2"/>
+  <!-- Nose Spine & Tubular Eyes -->
+  <line x1="128" y1="88" x2="128" y2="164" stroke="#f5ebe4" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="96" cy="136" r="14" fill="#120a07" stroke="#7ed957" stroke-width="4"/>
+  <circle cx="96" cy="136" r="5" fill="#f5ebe4"/>
+  <circle cx="160" cy="136" r="14" fill="#120a07" stroke="#2dd4bf" stroke-width="4"/>
+  <circle cx="160" cy="136" r="5" fill="#f5ebe4"/>
+  <!-- Harmonic Rectangular Mouth -->
+  <rect x="98" y="180" width="60" height="18" rx="3" fill="none" stroke="#c88a58" stroke-width="3.5"/>
+  <line x1="113" y1="183" x2="113" y2="195" stroke="#7ed957" stroke-width="3"/>
+  <line x1="128" y1="183" x2="128" y2="195" stroke="#f5ebe4" stroke-width="3"/>
+  <line x1="143" y1="183" x2="143" y2="195" stroke="#2dd4bf" stroke-width="3"/>
+</svg>

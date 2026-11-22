@@ -5,16 +5,23 @@ metadata:
   namespace: dbrain
   labels:
     app.kubernetes.io/name: nousgent
-    app.kubernetes.io/version: "1.2.0"
+    app.kubernetes.io/version: "1.7.0"
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  APP_VERSION: "1.2.0"
+  APP_VERSION: "1.7.0"
   CANONICAL_ORIGIN: "https://nousgent.ai"
   M2M_ORIGIN: "https://ia.nousgent.ai"
   NOUSGENT_STATE_DIR: "/var/lib/nousgent"
   DOLFACTORY_ORIGIN: "https://dolfactory.to"
+  DOLFACTORY_UPSTREAM_URL: "http://dolfactory-web.dbrain.svc.cluster.local:80"
   DTHALAMUS_ORIGIN: "https://dthalamus.to"
+  DTHALAMUS_UPSTREAM_URL: "http://dthalamus-web.dbrain.svc.cluster.local:80"
   DBRAIN_ORIGIN: "https://dbrain.to"
+  DBRAIN_UPSTREAM_URL: "http://dbrain-web.dbrain.svc.cluster.local:80"
+  DBRAIN_MCP_URL: "http://dbrain-web.dbrain.svc.cluster.local:80/api/mcp"
   CBRAIN_ORIGIN: "https://cbrain.to"
+  CBRAIN_UPSTREAM_URL: "http://cbrain-web.dbrain.svc.cluster.local:80"
   LIQUIDISH_ORIGIN: "https://shi.liquidi.sh"
+  LIQUIDISH_UPSTREAM_URL: "http://liquidish-web.dbrain.svc.cluster.local:80"
+  SHI_LIQUIDISH_UPSTREAM_URL: "http://liquidish-web.dbrain.svc.cluster.local:80"

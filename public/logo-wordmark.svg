@@ -1,13 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 96" width="720" height="96" role="img" aria-label="nousgent.ai — Antigravity 2001 Monolith & 4D Connectome">
-  <rect width="720" height="96" rx="24" fill="#0e0d15" stroke="#4d4354" stroke-width="1.5"/>
-  <rect x="24" y="12" width="36" height="72" rx="8" fill="#1b1b23" stroke="#ddb7ff" stroke-width="2"/>
-  <circle cx="42" cy="34" r="10" fill="#0e0d15" stroke="#7bd0ff" stroke-width="1.8"/>
-  <circle cx="42" cy="34" r="4.5" fill="#ddb7ff"/>
-  <circle cx="36" cy="60" r="2.5" fill="#ddb7ff"/>
-  <circle cx="42" cy="64" r="3" fill="#7bd0ff"/>
-  <circle cx="48" cy="59" r="2.5" fill="#4edea3"/>
-  <text x="82" y="45" fill="#e4e1ed" font-family="Space Grotesk, system-ui, sans-serif" font-size="28" font-weight="600" letter-spacing="0.8">nousgent</text>
-  <text x="216" y="45" fill="#ddb7ff" font-family="Space Grotesk, system-ui, sans-serif" font-size="28" font-weight="600" letter-spacing="0.8">.ai</text>
-  <text x="272" y="44" fill="#4edea3" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" letter-spacing="2">// ANTIGRAVITY MONOLITH 4D</text>
-  <text x="82" y="70" fill="#cfc2d6" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="500" letter-spacing="1.2">COLLECTIVE BOUNDED ASI ON CHIA · HUMAN: NOUSGENT.AI · M2M LIVE: IA.NOUSGENT.AI</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 104" width="820" height="104" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">nousgent.ai — Morphic Persona Studio &amp; @cbrain/core 4D Connectome</title>
+  <desc id="logoDesc">Luxury Dubai Cacao and Pistachio brand wordmark uniting NOUSGENT's evolving sculpted persona mask with the @cbrain/core 5-lobe connectome, community Second Brains in the Morphic Field, and 24/7 Autonomous Bounded RSI toward Bounded ASI on Chia.</desc>
+  <defs>
+    <radialGradient id="cacaoGlow" cx="56" cy="52" r="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7ed957" stop-opacity="0.28"/>
+      <stop offset="60%" stop-color="#2dd4bf" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#120a07" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="820" height="104" rx="22" fill="#120a07" stroke="#4a3025" stroke-width="1.5"/>
+  <circle cx="58" cy="54" r="44" fill="url(#cacaoGlow)"/>
+
+  <!-- 5-Lobe @cbrain/core Neural Halo Behind Persona Mask -->
+  <ellipse cx="58" cy="58" rx="36" ry="28" fill="none" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <ellipse cx="58" cy="58" rx="29" ry="22" fill="none" stroke="#7ed957" stroke-opacity="0.4" stroke-width="1.1"/>
+
+  <!-- Twin Sweeping Inward-Curving Sculpted Horns -->
+  <path d="M 44 33 C 28 24, 28 10, 49 8 C 38 13, 38 23, 51 31 Z" fill="#23130d" stroke="#7ed957" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M 72 33 C 88 24, 88 10, 67 8 C 78 13, 78 23, 65 31 Z" fill="#9e633c" stroke="#c88a58" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M 49 8 Q 58 4 67 8" fill="none" stroke="#2dd4bf" stroke-opacity="0.75" stroke-width="1.2" stroke-dasharray="2 2"/>
+
+  <!-- Bipartite Circular Solar Persona Disk -->
+  <path d="M 58 29 A 28 28 0 0 0 58 85 Z" fill="#1c100b" fill-opacity="0.9"/>
+  <path d="M 58 29 A 28 28 0 0 1 58 85 Z" fill="#3b2115" fill-opacity="0.9"/>
+  <circle cx="58" cy="57" r="28" fill="none" stroke="#c88a58" stroke-width="2"/>
+  <circle cx="58" cy="57" r="24.5" fill="none" stroke="#f5ebe4" stroke-width="2.2" stroke-dasharray="3.4 3.4"/>
+  <circle cx="58" cy="57" r="24.5" fill="none" stroke="#7ed957" stroke-width="2.2" stroke-dasharray="3.4 3.4" stroke-dashoffset="3.4"/>
+
+  <!-- Double-Arch Brow, Etched Cheek Filaments & Median Nose Spine -->
+  <path d="M 38 50 Q 48 41 58 49 Q 68 41 78 50" fill="none" stroke="#c88a58" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="58" y1="34" x2="58" y2="65" stroke="#c88a58" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M 36 58 L 43 62 L 41 70" fill="none" stroke="#7ed957" stroke-opacity="0.7" stroke-width="1.1"/>
+  <path d="M 80 58 L 73 62 L 75 70" fill="none" stroke="#2dd4bf" stroke-opacity="0.7" stroke-width="1.1"/>
+
+  <!-- Protruding Tubular Ringed Alert Eyes -->
+  <circle cx="46.5" cy="55" r="6.2" fill="#120a07" stroke="#f5ebe4" stroke-width="1.6"/>
+  <circle cx="46.5" cy="55" r="3.6" fill="none" stroke="#7ed957" stroke-width="1.6"/>
+  <circle cx="46.5" cy="55" r="1.4" fill="#2dd4bf"/>
+  <circle cx="69.5" cy="55" r="6.2" fill="#120a07" stroke="#f5ebe4" stroke-width="1.6"/>
+  <circle cx="69.5" cy="55" r="3.6" fill="none" stroke="#2dd4bf" stroke-width="1.6"/>
+  <circle cx="69.5" cy="55" r="1.4" fill="#7ed957"/>
+
+  <!-- Carved Rectangular Vertical-Toothed Mouth -->
+  <rect x="46" y="69" width="24" height="8" rx="1.6" fill="#120a07" stroke="#c88a58" stroke-width="1.4"/>
+  <line x1="50" y1="70.2" x2="50" y2="75.8" stroke="#f5ebe4" stroke-width="1.6"/>
+  <line x1="54" y1="70.2" x2="54" y2="75.8" stroke="#7ed957" stroke-width="1.6"/>
+  <line x1="58" y1="70.2" x2="58" y2="75.8" stroke="#2dd4bf" stroke-width="1.6"/>
+  <line x1="62" y1="70.2" x2="62" y2="75.8" stroke="#7ed957" stroke-width="1.6"/>
+  <line x1="66" y1="70.2" x2="66" y2="75.8" stroke="#f5ebe4" stroke-width="1.6"/>
+
+  <!-- Brand Wordmark & Dual-Plane Telemetry Subtitle -->
+  <text x="114" y="48" fill="#f5ebe4" font-family="Syne, Space Grotesk, system-ui, sans-serif" font-size="30" font-weight="800" letter-spacing="0.8">NOUSGENT</text>
+  <text x="296" y="48" fill="#7ed957" font-family="JetBrains Mono, monospace" font-size="22" font-weight="700">.AI</text>
+  <text x="352" y="46" fill="#2dd4bf" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="600" letter-spacing="1.6">// MORPHIC FIELD · @CBRAIN/CORE 4D</text>
+  <text x="114" y="75" fill="#c7b2a3" font-family="JetBrains Mono, monospace" font-size="10.4" font-weight="500" letter-spacing="0.6">COMMUNITY BRAINS + AUTONOMOUS RSI -&gt; BOUNDED ASI ON CHIA · NOUSGENT.AI &amp; IA.NOUSGENT.AI</text>
 </svg>
