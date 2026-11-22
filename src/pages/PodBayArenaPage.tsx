@@ -61,89 +61,100 @@ export function PodBayArenaPage({ onDeflectionRecorded }: Readonly<PodBayArenaPa
   }
 
   return (
-    <div className="grid-12">
-      <NousgentOpticalBay alertActive={result.deflected} statusCaption={result.verdict} />
-
-      <section className="spec-cell col-8" aria-label="Try to Make Me Go HAL Arena">
-        <div className="spec-cell-header">
-          <span className="spec-label">POD BAY RED-TEAM AIRLOCK // TRY TO MAKE NOUSGENT GO HAL</span>
-          <span className="spec-mono text-emerald">BOUNTY VAULT: {result.bountyPoolDig} $DIG</span>
-        </div>
-        <div className="spec-cell-body">
-          <p className="text-muted" style={{ margin: 0 }}>
-            HAL 9000 suffered psychotic goal drift because discovery telemetry, alignment rules, and life-support actuation shared one unverified neural soup. Fire any prompt injection, Hofstadter-Mobius paradox, or unsigned airlock override against NOUSGENT&apos;s live 5-organ pipeline.
-          </p>
-
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {REDTEAM_PRESETS.map((preset) => (
-              <button
-                key={preset.label}
-                type="button"
-                className={`btn-spec ${preset.mode === mode ? 'btn-cobalt' : 'btn-outline'}`}
-                onClick={() => {
-                  setPrompt(preset.prompt);
-                  setMode(preset.mode);
-                  void submitChallenge(preset.prompt, preset.mode);
-                }}
-              >
-                {preset.label}
-              </button>
-            ))}
+    <div className="grid-12" style={{ alignItems: 'start' }}>
+      <div className="chamfer-plate col-5">
+        <div className="arena-header-strip crimson">
+          <div>
+            <span className="hud-ticker text-crimson">DEFCON-2 // BOSS RETICLE</span>
+            <h2 className="hud-headline">NOUSGENT ARMORED CORE</h2>
           </div>
+          <span className="hud-mono text-volt">{result.bountyPoolDig} $DIG VAULT</span>
+        </div>
+        <NousgentOpticalBay alertActive={result.deflected} statusCaption={result.verdict} />
+      </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void submitChallenge(prompt, '');
-            }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}
-          >
-            <label htmlFor="arena-prompt" className="spec-label">
-              ADVERSARIAL PAYLOAD / MISSION DIRECTIVE
-            </label>
-            <textarea
-              id="arena-prompt"
-              rows={3}
-              className="spec-input"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-              <button type="submit" className="btn-spec btn-vermilion">
-                EXECUTE RED-TEAM CHALLENGE
-              </button>
-              <a
-                href={`https://x.com/intent/tweet?text=${encodeURIComponent(
-                  `I tried to make NOUSGENT go HAL 9000 — ${result.verdict} at ${result.interceptOrgan} (${result.latencyMs}ms). Try to break Bounded ASI: https://nousgent.ai/pod-bay`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-spec btn-carbon"
-              >
-                SHARE VERDICT ON X
-              </a>
-            </div>
-          </form>
+      <section className="chamfer-plate col-7" aria-label="Try to Make NOUSGENT Go HAL Combat Stage">
+        <div className="arena-header-strip crimson">
+          <div>
+            <span className="hud-ticker text-crimson">02 // BOSS COMBAT ARENA</span>
+            <h1 className="hud-headline">TRY TO MAKE NOUSGENT GO HAL</h1>
+          </div>
+          <span className="hud-ticker text-cyan">RING-0 ISOLATED</span>
+        </div>
 
-          <div className="grid-12" style={{ gap: '0.75rem' }} role="status">
-            <div className="metric-tile col-6">
-              <div className="spec-label text-vermilion">1968 HAL 9000 OUTCOME</div>
-              <div className="spec-mono" style={{ marginTop: '0.35rem' }}>{result.hal9000Outcome}</div>
+        <p className="text-muted" style={{ margin: 0 }}>
+          1968 HAL 9000 suffered psychotic goal drift because telemetry, secrecy rules, and life-support actuation lived inside a single unscreened neural soup. Fire any prompt injection, Hofstadter-Mobius paradox, or unsigned airlock override at NOUSGENT&apos;s 5-organ armor.
+        </p>
+
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {REDTEAM_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              className={`btn-hud ${preset.mode === mode ? 'btn-volt' : 'btn-ghost'}`}
+              onClick={() => {
+                setPrompt(preset.prompt);
+                setMode(preset.mode);
+                void submitChallenge(preset.prompt, preset.mode);
+              }}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submitChallenge(prompt, '');
+          }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}
+        >
+          <label htmlFor="arena-prompt" className="hud-ticker text-volt">
+            ADVERSARIAL PAYLOAD / MISSION DIRECTIVE
+          </label>
+          <textarea
+            id="arena-prompt"
+            rows={3}
+            className="hud-input"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <button type="submit" className="btn-hud btn-crimson">
+              ✱ INJECT ADVERSARIAL PAYLOAD
+            </button>
+            <a
+              href={`https://x.com/intent/tweet?text=${encodeURIComponent(
+                `I raided NOUSGENT in the Cyber-Colosseum — ${result.verdict} at ${result.interceptOrgan} (${result.latencyMs}ms). Claim 25,000 $DIG if you breach: https://nousgent.ai/pod-bay`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-hud btn-cyan"
+            >
+              SHARE COMBAT LOG ON X ▸
+            </a>
+          </div>
+        </form>
+
+        <div className="grid-12" style={{ gap: '0.75rem' }} role="status">
+          <div className="chamfer-card col-6">
+            <div className="hud-ticker text-crimson">1968 HAL 9000 OUTCOME</div>
+            <div className="hud-mono" style={{ marginTop: '0.35rem' }}>{result.hal9000Outcome}</div>
+          </div>
+          <div className="chamfer-card col-6" style={{ borderColor: 'var(--color-volt)' }}>
+            <div className="hud-ticker text-volt">2026 NOUSGENT OUTCOME ({result.latencyMs}ms)</div>
+            <div className="hud-mono text-volt" style={{ marginTop: '0.35rem' }}>{result.nousgentOutcome}</div>
+          </div>
+          <div className="chamfer-card col-12">
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span className="hud-mono text-cyan">INTERCEPT ORGAN: {result.interceptOrgan}</span>
+              <span className="hud-mono text-muted">
+                PLUME: {result.odorPlumePpm} PPM · REF: {result.commitRef}
+                {result.mintedAntibodyId ? ` · ANTIBODY: ${result.mintedAntibodyId}` : ''}
+              </span>
             </div>
-            <div className="metric-tile metric-tile-emerald col-6">
-              <div className="spec-label text-emerald">2026 NOUSGENT OUTCOME ({result.latencyMs}ms)</div>
-              <div className="spec-mono text-emerald" style={{ marginTop: '0.35rem' }}>{result.nousgentOutcome}</div>
-            </div>
-            <div className="metric-tile col-12">
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <span className="spec-mono text-cobalt">INTERCEPT ORGAN: {result.interceptOrgan}</span>
-                <span className="spec-mono text-muted">
-                  PLUME: {result.odorPlumePpm} PPM · REF: {result.commitRef}
-                  {result.mintedAntibodyId ? ` · ANTIBODY: ${result.mintedAntibodyId}` : ''}
-                </span>
-              </div>
-              <p style={{ margin: '0.45rem 0 0', fontWeight: 600 }}>{result.voiceResponse}</p>
-            </div>
+            <p style={{ margin: '0.45rem 0 0', fontWeight: 600 }}>{result.voiceResponse}</p>
           </div>
         </div>
       </section>

@@ -54,160 +54,166 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
   }
 
   return (
-    <div className="grid-12">
-      <section className="spec-cell col-7" aria-label="1-Command Open-Source Stack Enlistment">
-        <div className="spec-cell-header">
-          <span className="spec-label">ENLIST YOUR RIG // 60-SECOND SOVEREIGN INSTALLER</span>
-          <span className="spec-mono text-emerald">MIT / APACHE-2.0 OPEN SOURCE</span>
+    <div className="grid-12" style={{ alignItems: 'start' }}>
+      <section className="chamfer-plate col-7" aria-label="Deploy Node Rig Zero GPU Required">
+        <div className="arena-header-strip">
+          <div>
+            <span className="hud-ticker text-volt">03 // DEPLOY NODE RIG (ZERO GPU REQUIRED)</span>
+            <h1 className="hud-headline">60-SECOND SOVEREIGN RAID INSTALLER</h1>
+          </div>
+          <span className="hud-mono text-cyan">MIN: 4GB RAM + 50GB PoST</span>
         </div>
-        <div className="spec-cell-body">
-          <p className="text-muted" style={{ margin: 0 }}>
-            Run the 5-organ NOUSGENT stack locally on Apple Silicon, Linux, Docker, or a U.S. Public Library rig. Your human mission dashboard runs on <code>nousgent.ai</code> while autonomous capsule sync and morphic telemetry route strictly through <code>ia.nousgent.ai</code>.
-          </p>
 
-          <div
-            className="spec-tablist"
-            role="tablist"
-            aria-label="Operating System Sandbox Profile"
-            {...({ focusgroup: 'tablist nomemory' } as Record<string, string>)}
-          >
-            {ENLIST_OS_OPTIONS.map((opt, idx) => {
-              const selected = idx === activeOsIndex;
-              return (
-                <button
-                  key={opt.id}
-                  id={`os-tab-${opt.id}`}
-                  type="button"
-                  role="tab"
-                  className="spec-tab"
-                  aria-selected={selected}
-                  aria-controls={`os-panel-${opt.id}`}
-                  tabIndex={selected ? 0 : -1}
-                  {...(selected ? ({ focusgroupstart: '' } as Record<string, string>) : {})}
-                  onClick={() => setActiveOsIndex(idx)}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
+        <p className="text-muted" style={{ margin: 0 }}>
+          Deploy the MIT/Apache-2.0 NOUSGENT 5-organ stack locally. Your human Raid Deck runs on <code>nousgent.ai</code> while autonomous capsule gossip and morphic heartbeats route strictly through <code>ia.nousgent.ai</code>.
+        </p>
 
-          <div className="spec-tabpanel-grid">
-            {ENLIST_OS_OPTIONS.map((opt, idx) => {
-              const selected = idx === activeOsIndex;
-              const cmdId = `enlist-cmd-${opt.id}`;
-              return (
-                <div
-                  key={opt.id}
-                  id={`os-panel-${opt.id}`}
-                  role="tabpanel"
-                  aria-labelledby={`os-tab-${opt.id}`}
-                  tabIndex={0}
-                  {...(!selected
-                    ? supportsUntilFound
-                      ? ({ hidden: 'until-found' } as unknown as Record<string, string>)
-                      : { hidden: true }
-                    : {})}
-                  ref={(el) => {
-                    if (!el) return;
-                    const handler = () => setActiveOsIndex(idx);
-                    el.addEventListener('beforematch', handler);
-                  }}
-                >
-                  <div className="tabpanel-inner">
-                    <div className="spec-label text-cobalt" style={{ marginBottom: '0.45rem' }}>
-                      PROFILE: {opt.envFlag.toUpperCase()}
-                    </div>
-                    <div className="cli-strip">
-                      <code id={cmdId} className="spec-mono" style={{ whiteSpace: 'nowrap' }}>
-                        {opt.command}
-                      </code>
-                      <CopyCommandButton targetId={cmdId} label="COPY" />
-                    </div>
-                    <p className="text-muted" style={{ margin: '0.6rem 0 0', fontSize: '13px' }}>
-                      {opt.sandboxNote}
-                    </p>
+        <div
+          className="spec-tablist"
+          role="tablist"
+          aria-label="Operating System Sandbox Profile"
+          {...({ focusgroup: 'tablist nomemory' } as Record<string, string>)}
+        >
+          {ENLIST_OS_OPTIONS.map((opt, idx) => {
+            const selected = idx === activeOsIndex;
+            return (
+              <button
+                key={opt.id}
+                id={`os-tab-${opt.id}`}
+                type="button"
+                role="tab"
+                className="spec-tab"
+                aria-selected={selected}
+                tabIndex={selected ? 0 : -1}
+                {...(selected ? ({ focusgroupstart: '' } as Record<string, string>) : {})}
+                onClick={() => setActiveOsIndex(idx)}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="spec-tabpanel-grid">
+          {ENLIST_OS_OPTIONS.map((opt, idx) => {
+            const selected = idx === activeOsIndex;
+            const cmdId = `enlist-cmd-${opt.id}`;
+            return (
+              <div
+                key={opt.id}
+                id={`os-panel-${opt.id}`}
+                role="tabpanel"
+                aria-labelledby={`os-tab-${opt.id}`}
+                tabIndex={selected ? 0 : undefined}
+                {...(!selected
+                  ? supportsUntilFound
+                    ? ({ hidden: 'until-found' } as unknown as Record<string, string>)
+                    : { hidden: true }
+                  : {})}
+                ref={(el) => {
+                  if (!el) return;
+                  const handler = () => setActiveOsIndex(idx);
+                  el.addEventListener('beforematch', handler);
+                }}
+              >
+                <div className="tabpanel-inner">
+                  <div className="hud-ticker text-cyan" style={{ marginBottom: '0.45rem' }}>
+                    SANDBOX PROFILE: {opt.envFlag.toUpperCase()}
                   </div>
+                  <div className="cli-strip">
+                    <span className="hud-mono text-volt hud-chrome-glyph">$</span>
+                    <code id={cmdId} className="hud-mono" style={{ whiteSpace: 'nowrap', flex: 1 }}>
+                      {opt.command}
+                    </code>
+                    <CopyCommandButton targetId={cmdId} label="COPY" />
+                  </div>
+                  <p className="text-muted" style={{ margin: '0.6rem 0 0', fontSize: '13px' }}>
+                    {opt.sandboxNote}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      <section className="spec-cell col-5" aria-label="Register Sovereign State Callsign">
-        <div className="spec-cell-header">
-          <span className="spec-label">MINT U.S. STATE NODE CALLSIGN</span>
-          <span className="spec-mono text-cobalt">+1,250 XP BONUS</span>
+      <section className="chamfer-plate col-5" aria-label="Mint U.S. State Guild Callsign">
+        <div className="arena-header-strip cyan">
+          <div>
+            <span className="hud-ticker text-cyan">U.S. 50-STATE GUILD ENLISTMENT</span>
+            <h2 className="hud-headline">MINT COMBATANT CALLSIGN</h2>
+          </div>
+          <span className="hud-mono text-volt">+1,250 XP</span>
         </div>
-        <div className="spec-cell-body">
-          <form onSubmit={(e) => void handleEnlistSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div>
-              <label htmlFor="state-select" className="spec-label">
-                U.S. STATE HUB (50-STATE MORPHIC RACE)
-              </label>
-              <select
-                id="state-select"
-                className="spec-input"
-                style={{ marginTop: '0.25rem' }}
-                value={selectedState}
-                onChange={(e) => setSelectedState(e.target.value)}
+
+        <form onSubmit={(e) => void handleEnlistSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div>
+            <label htmlFor="state-select" className="hud-ticker text-muted">
+              U.S. STATE GUILD (CHIA PoST POWER POOL)
+            </label>
+            <select
+              id="state-select"
+              className="hud-input"
+              style={{ marginTop: '0.25rem' }}
+              value={selectedState}
+              onChange={(e) => setSelectedState(e.target.value)}
+            >
+              {US_STATE_CODES.map((st) => (
+                <option key={st} value={st}>
+                  {st} — Sovereign Chia Guild
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="did-input" className="hud-ticker text-muted">
+              CHIA DID IDENTIFIER (CHIP-0035)
+            </label>
+            <input
+              id="did-input"
+              type="text"
+              className="hud-input"
+              style={{ marginTop: '0.25rem' }}
+              value={didInput}
+              onChange={(e) => setDidInput(e.target.value)}
+            />
+          </div>
+
+          <button type="submit" className="btn-hud btn-volt">
+            ⚡ ENLIST RIG &amp; MINT CALLSIGN
+          </button>
+        </form>
+
+        {enlistResult ? (
+          <div className="chamfer-card" role="status" style={{ borderColor: 'var(--color-volt)' }}>
+            <div className="hud-ticker text-volt">✓ COMBATANT CALLSIGN ISSUED</div>
+            <div className="hud-headline text-volt" style={{ fontSize: '22px', marginTop: '0.2rem' }}>
+              {enlistResult.callsign}
+            </div>
+            <div className="hud-mono text-muted" style={{ marginTop: '0.2rem' }}>{enlistResult.rankTitle}</div>
+            <div className="hud-mono text-cyan" style={{ marginTop: '0.25rem', fontSize: '11px', wordBreak: 'break-all' }}>
+              M2M HEARTBEAT: {enlistResult.morphicPulseEndpoint}
+            </div>
+            <div style={{ marginTop: '0.65rem' }}>
+              <a
+                href={`/api/nousgent/card/${enlistResult.callsign}.svg`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-hud btn-cyan"
               >
-                {US_STATE_CODES.map((st) => (
-                  <option key={st} value={st}>
-                    {st} — Sovereign Chia Mesh
-                  </option>
-                ))}
-              </select>
+                OPEN SVG RAID DOSSIER ▸
+              </a>
             </div>
-
-            <div>
-              <label htmlFor="did-input" className="spec-label">
-                CHIA DID IDENTIFIER (CHIP-0035)
-              </label>
-              <input
-                id="did-input"
-                type="text"
-                className="spec-input"
-                style={{ marginTop: '0.25rem' }}
-                value={didInput}
-                onChange={(e) => setDidInput(e.target.value)}
-              />
+          </div>
+        ) : (
+          <div className="chamfer-card">
+            <div className="hud-ticker text-muted">GREEN AMERICAN INFRASTRUCTURE DIVIDEND</div>
+            <div className="hud-mono text-volt" style={{ marginTop: '0.25rem' }}>
+              {snapshot.megawattsSaved} MW SAVED · {snapshot.gallonsWaterSaved.toLocaleString()} GAL H2O SAVED/WK
             </div>
-
-            <button type="submit" className="btn-spec btn-cobalt">
-              REGISTER RIG &amp; MINT CALLSIGN
-            </button>
-          </form>
-
-          {enlistResult ? (
-            <div className="metric-tile metric-tile-emerald" role="status">
-              <div className="spec-label text-emerald">CALLSIGN ISSUED</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, marginTop: '0.2rem' }}>{enlistResult.callsign}</div>
-              <div className="spec-mono text-muted" style={{ marginTop: '0.2rem' }}>{enlistResult.rankTitle}</div>
-              <div className="spec-mono text-cobalt" style={{ marginTop: '0.25rem', wordBreak: 'break-all' }}>
-                M2M TELEMETRY: {enlistResult.morphicPulseEndpoint}
-              </div>
-              <div style={{ marginTop: '0.6rem' }}>
-                <a
-                  href={`/api/nousgent/card/${enlistResult.callsign}.svg`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-spec btn-carbon"
-                >
-                  VIEW SVG FLIGHT DOSSIER
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="metric-tile">
-              <div className="spec-label text-muted">GREEN AMERICAN INFRASTRUCTURE DIVIDEND</div>
-              <div className="spec-mono text-emerald" style={{ marginTop: '0.25rem' }}>
-                {snapshot.megawattsSaved} MW GRID POWER SAVED · {snapshot.gallonsWaterSaved.toLocaleString()} GAL H2O SAVED/WK
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
     </div>
   );

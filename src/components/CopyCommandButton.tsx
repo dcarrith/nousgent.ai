@@ -11,6 +11,7 @@ const copyTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 
 function reportCopyResult(button: HTMLElement, ok: boolean): void {
   const tip = button.nextElementSibling as HTMLElement | null;
+  const iconEl = button.querySelector<HTMLElement>('[data-copy-icon]');
   const existing = copyTimers.get(button);
   if (existing) clearTimeout(existing);
   button.removeAttribute('data-copied');
@@ -22,6 +23,7 @@ function reportCopyResult(button: HTMLElement, ok: boolean): void {
   }
   lastCopyMessage = message;
 
+  if (iconEl) iconEl.textContent = ok ? '✓' : '✕';
   if (tip) tip.textContent = '';
   void button.offsetWidth;
   button.setAttribute(ok ? 'data-copied' : 'data-failed', '');
@@ -35,6 +37,7 @@ function reportCopyResult(button: HTMLElement, ok: boolean): void {
     setTimeout(() => {
       button.removeAttribute('data-copied');
       button.removeAttribute('data-failed');
+      if (iconEl) iconEl.textContent = '⎘';
       if (tip) tip.textContent = '';
     }, 2000)
   );
@@ -95,6 +98,9 @@ export function CopyCommandButton({ targetId, label = 'COPY' }: Readonly<CopyCom
         className="copy-btn"
         {...({ command: '--copy', commandfor: targetId } as Record<string, string>)}
       >
+        <span data-copy-icon aria-hidden="true" style={{ marginRight: '0.3rem' }}>
+          ⎘
+        </span>
         {label}
       </button>
       <span className="copy-tip" role="status" />

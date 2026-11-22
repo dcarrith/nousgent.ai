@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,11 +11,11 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-22T02:38:49.289Z",
+  "builtAt": "2026-11-22T03:26:01.345Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0x3b14dc4658730244a44aa6014fb0e084008b2bce9b88cd751d4f708646d6c6d2",
+    "manifestTreeSha256": "0xa9011a76ba2586ba201435715b81dc9f912ff4c5a909231d8dc88f5f44868e09",
     "totalFiles": 13,
-    "totalBytes": 1652040
+    "totalBytes": 2292449
   },
   "files": [
     {
@@ -25,48 +25,48 @@
     },
     {
       "path": "apple-touch-icon.png",
-      "bytes": 20374,
-      "sha256": "a417667065ed53b7cf845731ff99236a7f8d89ff250427d9eed9ba7ca6392811"
+      "bytes": 35619,
+      "sha256": "3c3796f5cd50bd12bbe32821c5c02c757418200f574c96bcbbf1fb1ea33592b0"
     },
     {
-      "path": "assets/index-C5BivoVE.css",
-      "bytes": 9377,
-      "sha256": "03f98bc5274ff68d739c98208689a61d2855ebd9f3eb1a0fdb8b3671bf218222"
+      "path": "assets/index-D03koAY7.css",
+      "bytes": 12088,
+      "sha256": "6f34a57a05ac23def0c3dc2022e1844978abc606633e9dff91df93c463aa791d"
     },
     {
-      "path": "assets/index-DQkaonNW.js",
-      "bytes": 316106,
-      "sha256": "6c123a98b4005295ab107ec6b2c7f6cea78e6998cc1aef5da9dad7fcbb2db1a5"
+      "path": "assets/index-DIz2lv2W.js",
+      "bytes": 333484,
+      "sha256": "887fe93ce51efbaff9d4f9b9e50658acad4c9a4c98f55868ae116674d5981902"
     },
     {
       "path": "favicon.svg",
-      "bytes": 441,
-      "sha256": "c91afe317911af44ec54d81a4fcc7dd56fd96a83ed00186bfc1c1ad0fa004862"
+      "bytes": 504,
+      "sha256": "e473ef488ca733dff7b2cf631b64ed4ce26c7ac848e6b25faf22f2d8b5178325"
     },
     {
       "path": "index.html",
-      "bytes": 4874,
-      "sha256": "31addeceb89ad3e460051af4089fb6cc9fa121f7677bb7c1e2ada15dbb790cee"
+      "bytes": 5422,
+      "sha256": "0a64a989ff0f83f1168eb861d3e350fb9712db6092e37446233ec7d6ecd5189f"
     },
     {
       "path": "logo-wordmark.svg",
-      "bytes": 1233,
-      "sha256": "5decf2baa60abfde730f60d5828fe39f5732f31529244f6a2095b9821eed9eb4"
+      "bytes": 1180,
+      "sha256": "0439fd4eb8dd1c2a54e002bd7d6a55c8a057f3d6c251d1e09d0c105c804d5c14"
     },
     {
       "path": "og-image.jpg",
-      "bytes": 152701,
-      "sha256": "7474a663c8531d939c469ad91fb28b6a76bb2ae8e368fcd288ee8f076b43c415"
+      "bytes": 268698,
+      "sha256": "a557cd96c71b5e7c5baa7196be688513d135ae6f5a367a7c63b868e5d5491032"
     },
     {
       "path": "og-image.png",
-      "bytes": 207509,
-      "sha256": "b1d30f48a5b9339544b815aeb525f64d7f56b8500f8df6b5cd1ef028c1699745"
+      "bytes": 423833,
+      "sha256": "9080ea0d51cd4e2a1b156cd94a6ebc9b82231f500d83f7f22433a4626da884bc"
     },
     {
       "path": "og-square.jpg",
-      "bytes": 77833,
-      "sha256": "caaa747f820eeff04087ec11e346e2c787542c784e9ed03124a7e7d92aa14ae4"
+      "bytes": 350069,
+      "sha256": "b42d85f72234ed622231948d51e456ed68f0fbd65c66c45382fff99895998a6b"
     },
     {
       "path": "robots.txt",
@@ -75,8 +75,8 @@
     },
     {
       "path": "site.webmanifest",
-      "bytes": 591,
-      "sha256": "984bf4eeb5e5405f5b00ee5e0dcd2a9cf698d45de5ceb05c758c050286568b23"
+      "bytes": 551,
+      "sha256": "19845165be621c04afcf921300c4009041b061dcc41c9803916f7f24bd90191e"
     },
     {
       "path": "sitemap.xml",

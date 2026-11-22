@@ -1,11 +1,11 @@
 {
-  "name": "nousgent.ai — NOUSGENT Bounded ASI Mission Control",
-  "short_name": "nousgent.ai",
-  "description": "Urbana White-Room Centrifuge & NASA Flight Data Manual for Open-Source Bounded ASI on the Chia Blockchain & DIG Network (M2M Plane: ia.nousgent.ai).",
+  "name": "NOUSGENT // Cyber-Colosseum Raid Deck (nousgent.ai)",
+  "short_name": "NOUSGENT",
+  "description": "Cyber-Colosseum Raid Boss & Esports Co-Op HUD for Stage-V Bounded ASI on Chia L1 (nousgent.ai & ia.nousgent.ai).",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8f9fb",
-  "theme_color": "#006194",
+  "background_color": "#0b0e19",
+  "theme_color": "#10131f",
   "icons": [
     {
       "src": "/favicon.svg",

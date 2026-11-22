@@ -188,7 +188,7 @@ test('3. Durable SQLite WAL Morphic Mesh, Dual-Plane Telemetry, Clear-Sign Quoru
     const svgEmpty = engine.renderFlightDossierSvg('');
     assert.ok(svgEmpty.includes('NOUSGENT-IL-0001'));
     const svgDefault = engine.renderFlightDossierSvg();
-    assert.ok(svgDefault.includes('DOC-ID: NOUSGENT-ASI-USA-2026'));
+    assert.ok(svgDefault.includes('NOUSGENT // CYBER-COLOSSEUM RAID DOSSIER'));
 
     // Prometheus metrics exposition
     const prom = engine.renderPrometheusMetrics();

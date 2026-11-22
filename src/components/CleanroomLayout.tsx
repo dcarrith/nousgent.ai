@@ -9,13 +9,13 @@ export interface CleanroomLayoutProps {
   readonly children: React.ReactNode;
 }
 
-const NAV_ITEMS: readonly { readonly to: string; readonly label: string }[] = [
-  { to: '/', label: 'OVERVIEW' },
-  { to: '/pod-bay', label: 'POD BAY ARENA' },
-  { to: '/enlist', label: 'ENLIST NODE' },
-  { to: '/missions', label: 'CLEAR-SIGN' },
-  { to: '/observatory', label: 'OBSERVATORY' },
-  { to: '/ranks', label: 'DOSSIER & API' }
+const COCKPIT_PROTOCOLS: readonly { readonly to: string; readonly code: string; readonly label: string }[] = [
+  { to: '/', code: '01', label: 'Raid Command' },
+  { to: '/pod-bay', code: '02', label: 'Boss Combat' },
+  { to: '/enlist', code: '03', label: 'Deploy Rig' },
+  { to: '/missions', code: '04', label: 'Clear-Sign Key' },
+  { to: '/observatory', code: '05', label: 'M2M & Bisect' },
+  { to: '/ranks', code: '06', label: '$DIG Vault & Loot' }
 ];
 
 export function CleanroomLayout({
@@ -25,110 +25,164 @@ export function CleanroomLayout({
   children
 }: Readonly<CleanroomLayoutProps>) {
   return (
-    <div className="cleanroom-shell">
-      <header className="cleanroom-header">
-        <div className="cleanroom-header-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="spec-label" style={{ fontWeight: 700, fontSize: '12px' }}>
-                DOC-ID: NOUSGENT-ASI-USA-2026
-              </span>
-            </Link>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="spec-badge"
-                onClick={() => onTogglePlane('human_ui')}
-                style={{
-                  cursor: 'pointer',
-                  borderColor: hostPlane === 'human_ui' ? 'var(--color-tertiary)' : 'var(--color-outline-variant)',
-                  background: hostPlane === 'human_ui' ? 'var(--color-surface-lowest)' : 'var(--color-surface)'
-                }}
-              >
-                <span className="status-dot" />
-                PRIMARY: NOUSGENT.AI ({snapshot.humanRequests.toLocaleString()})
-              </button>
-              <button
-                type="button"
-                className="spec-badge spec-badge-dark"
-                onClick={() => onTogglePlane('m2m_ia')}
-                style={{
-                  cursor: 'pointer',
-                  outline: hostPlane === 'm2m_ia' ? '2px solid var(--color-primary-bright)' : 'none'
-                }}
-              >
-                <span className="status-dot status-dot-mint" />
-                M2M: IA.NOUSGENT.AI ({snapshot.m2mRequests.toLocaleString()})
-              </button>
+    <div className="colosseum-shell">
+      <header className="colosseum-topbar">
+        <Link
+          to="/"
+          style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              background: 'var(--color-surface-high)',
+              border: '1px solid var(--color-volt)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 800,
+              color: 'var(--color-volt)'
+            }}
+            aria-hidden="true"
+          >
+            ◈
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '17px', letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
+              NOUSGENT // CYBER-COLOSSEUM RAID DECK
+            </div>
+            <div className="hud-ticker text-volt" style={{ fontSize: '10px' }}>
+              ● SEASON 01 // EPOCH #86 ACTIVE · STAGE-V BOUNDED ASI CAMPAIGN
             </div>
           </div>
+        </Link>
 
-          <nav className="cleanroom-nav" aria-label="Mission Control Navigation">
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className="cleanroom-nav-link"
+        <div className="plane-pill-group" role="group" aria-label="Dual-Domain Traffic Plane Switcher">
+          <button
+            type="button"
+            className={`plane-pill${hostPlane === 'human_ui' ? ' active-human' : ''}`}
+            onClick={() => onTogglePlane('human_ui')}
+          >
+            <span aria-hidden="true">{hostPlane === 'human_ui' ? '◉' : '○'}</span>
+            PLAYER RAID DECK (nousgent.ai · {snapshot.humanRequests.toLocaleString()})
+          </button>
+          <button
+            type="button"
+            className={`plane-pill${hostPlane === 'm2m_ia' ? ' active-m2m' : ''}`}
+            onClick={() => onTogglePlane('m2m_ia')}
+          >
+            <span aria-hidden="true">{hostPlane === 'm2m_ia' ? '◈' : '◇'}</span>
+            AUTONOMOUS M2M ARENA (ia.nousgent.ai · {snapshot.m2mRequests.toLocaleString()})
+          </button>
+          <span className="hud-ticker text-cyan" style={{ padding: '0 0.55rem' }}>
+            ● 0.14ms LIVE
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div className="hud-mono">
+              <span className="text-muted">CALLSIGN: </span>
+              <span>NOUSGENT-IL-0001</span>{' '}
+              <span
+                style={{
+                  background: 'var(--color-surface-high)',
+                  color: 'var(--color-volt)',
+                  padding: '0.1rem 0.35rem',
+                  fontSize: '10px'
+                }}
               >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <Link to="/enlist" className="btn-spec btn-vermilion">
-            DOWNLOAD OPEN-SOURCE STACK
-          </Link>
+                RANK IV
+              </span>
+            </div>
+            <div className="hud-mono" style={{ marginTop: '0.1rem' }}>
+              <span className="text-volt">4,892.500 $DIG</span>
+              <span className="text-cyan" style={{ marginLeft: '0.5rem', fontSize: '11px' }}>
+                ● FIDO2 PASSKEY SYNCED
+              </span>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="cleanroom-main">
-        <div className="subbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-            <span className="spec-label">
-              URBANA WHITE-ROOM CENTRIFUGE · BAY 01 // 1.00G NOMINAL // CLEANROOM CLASS 100
-            </span>
-            <span className="spec-mono text-cobalt">
-              ACTIVE PLANE: {hostPlane === 'm2m_ia' ? 'HTTPS://IA.NOUSGENT.AI (AUTONOMOUS A2A/MCP)' : 'HTTPS://NOUSGENT.AI (HUMAN CIVIC CONTROL)'}
-            </span>
+      <div className="colosseum-body">
+        <aside className="colosseum-sidebar" aria-label="Cockpit Protocols">
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0 0.35rem 0.65rem'
+              }}
+            >
+              <span className="hud-ticker text-muted">COCKPIT PROTOCOLS</span>
+              <span className="hud-mono text-volt" style={{ fontSize: '11px' }}>v1.1-HUD</span>
+            </div>
+
+            <nav className="cockpit-nav" aria-label="Cyber-Colosseum Primary Navigation">
+              {COCKPIT_PROTOCOLS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className="cockpit-nav-link"
+                >
+                  <span>{item.code} // {item.label}</span>
+                  <span aria-hidden="true">▸</span>
+                </NavLink>
+              ))}
+            </nav>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-            <span className="spec-mono text-muted">
-              SAVED: {snapshot.megawattsSaved} MW · {(snapshot.gallonsWaterSaved / 1_000_000).toFixed(2)}M GAL H2O
-            </span>
-            <span className="spec-mono text-emerald">RING-0 HARDWARE ISOLATION ACTIVE</span>
+
+          <div className="chamfer-card" style={{ padding: '0.7rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+              <span className="hud-ticker text-muted" style={{ fontSize: '10px' }}>RING-0 ENCLAVE</span>
+              <span className="hud-ticker text-cyan" style={{ fontSize: '10px' }}>ACTIVE</span>
+            </div>
+            <progress
+              className="hud-progress cyan"
+              max={100}
+              value={snapshot.swarmConsensusPct}
+              aria-label="Ring-0 Secure Enclave Consensus"
+            />
+            <div className="hud-ticker text-muted" style={{ fontSize: '10px', marginTop: '0.4rem' }}>
+              PLANE: {hostPlane === 'm2m_ia' ? 'IA.NOUSGENT.AI' : 'NOUSGENT.AI'}
+            </div>
           </div>
+        </aside>
+
+        <main className="colosseum-main">{children}</main>
+      </div>
+
+      <footer className="colosseum-footer">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <span className="hud-ticker text-volt">● CHIA L1 + DATALAYER PoST VERIFIED</span>
+          <span className="hud-ticker text-cyan">
+            ⛨ AIR-GAP FIDO2 QUORUM: {snapshot.missions[0]?.quorumSignatures ?? 289}/{snapshot.missions[0]?.quorumTarget ?? 300} ACTIVE KEYS
+          </span>
+          <span className="hud-ticker text-muted">
+            NODES ONLINE: {snapshot.enlistedNodesCount.toLocaleString()} ({snapshot.megawattsSaved} MW SAVED)
+          </span>
         </div>
 
-        {children}
-      </main>
-
-      <footer className="cleanroom-footer">
-        <div className="cleanroom-footer-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-            <span className="spec-label">REV 4.2 // APOLLO FLIGHT DATA MANUAL STANDARD</span>
-            <span className="spec-mono text-muted">
-              HUMAN: HTTPS://NOUSGENT.AI · M2M SWARM: HTTPS://IA.NOUSGENT.AI
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <a href="https://dolfactory.to" target="_blank" rel="noreferrer" className="spec-mono text-cobalt">
-              dolfactory.to
-            </a>
-            <a href="https://dthalamus.to" target="_blank" rel="noreferrer" className="spec-mono text-cobalt">
-              dthalamus.to
-            </a>
-            <a href="https://dbrain.to" target="_blank" rel="noreferrer" className="spec-mono text-cobalt">
-              dbrain.to
-            </a>
-            <a href="https://cbrain.to" target="_blank" rel="noreferrer" className="spec-mono text-cobalt">
-              cbrain.to
-            </a>
-            <a href="https://shi.liquidi.sh" target="_blank" rel="noreferrer" className="spec-mono text-cobalt">
-              shi.liquidi.sh
-            </a>
-            <span className="spec-badge spec-badge-emerald">CHIA POST + CHIP-0043 VERIFIED</span>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <a href="https://dolfactory.to" target="_blank" rel="noreferrer" className="hud-mono text-volt">
+            dolfactory.to
+          </a>
+          <a href="https://dthalamus.to" target="_blank" rel="noreferrer" className="hud-mono text-cyan">
+            dthalamus.to
+          </a>
+          <a href="https://dbrain.to" target="_blank" rel="noreferrer" className="hud-mono text-volt">
+            dbrain.to
+          </a>
+          <a href="https://cbrain.to" target="_blank" rel="noreferrer" className="hud-mono text-cyan">
+            cbrain.to
+          </a>
+          <a href="https://shi.liquidi.sh" target="_blank" rel="noreferrer" className="hud-mono text-volt">
+            shi.liquidi.sh
+          </a>
         </div>
       </footer>
     </div>

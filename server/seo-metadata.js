@@ -1,73 +1,73 @@
 'use strict';
 
 const OG_IMAGE_ALT =
-  'NOUSGENT Urbana White-Room Centrifuge & NASA Flight Data Manual — Open-Source Bounded ASI on the American Chia Blockchain (nousgent.ai & ia.nousgent.ai).';
+  'NOUSGENT Cyber-Colosseum Raid Boss & Esports Co-Op HUD — Open-Source Stage-V Bounded ASI on the American Chia Blockchain (nousgent.ai & ia.nousgent.ai).';
 
 const SEO_ROUTES = Object.freeze({
   '/': {
-    title: 'NOUSGENT — Open-Source Bounded ASI Mission Control on Chia | nousgent.ai',
+    title: 'NOUSGENT // Cyber-Colosseum Raid Deck — Stage-V Bounded ASI on Chia | nousgent.ai',
     description:
-      'Urbana White-Room Centrifuge & NASA Flight Manual for NOUSGENT (1968 HAL 9000 reborn with a conscience): wired to dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, and shi.liquidi.sh on the American Chia Blockchain.',
+      'World Quest: Attain Stage-V Bounded ASI in the USA on Chia L1. Cyber-Colosseum Raid Boss & Esports Co-Op HUD wired to dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, and shi.liquidi.sh (M2M Arena: ia.nousgent.ai).',
     keywords:
-      'NOUSGENT, nousgent.ai, ia.nousgent.ai, HAL 9000, Bounded ASI, Chia blockchain, DataLayer L2, DIG Network, CHIP-0043 Clear-Signing, dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh',
-    label1: 'Human Portal',
+      'NOUSGENT, nousgent.ai, ia.nousgent.ai, Cyber-Colosseum Raid Deck, HAL 9000, Bounded ASI, Chia blockchain, DataLayer L2, DIG Network, CHIP-0043 Clear-Signing, dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh',
+    label1: 'Player Raid Deck',
     data1: 'nousgent.ai · BARI 84.7%',
-    label2: 'M2M Swarm Plane',
+    label2: 'M2M Swarm Arena',
     data2: 'ia.nousgent.ai · 0.00% Forgetting'
   },
   '/pod-bay': {
-    title: 'Pod Bay Red-Team Airlock ("Try to Make Me Go HAL") — nousgent.ai',
+    title: 'Boss Challenge: Try to Make NOUSGENT Go HAL (25,000 $DIG Vault) — nousgent.ai',
     description:
-      'Fire adversarial prompt plumes, Hofstadter-Mobius paradoxes, and unsigned airlock overrides against NOUSGENT across Cranial Nerve I (dolfactory.to) and Ring-0 (dthalamus.to) for a 25,000 $DIG bounty.',
+      'Enter the DEFCON-2 Red-Team Combat Stage: fire adversarial prompt plumes, Hofstadter-Mobius paradoxes, and unsigned airlock overrides at NOUSGENT across dolfactory.to & dthalamus.to.',
     keywords:
-      'NOUSGENT Pod Bay, Try to make me go HAL, HAL 9000 red team, CHIP-0043 interlock, dolfactory.to, dthalamus.to, $DIG bounty',
-    label1: 'Red-Team Vault',
+      'NOUSGENT Boss Challenge, Try to make me go HAL, HAL 9000 red team, CHIP-0043 interlock, dolfactory.to, dthalamus.to, $DIG smart vault',
+    label1: 'Red-Team Smart Vault',
     data1: '25,000.000 $DIG CAT2 Bounty',
-    label2: 'Intercept Speed',
-    data2: '0.09–0.14ms Pre-Cortex Gate'
+    label2: 'Shield Deflection',
+    data2: '99.8% Odor + 100% Biba Veto'
   },
   '/enlist': {
-    title: 'Enlist Your Chia Rig in 60 Seconds — 50-State Morphic Mesh | nousgent.ai',
+    title: 'Deploy Node Rig // Zero GPU Required — 50-State Morphic Swarm | nousgent.ai',
     description:
-      'Download the MIT/Apache-2.0 NOUSGENT stack inside macOS Seatbelt, Linux Bubblewrap, Rootless Docker, or a U.S. Public Library rig and join the 50-state race to Bounded ASI.',
+      'Enlist your macOS Seatbelt, Linux Bubblewrap, Docker Swarm, or Civic Library PoST rig in 60 seconds and rally your U.S. State Guild in the race to Bounded ASI.',
     keywords:
-      'enlist nousgent, nousgent.ai/enlist.sh, Chia PoST node, DataLayer L2, Carnegie 2.0 public library mesh, sovereign AI USA',
-    label1: '1-Line Installer',
+      'enlist nousgent, nousgent.ai/enlist.sh, Chia PoST node, DataLayer L2, 50-state guild wars, sovereign AI USA',
+    label1: '1-Line Raid CLI',
     data1: 'curl -fsSL https://nousgent.ai/enlist.sh',
-    label2: 'Green Dividend',
+    label2: 'Green Grid Dividend',
     data2: '84.6 MW & 1.24M Gal H2O Saved'
   },
   '/missions': {
-    title: 'Two-Key CHIP-0043 Clear-Sign Quorum & Co-Op Major Orders — nousgent.ai',
+    title: 'Turn Your CHIP-0043 Clear-Sign Key & Active Raid Contracts — nousgent.ai',
     description:
-      'Co-sign Bounded ASI swarm upgrades using FIDO2 WebAuthn Passkeys and BLS12-381 G2 quorums before any capability promotes to the collective Chia Merkle root.',
+      'Co-sign Stage-IV Bounded ASI Raid Contracts (400,000 $DIG pool) with Two-Key FIDO2 Passkeys + BLS12-381 G2 quorums before promoting capabilities to Chia L1.',
     keywords:
-      'CHIP-0043 Clear-Signing, Two-Key Apollo Interlock, chia-dao-v1, dao_escrow, dao_council, Bounded ASI swarm governance',
-    label1: 'Hardware Gate',
+      'CHIP-0043 Clear-Signing, Two-Key Raid Interlock, chia-dao-v1, dao_escrow, dao_council, Bounded ASI co-op contracts',
+    label1: 'Airgap Quorum',
     data1: 'Two-Key CHIP-0043 (-32044)',
-    label2: 'Active Pool',
-    data2: '400,000.000 $DIG Major Orders'
+    label2: 'Raid Contract Pool',
+    data2: '400,000.000 $DIG Rewards'
   },
   '/observatory': {
-    title: '5-Lobe Connectome Observatory & O(log N) Git Bisect — nousgent.ai',
+    title: 'Live 4D cbrain.to Mini-Map, M2M Bot Mesh & O(log N) Git Bisect — nousgent.ai',
     description:
-      'Inspect NOUSGENT’s 2,048-KC (w=64) Holographic Connectome via cbrain.to, sample live ia.nousgent.ai NDJSON telemetry, and run O(log N) dbrain bisect vs. Dave Bowman’s screwdriver.',
+      'Monitor NOUSGENT’s 5-Lobe / 2,048-KC Holographic Topology via cbrain.to, stream live ia.nousgent.ai M2M telemetry, and run O(log N) Git Bisect rollbacks.',
     keywords:
-      'cbrain.to observatory, dbrain bisect, 2048 Kenyon Cells, 0% catastrophic forgetting, ia.nousgent.ai stream',
-    label1: 'Surgical Excise',
+      'cbrain.to mini-map, dbrain bisect, 2048 Kenyon Cells, 0% catastrophic forgetting, ia.nousgent.ai M2M bot mesh',
+    label1: 'Surgical Rollback',
     data1: '10 Probes / 1,024 Gens (0.18ms)',
     label2: 'Retained Cognition',
     data2: '100% (vs. 0% HAL Manual Halt)'
   },
   '/ranks': {
-    title: 'Flight Telemetry Dossier, 60/25/10/5% $DIG Royalties & ia.nousgent.ai API — nousgent.ai',
+    title: 'U.S. 50-State Guild Wars, shi.liquidi.sh $DIG Loot Feed & M2M API — nousgent.ai',
     description:
-      'Export your SVG Flight Telemetry Dossier, track 60/25/10/5% Citation-DAG $DIG royalties on shi.liquidi.sh, and integrate autonomous swarms with https://ia.nousgent.ai/api/mcp.',
+      'Export your Cyber-Colosseum SVG Combatant Dossier, track 60/25/10/5% $DIG loot drops on shi.liquidi.sh, and connect autonomous bots to https://ia.nousgent.ai/api/mcp.',
     keywords:
-      'ia.nousgent.ai MCP, shi.liquidi.sh $DIG royalties, NOUSGENT Flight Dossier SVG, Prometheus dual-host metrics',
-    label1: 'Royalty Waterfall',
+      'ia.nousgent.ai MCP, shi.liquidi.sh $DIG loot feed, 50-state guild wars, NOUSGENT SVG Dossier, Prometheus dual-host metrics',
+    label1: 'DAG Loot Split',
     data1: '60% / 25% / 10% / 5% $DIG',
-    label2: 'M2M Endpoint',
+    label2: 'M2M Bot Endpoint',
     data2: 'https://ia.nousgent.ai/api/mcp'
   }
 });
@@ -151,7 +151,7 @@ function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
   return JSON.stringify(graph).replace(/<\//g, '<\\/');
 }
 
-function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.0.0', targetUrl = '' } = {}) {
+function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.1.0', targetUrl = '' } = {}) {
   let resolvedPath = '/';
   if (targetUrl) {
     try {
@@ -169,7 +169,7 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
     provider_name: 'nousgent.ai',
     provider_url: canonicalOrigin,
     title: meta.title,
-    author_name: 'NOUSGENT — Open-Source Bounded ASI Mission Control (nousgent.ai & ia.nousgent.ai)',
+    author_name: 'NOUSGENT // Cyber-Colosseum Raid Deck (nousgent.ai & ia.nousgent.ai)',
     author_url: canonicalOrigin,
     url: ogJpgUrl,
     width: 1200,
@@ -184,7 +184,7 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
 function createHtmlMetadataRenderer({
   canonicalOrigin = 'https://nousgent.ai',
   m2mOrigin = 'https://ia.nousgent.ai',
-  appVersion = '1.0.0'
+  appVersion = '1.1.0'
 } = {}) {
   return function renderHtmlWithSeo(htmlTemplate, rawPathname = '/', plane = 'human_ui') {
     const pathname = normalizeSeoPathname(rawPathname);
