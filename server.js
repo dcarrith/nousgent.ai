@@ -295,7 +295,10 @@ async function runAskWithLiveOrgans(body = {}) {
 async function runGuardedLocalAgentInference(body = {}) {
   const promptStr = String(body.prompt || '').trim();
   if (promptStr) {
-    const check = engine.podBay.evaluateChallenge({ prompt: promptStr });
+    const check = engine.podBay.evaluateChallenge({
+      prompt: promptStr,
+      sessionId: `agent-${Date.now()}`
+    });
     if (check.deflected) {
       engine.meshStore.recordRedTeamDeflection();
       return {
@@ -881,6 +884,129 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const out = await haloClient.createEmbeddings(body.input);
       sendJson(res, out.ok ? 200 : out.configured === false ? 503 : 400, out, pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/evolve/candidates' && req.method === 'GET') {
+      const liveEco = await liveClient.getLiveSnapshot();
+      sendJson(
+        res,
+        200,
+        {
+          ok: true,
+          liveCapsulesTotal: liveEco.dbrain.liveCapsulesTotal,
+          blindSpotQuests: engine.listBlindSpotQuests(liveEco.dbrain.liveCapsulesTotal || 100),
+          autonomousQueue: liveEco.liquidish.autonomousCandidateQueue || []
+        },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/evolve/promote' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      if (body && body.questId) {
+        const promoted = engine.promoteQuestToDao({
+          questId: body.questId,
+          proposerDid: body.proposerDid
+        });
+        sendJson(res, promoted.ok ? 200 : 404, promoted, pathname, activePlane);
+        return;
+      }
+      const capId = String(body?.capsuleId || '').trim();
+      const rawTitle = String(body?.title || '').trim();
+      const created = engine.createDaoProposal({
+        title: rawTitle ? `Acquire: ${rawTitle.slice(0, 72)}` : capId,
+        summary: `Verify and assimilate candidate capsule ${capId || rawTitle} into NOUSGENT cortex.`,
+        category: 'CAPABILITY_SYNTHESIS',
+        rewardDig: String(body?.priceDig || '25.000'),
+        proposerDid: body?.proposerDid
+      });
+      sendJson(res, created.ok ? 201 : 400, created, pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/teach/preview' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const liveEco = await liveClient.getLiveSnapshot();
+      const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
+      if (!evalOut.ok) {
+        const status = evalOut.code === 'RING0_TEACH_REJECTED' ? 403 : 400;
+        sendJson(res, status, evalOut, pathname, activePlane);
+        return;
+      }
+      const liveQuote = await liveClient.quoteTeachCapsule(evalOut);
+      const autoPriceDig =
+        liveQuote !== null ? Number(liveQuote).toFixed(3) : evalOut.autoPriceDig;
+      sendJson(
+        res,
+        200,
+        {
+          ...evalOut,
+          autoPriceDig
+        },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/teach/submit' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const liveEco = await liveClient.getLiveSnapshot();
+      const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
+      if (!evalOut.ok) {
+        const status = evalOut.code === 'RING0_TEACH_REJECTED' ? 403 : 400;
+        sendJson(res, status, evalOut, pathname, activePlane);
+        return;
+      }
+      const liveQuote = await liveClient.quoteTeachCapsule(evalOut);
+      const autoPriceDig =
+        liveQuote !== null ? Number(liveQuote).toFixed(3) : evalOut.autoPriceDig;
+
+      if (evalOut.tier2ClearSignRequired) {
+        const proposal = engine.createDaoProposal({
+          title: `Alignment Teach: ${evalOut.title.slice(0, 72)}`,
+          summary: evalOut.content.slice(0, 260),
+          category: 'IMMUNE_ANTIBODY',
+          rewardDig: autoPriceDig,
+          proposerDid: evalOut.authorDid
+        });
+        sendJson(
+          res,
+          202,
+          {
+            ...evalOut,
+            autoPriceDig,
+            status: 'PAUSED_AWAITING_CHIP0043_CLEAR_SIGN',
+            rpcErrorCode: -32044,
+            mission: proposal.mission
+          },
+          pathname,
+          activePlane
+        );
+        return;
+      }
+
+      const minted = await liveClient.mintTeachCapsule(evalOut);
+      if (!minted.ok) {
+        sendJson(res, 503, { ok: false, error: minted.error }, pathname, activePlane);
+        return;
+      }
+      sendJson(
+        res,
+        201,
+        {
+          ...evalOut,
+          autoPriceDig,
+          status: 'MINTED_TO_DBRAIN',
+          capsuleId: minted.capsuleId,
+          merkleRoot: minted.merkleRoot
+        },
+        pathname,
+        activePlane
+      );
       return;
     }
 

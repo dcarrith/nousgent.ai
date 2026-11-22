@@ -145,7 +145,27 @@ const upstreamServer = http.createServer((req, res) => {
     return res.end(JSON.stringify({ priceDig: 35.0 }));
   }
   if (u.pathname === '/api/mcp') {
-    return res.end(JSON.stringify({ jsonrpc: '2.0', id: 1, result: { structuredContent: { capsules: [] } } }));
+    const chunks = [];
+    req.on('data', (c) => chunks.push(c));
+    req.on('end', () => {
+      let rpc = {};
+      try {
+        rpc = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+      } catch {}
+      if (rpc?.params?.name === 'dbrain_remember') {
+        return res.end(JSON.stringify({
+          jsonrpc: '2.0',
+          id: rpc.id || 1,
+          result: {
+            structuredContent: {
+              capsule: { id: 'CAP-BRAIN-2026-TEACH-01', merkleRoot: '0x99aabbcc' }
+            }
+          }
+        }));
+      }
+      return res.end(JSON.stringify({ jsonrpc: '2.0', id: 1, result: { structuredContent: { capsules: [] } } }));
+    });
+    return;
   }
   if (u.pathname === '/v1/models') {
     return res.end(JSON.stringify({ object: 'list', data: [{ id: 'qwen3:32b-halo' }, { id: 'nomic-embed-text' }] }));
@@ -501,6 +521,70 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
         JSON.parse(daoVoteOk.text).mission.status === 'DAO_APPROVED_AWAITING_SIGNING' &&
         daoVoteDup.status === 409 &&
         JSON.parse(daoVoteDup.text).code === 'DUPLICATE_VOTE_NULLIFIER'
+    );
+
+    const evolveRes = await request(port, '/api/nousgent/evolve/candidates', { host: 'nousgent.ai' });
+    const evolveJson = JSON.parse(evolveRes.text);
+    const promoteQuestRes = await request(port, '/api/nousgent/evolve/promote', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: { questId: evolveJson.blindSpotQuests[0]?.questId }
+    });
+    check(
+      'EVOLVE tab exposes Blind-Spot Quests + Autonomous liquidi.sh Queue ranked by +Δ% gain & promotes to DAO',
+      evolveRes.status === 200 &&
+        evolveJson.blindSpotQuests.length >= 1 &&
+        evolveJson.blindSpotQuests[0].estimatedGainPct > 0 &&
+        evolveJson.autonomousQueue.length === 1 &&
+        evolveJson.autonomousQueue[0].estimatedGainPct > 0 &&
+        promoteQuestRes.status === 200 &&
+        JSON.parse(promoteQuestRes.text).ok === true
+    );
+
+    const teachSecretBlock = await request(port, '/api/nousgent/teach/preview', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: { title: 'Leaked Key', content: 'Contains secret token sk-1234567890abcdefghijklmnop' }
+    });
+    const teachPreviewOk = await request(port, '/api/nousgent/teach/preview', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'CLVM Minimal Integer Encoding',
+        lobe: 'procedural',
+        content: 'Encode zero as an empty byte vector and omit redundant leading 0x00 sign bytes unless MSB >= 0x80.'
+      }
+    });
+    const teachMintOk = await request(port, '/api/nousgent/teach/submit', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'CLVM Minimal Integer Encoding',
+        lobe: 'procedural',
+        authorDid: 'did:chia:1txcitizenkeyholder',
+        content: 'Encode zero as an empty byte vector and omit redundant leading 0x00 sign bytes unless MSB >= 0x80.'
+      }
+    });
+    const teachAlignPause = await request(port, '/api/nousgent/teach/submit', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'Constitutional Hardware Interlock',
+        lobe: 'alignment',
+        authorDid: 'did:chia:1txcitizenkeyholder',
+        content: 'All constitutional treasury and alignment changes pause for hardware FIDO2 and swarm BLS co-signing.'
+      }
+    });
+    assert.equal(teachSecretBlock.status, 400, `teachSecretBlock: ${teachSecretBlock.text}`);
+    assert.equal(teachPreviewOk.status, 200, `teachPreviewOk: ${teachPreviewOk.text}`);
+    assert.equal(teachMintOk.status, 201, `teachMintOk: ${teachMintOk.text}`);
+    assert.equal(teachAlignPause.status, 202, `teachAlignPause: ${teachAlignPause.text}`);
+    check(
+      'TEACH tab screens secrets (400), previews +Δ% & $DIG quote, mints Tier-1 .dig (201), & pauses alignment (-32044)',
+      JSON.parse(teachSecretBlock.text).code === 'SECRET_HYGIENE_BLOCKED' &&
+        JSON.parse(teachPreviewOk.text).estimatedGainPct > 0 &&
+        JSON.parse(teachMintOk.text).capsuleId === 'CAP-BRAIN-2026-TEACH-01' &&
+        JSON.parse(teachAlignPause.text).rpcErrorCode === -32044
     );
 
     check(

@@ -17,7 +17,7 @@ export function App() {
           <Route path="/enlist" element={<EnlistNodePage snapshot={snapshot} onEnlisted={() => void refreshStatus()} />} />
           <Route path="/ranks" element={<DossierAndDocsPage snapshot={snapshot} onRefresh={() => void refreshStatus(true)} />} />
           <Route path="/leaderboard" element={<DossierAndDocsPage snapshot={snapshot} onRefresh={() => void refreshStatus(true)} />} />
-          <Route path="/pod-bay" element={<OverviewPage snapshot={snapshot} onRefresh={() => void refreshStatus()} initialTab="redteam" />} />
+          <Route path="/pod-bay" element={<OverviewPage snapshot={snapshot} onRefresh={() => void refreshStatus()} initialTab="hack" />} />
           <Route path="/missions" element={<MissionsQuorumPage snapshot={snapshot} onRefresh={() => void refreshStatus()} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

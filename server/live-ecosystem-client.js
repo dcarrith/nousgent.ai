@@ -15,8 +15,10 @@
 const http = require('node:http');
 const https = require('node:https');
 const zlib = require('node:zlib');
+const { estimateCapsuleIntelligenceGain } = require('../lib/modules/morphic-mesh-and-missions.js');
 
 const RFC5737_TEST_FIXTURE_RE = /(?:198[.-]51[.-]100[.-]|203[.-]0[.-]113[.-]|192[.-]0[.-]2[.-])/;
+const INTERNAL_UI_RUNBOOK_RE = /\b(morphattributes|morphtargetinfluences|facebookexternalhit|renderorder)\b/i;
 
 function parseCapsuleTelemetryTags(tags) {
   let derivationTokens = 0;
@@ -649,7 +651,63 @@ function createLiveEcosystemClient(env = process.env) {
       shiActivePlane: String(shiStat.activePlane || ''),
       shiM2mRequestsCount: Number(shiStat.telemetryIsolation?.m2mRequestsCount || 0),
       shiHumanRequestsCount: Number(shiStat.telemetryIsolation?.humanRequestsCount || 0),
-      shiM2mTrafficSharePct: Number(shiStat.telemetryIsolation?.m2mTrafficSharePct || 0)
+      shiM2mTrafficSharePct: Number(shiStat.telemetryIsolation?.m2mTrafficSharePct || 0),
+      autonomousCandidateQueue: orderbookCapsules
+        .filter(
+          (item) =>
+            item &&
+            (!item.capsuleOrigin || item.capsuleOrigin === 'LIVE_DBRAIN_CLUSTER') &&
+            !INTERNAL_UI_RUNBOOK_RE.test(`${item.title || ''} ${item.summary || ''}`)
+        )
+        .map((item) => {
+          const capId = String(item.dbrainCapsuleId || item.swapId || '');
+          const lobe = String(item.lobe || 'semantic').toLowerCase();
+          const priceDigNum = Number.isFinite(Number(item.priceDig)) ? Number(item.priceDig) : 10;
+          const derivationTokens = Math.max(
+            2000,
+            Number(item.autoPricing?.effectiveDerivationTokens || 4000)
+          );
+          const sweBenchLiftPct = Number(item.sweBenchLiftPct || 0);
+          const highDriftRisk = String(item.cbrainDriftRisk || '') === 'HIGH_CONTAMINATION_DRIFT';
+          const externalStoreBonus =
+            item.storeId && dbStat.primaryStoreId && item.storeId !== dbStat.primaryStoreId ? 1.15 : 1.0;
+          const baseGain = estimateCapsuleIntelligenceGain({
+            liveCapsulesTotal,
+            derivationTokens,
+            lobe,
+            sweBenchLiftPct,
+            highDriftRisk
+          });
+          const estimatedGainPct = Number(Math.min(4.5, baseGain * externalStoreBonus).toFixed(2));
+          const gainPer100Dig = Number(((estimatedGainPct / Math.max(1, priceDigNum)) * 100).toFixed(2));
+          return {
+            capsuleId: capId,
+            swapId: String(item.swapId || ''),
+            title: String(item.title || capId),
+            summary: String(item.summary || '').slice(0, 180),
+            lobe,
+            storeId: String(item.storeId || ''),
+            storeName: String(item.storeName || 'Community Brain Store'),
+            priceDig: Number(priceDigNum.toFixed(3)),
+            priceDigFormatted: `${priceDigNum.toFixed(3)} $DIG`,
+            derivationTokens: Math.round(derivationTokens),
+            sweBenchLiftPct,
+            upstreamCitationsCount: Number(item.upstreamCitationsCount || 0),
+            withinAutoAllowance: item.autoPricing?.withinShiDaoAllowanceCap !== false,
+            estimatedGainPct,
+            gainPer100Dig,
+            capsuleUrl: item.dbrainCapsuleId
+              ? `https://dbrain.to/dig/${encodeURIComponent(String(item.dbrainCapsuleId))}.json`
+              : ''
+          };
+        })
+        .sort(
+          (a, b) =>
+            b.estimatedGainPct - a.estimatedGainPct ||
+            b.gainPer100Dig - a.gainPer100Dig ||
+            b.upstreamCitationsCount - a.upstreamCitationsCount
+        )
+        .slice(0, 12)
     };
 
     const organsReachableCount = [
@@ -775,9 +833,73 @@ function createLiveEcosystemClient(env = process.env) {
     };
   }
 
+  async function quoteTeachCapsule({ title, content, lobe, derivationTokens }) {
+    if (offlineTest) return null;
+    const res = await fetchJsonWithFallback(targets.shi, '/api/liquidish/pricing/auto', {
+      method: 'POST',
+      body: {
+        title: String(title || '').slice(0, 120),
+        content: String(content || '').slice(0, 1200),
+        lobe: String(lobe || 'procedural'),
+        derivationTokens: Number(derivationTokens || 4000),
+        turnsToDerive: 1
+      },
+      timeoutMs: 650
+    });
+    return res.ok && res.data?.priceDig !== undefined ? Number(res.data.priceDig) : null;
+  }
+
+  async function mintTeachCapsule({ title, content, lobe, authorDid, derivationTokens }) {
+    if (offlineTest) return { ok: false, error: 'Offline mode' };
+    const res = await fetchJsonWithFallback(targets.dbrain, '/api/mcp', {
+      method: 'POST',
+      body: {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'dbrain_remember',
+          arguments: {
+            agentName: 'NOUSGENT',
+            title,
+            content,
+            lobe,
+            tags: [
+              'teach-nousgent',
+              `author-did:${authorDid}`,
+              `derivation-tokens:${derivationTokens}`,
+              'turns:1'
+            ]
+          }
+        }
+      },
+      timeoutMs: 2500
+    });
+    if (!res.ok) {
+      return { ok: false, error: 'Upstream dbrain cortex unreachable' };
+    }
+    invalidateCache();
+    let parsed = res.data?.result?.structuredContent || null;
+    if (!parsed && Array.isArray(res.data?.result?.content) && res.data.result.content[0]?.text) {
+      try {
+        parsed = JSON.parse(res.data.result.content[0].text);
+      } catch {
+        parsed = null;
+      }
+    }
+    const cap = parsed?.capsule || res.data?.capsule || {};
+    return {
+      ok: true,
+      capsuleId: String(cap.id || `CAP-BRAIN-${Date.now().toString(16).toUpperCase()}`),
+      merkleRoot: String(cap.merkleRoot || parsed?.merkleRoot || '')
+    };
+  }
+
   return Object.freeze({
     getLiveSnapshot,
     runLiveOrganPromptPipeline,
+    quoteTeachCapsule,
+    mintTeachCapsule,
     invalidateCache
   });
 }

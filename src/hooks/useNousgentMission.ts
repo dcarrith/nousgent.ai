@@ -21,6 +21,38 @@ export interface LiveRecentCapsuleItem {
   readonly capsuleUrl: string;
 }
 
+export interface BlindSpotQuestItem {
+  readonly questId: string;
+  readonly prompt: string;
+  readonly lobe: string;
+  readonly rewardDig: string;
+  readonly derivationTokens: number;
+  readonly hitCount: number;
+  readonly answerMode: string;
+  readonly status: string;
+  readonly daoMissionId: string;
+  readonly estimatedGainPct: number;
+}
+
+export interface AutonomousCandidateCapsuleItem {
+  readonly capsuleId: string;
+  readonly swapId: string;
+  readonly title: string;
+  readonly summary: string;
+  readonly lobe: string;
+  readonly storeId: string;
+  readonly storeName: string;
+  readonly priceDig: number;
+  readonly priceDigFormatted: string;
+  readonly derivationTokens: number;
+  readonly sweBenchLiftPct: number;
+  readonly upstreamCitationsCount: number;
+  readonly withinAutoAllowance: boolean;
+  readonly estimatedGainPct: number;
+  readonly gainPer100Dig: number;
+  readonly capsuleUrl: string;
+}
+
 export interface CommunityLeaderboardEntry {
   readonly rank: number;
   readonly storeId: string;
@@ -155,6 +187,8 @@ export interface MissionSnapshot {
   readonly didLeaderboard: readonly DidLeaderboardEntry[];
   readonly rsiLeaderboardSummary: RsiLeaderboardSummary;
   readonly missions: readonly SwarmMissionItem[];
+  readonly blindSpotQuests: readonly BlindSpotQuestItem[];
+  readonly autonomousCandidateQueue: readonly AutonomousCandidateCapsuleItem[];
 }
 
 function readInitialMaskOpacityPct(): number {
@@ -244,7 +278,9 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
     totalListedValueDig: 0,
     sampledDerivationTokens: 0
   },
-  missions: []
+  missions: [],
+  blindSpotQuests: [],
+  autonomousCandidateQueue: []
 };
 
 export function playQuindarBeep(frequencyHz = 2525): void {
@@ -372,7 +408,11 @@ export function useNousgentMission() {
           totalListedValueDig: Number(d.rsiLeaderboard?.summary?.totalListedValueDig || 0),
           sampledDerivationTokens: Number(d.rsiLeaderboard?.summary?.sampledDerivationTokens || 0)
         },
-        missions: Array.isArray(d.missions) ? d.missions : []
+        missions: Array.isArray(d.missions) ? d.missions : [],
+        blindSpotQuests: Array.isArray(d.blindSpotQuests) ? d.blindSpotQuests : [],
+        autonomousCandidateQueue: Array.isArray(liq.autonomousCandidateQueue)
+          ? liq.autonomousCandidateQueue
+          : []
       });
     } catch {
       setSnapshot((prev) => ({ ...prev, loading: false }));
