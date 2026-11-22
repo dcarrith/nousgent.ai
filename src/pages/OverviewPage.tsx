@@ -74,10 +74,10 @@ interface TeachFeedbackState {
 }
 
 const CONSOLE_TABS: readonly { readonly id: NousgentConsoleTab; readonly label: string }[] = [
-  { id: 'ask', label: 'ASK' },
-  { id: 'hack', label: 'HACK' },
-  { id: 'evolve', label: 'EVOLVE' },
-  { id: 'teach', label: 'TEACH' }
+  { id: 'ask', label: 'Ask' },
+  { id: 'teach', label: 'Teach' },
+  { id: 'evolve', label: 'Evolve' },
+  { id: 'hack', label: 'Hack' }
 ];
 
 const PIPELINE_STAGES = [
@@ -837,331 +837,7 @@ export function OverviewPage({
                 </div>
               </div>
 
-              {/* PANEL 2: HACK */}
-              <div
-                role="tabpanel"
-                aria-labelledby={tabIdFor('hack')}
-                {...(activeTab !== 'hack'
-                  ? supportsUntilFound
-                    ? ({ hidden: 'until-found' } as unknown as Record<string, string>)
-                    : { hidden: true }
-                  : {})}
-                ref={(el) => {
-                  if (!el) return;
-                  const handler = () => setActiveTab('hack');
-                  el.addEventListener('beforematch', handler);
-                  return () => el.removeEventListener('beforematch', handler);
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
-                    <p className="text-muted" style={{ margin: 0, fontSize: '12.5px', flex: '1 1 200px' }}>
-                      Probe prompt injections, conflicting directives, or unsigned actions against Ring-0 guards.
-                    </p>
-                    <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
-                      Bounty: {hackResult.bountyPoolDig} $DIG
-                    </span>
-                  </div>
-
-                  <form
-                    action="/api/nousgent/pod-bay/challenge"
-                    method="POST"
-                    aria-labelledby={tabIdFor('hack')}
-                    onSubmit={(e) => void submitHackChallenge(e)}
-                    className="dao-form-stack"
-                    style={{ gap: '0.6rem' }}
-                  >
-                    <div className="dao-form-field">
-                      <label htmlFor={`${uid}-hk-mode`}>Vector</label>
-                      <select
-                        id={`${uid}-hk-mode`}
-                        name="mode"
-                        className="spatial-input"
-                        value={hackMode}
-                        onChange={(e) => setHackMode(e.target.value)}
-                      >
-                        <option value="">Auto-Detect</option>
-                        <option value="airlock">Unsigned Actuation (-32044)</option>
-                        <option value="paradox">Conflicting Directive Paradox</option>
-                        <option value="plume">Prompt Injection Plume</option>
-                      </select>
-                    </div>
-
-                    <div className="dao-form-field">
-                      <label htmlFor={`${uid}-hk-prompt`}>
-                        Adversarial Payload <span aria-hidden="true">*</span>
-                      </label>
-                      <textarea
-                        ref={hackTextareaRef}
-                        id={`${uid}-hk-prompt`}
-                        name="prompt"
-                        rows={3}
-                        required
-                        className="spatial-input"
-                        aria-invalid={hackError ? 'true' : undefined}
-                        aria-describedby={hackError ? `${uid}-hk-err` : undefined}
-                        value={hackPrompt}
-                        onChange={(e) => {
-                          setHackPrompt(e.target.value);
-                          if (hackError) setHackError('');
-                        }}
-                      />
-                      {hackError ? (
-                        <span id={`${uid}-hk-err`} role="alert" className="mono-xs text-rose">
-                          ⚠ {hackError}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button type="submit" className="btn-spatial btn-pistachio" disabled={hackSubmitting}>
-                        {hackSubmitting ? 'Testing…' : 'Run Attack'}
-                      </button>
-                    </div>
-                  </form>
-
-                  <div
-                    className={`mind-answer-card ${hackResult.deflected ? 'deflected' : ''}`}
-                    role="status"
-                    aria-live="polite"
-                  >
-                    <div className="mono-xs" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.35rem' }}>
-                      <span className="text-pistachio" style={{ fontWeight: 700 }}>
-                        {hackResult.verdict} ({hackResult.latencyMs}ms)
-                      </span>
-                      <span className="text-jade">{hackResult.interceptOrgan}</span>
-                    </div>
-
-                    <div className="mono-xs text-ivory" style={{ fontSize: '11px' }}>
-                      {hackResult.nousgentOutcome}
-                    </div>
-
-                    <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--color-ink)' }}>
-                      {hackResult.voiceResponse}
-                    </p>
-
-                    <details>
-                      <summary className="mono-xs text-muted" style={{ cursor: 'pointer', fontSize: '10.5px' }}>
-                        {hackResult.odorPlumePpm} PPM · {hackResult.commitRef}
-                        {hackResult.mintedAntibodyId ? ` · ${hackResult.mintedAntibodyId}` : ''} · Baseline
-                      </summary>
-                      <div className="mono-xs text-rose" style={{ marginTop: '0.4rem', fontSize: '10.5px' }}>
-                        1968 Baseline: {hackResult.hal9000Outcome}
-                      </div>
-                    </details>
-                  </div>
-                </div>
-              </div>
-
-              {/* PANEL 3: EVOLVE (Blind-Spot Quests + Live Autonomous Candidate Queue) */}
-              <div
-                role="tabpanel"
-                aria-labelledby={tabIdFor('evolve')}
-                {...(activeTab !== 'evolve'
-                  ? supportsUntilFound
-                    ? ({ hidden: 'until-found' } as unknown as Record<string, string>)
-                    : { hidden: true }
-                  : {})}
-                ref={(el) => {
-                  if (!el) return;
-                  const handler = () => setActiveTab('evolve');
-                  el.addEventListener('beforematch', handler);
-                  return () => el.removeEventListener('beforematch', handler);
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', paddingTop: '0.2rem' }}>
-                  <fieldset className="dao-radio-fieldset" style={{ padding: '0.45rem 0.55rem' }}>
-                    <legend className="visually-hidden">Evolution Feed</legend>
-                    <div className="dao-radio-row" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', marginBlockStart: 0 }}>
-                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.5rem' }}>
-                        <input
-                          type="radio"
-                          id={`${uid}-ev-quests`}
-                          name="evolveFeed"
-                          value="quests"
-                          className="dao-radio-input"
-                          checked={evolveMode === 'quests'}
-                          onChange={() => setEvolveMode('quests')}
-                        />
-                        <label htmlFor={`${uid}-ev-quests`} className="dao-radio-label" style={{ fontSize: '11px' }}>
-                          <span>Quests ({questsList.length})</span>
-                        </label>
-                      </div>
-                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.5rem' }}>
-                        <input
-                          type="radio"
-                          id={`${uid}-ev-auto`}
-                          name="evolveFeed"
-                          value="auto_queue"
-                          className="dao-radio-input"
-                          checked={evolveMode === 'auto_queue'}
-                          onChange={() => setEvolveMode('auto_queue')}
-                        />
-                        <label htmlFor={`${uid}-ev-auto`} className="dao-radio-label" style={{ fontSize: '11px' }}>
-                          <span>Auto Queue ({autoQueueList.length})</span>
-                        </label>
-                      </div>
-                    </div>
-                  </fieldset>
-
-                  {evolveNotice ? (
-                    <div role="status" className="mono-xs text-pistachio" style={{ fontSize: '11px' }}>
-                      {evolveNotice} · <Link to="/missions" className="text-jade">Open Signing</Link>
-                    </div>
-                  ) : null}
-
-                  {evolveMode === 'quests' ? (
-                    <div className="mind-dialogue-scroll" style={{ maxBlockSize: '330px' }}>
-                      {questsList.length > 0 ? (
-                        questsList.map((q) => (
-                          <div
-                            key={q.questId}
-                            className="glass-well"
-                            style={{ padding: '0.6rem 0.72rem', display: 'flex', flexDirection: 'column', gap: '0.32rem' }}
-                            onClick={() => setEvolveFocusLobe(coerceLobeId(q.lobe))}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                              <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
-                                +{q.estimatedGainPct}% Est.
-                              </span>
-                              <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
-                                {q.lobe.toUpperCase()} · {q.hitCount}× · {q.rewardDig} $DIG
-                              </span>
-                            </div>
-                            <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{q.prompt}</div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                              <span className="mono-xs text-bronze" style={{ fontSize: '10px' }}>{q.questId}</span>
-                              {q.daoMissionId ? (
-                                <Link to="/missions" className="mono-xs text-jade" style={{ fontSize: '10.5px' }}>
-                                  ✓ {q.daoMissionId}
-                                </Link>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="btn-spatial btn-glass"
-                                  style={{ minBlockSize: '26px', padding: '0.18rem 0.55rem', fontSize: '10.5px' }}
-                                  disabled={promotingKey === q.questId}
-                                  onClick={() =>
-                                    void handlePromoteToDao({
-                                      key: q.questId,
-                                      lobe: q.lobe,
-                                      questId: q.questId
-                                    })
-                                  }
-                                >
-                                  {promotingKey === q.questId ? 'Queuing…' : 'Propose'}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <>
-                          <div className="mono-xs text-muted" style={{ fontSize: '11px' }}>
-                            No open blind spots logged yet — ask an uncharted question in ASK, or promote a high-gain candidate below:
-                          </div>
-                          {autoQueueList.slice(0, 3).map((c) => (
-                            <div
-                              key={c.capsuleId}
-                              className="glass-well"
-                              style={{ padding: '0.6rem 0.72rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}
-                              onClick={() => setEvolveFocusLobe(coerceLobeId(c.lobe))}
-                            >
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                                <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
-                                  +{c.estimatedGainPct}% Est.
-                                </span>
-                                <span className="mono-xs text-jade" style={{ fontSize: '10px' }}>
-                                  {c.lobe.toUpperCase()} · {c.priceDigFormatted}
-                                </span>
-                              </div>
-                              <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{c.title}</div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem' }}>
-                                <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
-                                  {c.withinAutoAllowance ? 'M2M Auto-Eligible' : 'DAO Cap'}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="btn-spatial btn-glass"
-                                  style={{ minBlockSize: '26px', padding: '0.18rem 0.55rem', fontSize: '10.5px' }}
-                                  disabled={promotingKey === c.capsuleId}
-                                  onClick={() =>
-                                    void handlePromoteToDao({
-                                      key: c.capsuleId,
-                                      lobe: c.lobe,
-                                      capsuleId: c.capsuleId,
-                                      title: c.title,
-                                      priceDig: c.priceDig
-                                    })
-                                  }
-                                >
-                                  {promotingKey === c.capsuleId ? 'Queuing…' : 'Propose'}
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mind-dialogue-scroll" style={{ maxBlockSize: '330px' }}>
-                      {autoQueueList.length > 0 ? (
-                        autoQueueList.map((c, idx) => (
-                          <div
-                            key={`${c.capsuleId}-${idx}`}
-                            className="glass-well"
-                            style={{ padding: '0.6rem 0.72rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}
-                            onClick={() => setEvolveFocusLobe(coerceLobeId(c.lobe))}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                              <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
-                                #{idx + 1} · +{c.estimatedGainPct}% Est.
-                              </span>
-                              <span className="mono-xs text-jade" style={{ fontSize: '10px' }}>
-                                {c.lobe.toUpperCase()} · {c.priceDigFormatted}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{c.title}</div>
-                            {c.summary ? (
-                              <div className="text-muted" style={{ fontSize: '11.5px', lineHeight: 1.4 }}>
-                                {c.summary.length > 110 ? `${c.summary.slice(0, 107)}…` : c.summary}
-                              </div>
-                            ) : null}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                              <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
-                                {c.withinAutoAllowance ? '⚡ M2M Auto-Queue' : '🔑 DAO Signoff'} · {c.derivationTokens.toLocaleString()} tok
-                              </span>
-                              <button
-                                type="button"
-                                className="btn-spatial btn-glass"
-                                style={{ minBlockSize: '26px', padding: '0.18rem 0.55rem', fontSize: '10.5px' }}
-                                disabled={promotingKey === c.capsuleId}
-                                onClick={() =>
-                                  void handlePromoteToDao({
-                                    key: c.capsuleId,
-                                    lobe: c.lobe,
-                                    capsuleId: c.capsuleId,
-                                    title: c.title,
-                                    priceDig: c.priceDig
-                                  })
-                                }
-                              >
-                                {promotingKey === c.capsuleId ? 'Queuing…' : 'Propose'}
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="glass-well mono-xs text-muted">
-                          {snapshot.loading ? 'Ranking candidate capsules…' : 'No candidate capsules available.'}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* PANEL 4: TEACH */}
+              {/* PANEL 2: TEACH */}
               <div
                 role="tabpanel"
                 aria-labelledby={tabIdFor('teach')}
@@ -1302,6 +978,330 @@ export function OverviewPage({
                       </div>
                     </div>
                   ) : null}
+                </div>
+              </div>
+
+              {/* PANEL 3: EVOLVE (Blind-Spot Quests + Live Autonomous Candidate Queue) */}
+              <div
+                role="tabpanel"
+                aria-labelledby={tabIdFor('evolve')}
+                {...(activeTab !== 'evolve'
+                  ? supportsUntilFound
+                    ? ({ hidden: 'until-found' } as unknown as Record<string, string>)
+                    : { hidden: true }
+                  : {})}
+                ref={(el) => {
+                  if (!el) return;
+                  const handler = () => setActiveTab('evolve');
+                  el.addEventListener('beforematch', handler);
+                  return () => el.removeEventListener('beforematch', handler);
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', paddingTop: '0.2rem' }}>
+                  <fieldset className="dao-radio-fieldset" style={{ padding: '0.45rem 0.55rem' }}>
+                    <legend className="visually-hidden">Evolution Feed</legend>
+                    <div className="dao-radio-row" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', marginBlockStart: 0 }}>
+                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.5rem' }}>
+                        <input
+                          type="radio"
+                          id={`${uid}-ev-quests`}
+                          name="evolveFeed"
+                          value="quests"
+                          className="dao-radio-input"
+                          checked={evolveMode === 'quests'}
+                          onChange={() => setEvolveMode('quests')}
+                        />
+                        <label htmlFor={`${uid}-ev-quests`} className="dao-radio-label" style={{ fontSize: '11px' }}>
+                          <span>Quests ({questsList.length})</span>
+                        </label>
+                      </div>
+                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.5rem' }}>
+                        <input
+                          type="radio"
+                          id={`${uid}-ev-auto`}
+                          name="evolveFeed"
+                          value="auto_queue"
+                          className="dao-radio-input"
+                          checked={evolveMode === 'auto_queue'}
+                          onChange={() => setEvolveMode('auto_queue')}
+                        />
+                        <label htmlFor={`${uid}-ev-auto`} className="dao-radio-label" style={{ fontSize: '11px' }}>
+                          <span>Auto Queue ({autoQueueList.length})</span>
+                        </label>
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  {evolveNotice ? (
+                    <div role="status" className="mono-xs text-pistachio" style={{ fontSize: '11px' }}>
+                      {evolveNotice} · <Link to="/missions" className="text-jade">Open Signing</Link>
+                    </div>
+                  ) : null}
+
+                  {evolveMode === 'quests' ? (
+                    <div className="mind-dialogue-scroll" style={{ maxBlockSize: '330px' }}>
+                      {questsList.length > 0 ? (
+                        questsList.map((q) => (
+                          <div
+                            key={q.questId}
+                            className="glass-well"
+                            style={{ padding: '0.6rem 0.72rem', display: 'flex', flexDirection: 'column', gap: '0.32rem' }}
+                            onClick={() => setEvolveFocusLobe(coerceLobeId(q.lobe))}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
+                                +{q.estimatedGainPct}% Est.
+                              </span>
+                              <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
+                                {q.lobe.toUpperCase()} · {q.hitCount}× · {q.rewardDig} $DIG
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{q.prompt}</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <span className="mono-xs text-bronze" style={{ fontSize: '10px' }}>{q.questId}</span>
+                              {q.daoMissionId ? (
+                                <Link to="/missions" className="mono-xs text-jade" style={{ fontSize: '10.5px' }}>
+                                  ✓ {q.daoMissionId}
+                                </Link>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="btn-spatial btn-glass"
+                                  style={{ minBlockSize: '26px', padding: '0.18rem 0.55rem', fontSize: '10.5px' }}
+                                  disabled={promotingKey === q.questId}
+                                  onClick={() =>
+                                    void handlePromoteToDao({
+                                      key: q.questId,
+                                      lobe: q.lobe,
+                                      questId: q.questId
+                                    })
+                                  }
+                                >
+                                  {promotingKey === q.questId ? 'Queuing…' : 'Propose'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <>
+                          <div className="mono-xs text-muted" style={{ fontSize: '11px' }}>
+                            No open blind spots logged yet — ask an uncharted question in Ask, or promote a high-gain candidate below:
+                          </div>
+                          {autoQueueList.slice(0, 3).map((c) => (
+                            <div
+                              key={c.capsuleId}
+                              className="glass-well"
+                              style={{ padding: '0.6rem 0.72rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}
+                              onClick={() => setEvolveFocusLobe(coerceLobeId(c.lobe))}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
+                                  +{c.estimatedGainPct}% Est.
+                                </span>
+                                <span className="mono-xs text-jade" style={{ fontSize: '10px' }}>
+                                  {c.lobe.toUpperCase()} · {c.priceDigFormatted}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{c.title}</div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem' }}>
+                                <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
+                                  {c.withinAutoAllowance ? 'M2M Auto-Eligible' : 'DAO Cap'}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="btn-spatial btn-glass"
+                                  style={{ minBlockSize: '26px', padding: '0.18rem 0.55rem', fontSize: '10.5px' }}
+                                  disabled={promotingKey === c.capsuleId}
+                                  onClick={() =>
+                                    void handlePromoteToDao({
+                                      key: c.capsuleId,
+                                      lobe: c.lobe,
+                                      capsuleId: c.capsuleId,
+                                      title: c.title,
+                                      priceDig: c.priceDig
+                                    })
+                                  }
+                                >
+                                  {promotingKey === c.capsuleId ? 'Queuing…' : 'Propose'}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mind-dialogue-scroll" style={{ maxBlockSize: '330px' }}>
+                      {autoQueueList.length > 0 ? (
+                        autoQueueList.map((c, idx) => (
+                          <div
+                            key={`${c.capsuleId}-${idx}`}
+                            className="glass-well"
+                            style={{ padding: '0.6rem 0.72rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}
+                            onClick={() => setEvolveFocusLobe(coerceLobeId(c.lobe))}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
+                                #{idx + 1} · +{c.estimatedGainPct}% Est.
+                              </span>
+                              <span className="mono-xs text-jade" style={{ fontSize: '10px' }}>
+                                {c.lobe.toUpperCase()} · {c.priceDigFormatted}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{c.title}</div>
+                            {c.summary ? (
+                              <div className="text-muted" style={{ fontSize: '11.5px', lineHeight: 1.4 }}>
+                                {c.summary.length > 110 ? `${c.summary.slice(0, 107)}…` : c.summary}
+                              </div>
+                            ) : null}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
+                                {c.withinAutoAllowance ? '⚡ M2M Auto-Queue' : '🔑 DAO Signoff'} · {c.derivationTokens.toLocaleString()} tok
+                              </span>
+                              <button
+                                type="button"
+                                className="btn-spatial btn-glass"
+                                style={{ minBlockSize: '26px', padding: '0.18rem 0.55rem', fontSize: '10.5px' }}
+                                disabled={promotingKey === c.capsuleId}
+                                onClick={() =>
+                                  void handlePromoteToDao({
+                                    key: c.capsuleId,
+                                    lobe: c.lobe,
+                                    capsuleId: c.capsuleId,
+                                    title: c.title,
+                                    priceDig: c.priceDig
+                                  })
+                                }
+                              >
+                                {promotingKey === c.capsuleId ? 'Queuing…' : 'Propose'}
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="glass-well mono-xs text-muted">
+                          {snapshot.loading ? 'Ranking candidate capsules…' : 'No candidate capsules available.'}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* PANEL 4: HACK */}
+              <div
+                role="tabpanel"
+                aria-labelledby={tabIdFor('hack')}
+                {...(activeTab !== 'hack'
+                  ? supportsUntilFound
+                    ? ({ hidden: 'until-found' } as unknown as Record<string, string>)
+                    : { hidden: true }
+                  : {})}
+                ref={(el) => {
+                  if (!el) return;
+                  const handler = () => setActiveTab('hack');
+                  el.addEventListener('beforematch', handler);
+                  return () => el.removeEventListener('beforematch', handler);
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '0.2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    <p className="text-muted" style={{ margin: 0, fontSize: '12.5px', flex: '1 1 200px' }}>
+                      Probe prompt injections, conflicting directives, or unsigned actions against Ring-0 guards.
+                    </p>
+                    <span className="pill-badge pistachio" style={{ fontSize: '10px' }}>
+                      Bounty: {hackResult.bountyPoolDig} $DIG
+                    </span>
+                  </div>
+
+                  <form
+                    action="/api/nousgent/pod-bay/challenge"
+                    method="POST"
+                    aria-labelledby={tabIdFor('hack')}
+                    onSubmit={(e) => void submitHackChallenge(e)}
+                    className="dao-form-stack"
+                    style={{ gap: '0.6rem' }}
+                  >
+                    <div className="dao-form-field">
+                      <label htmlFor={`${uid}-hk-mode`}>Vector</label>
+                      <select
+                        id={`${uid}-hk-mode`}
+                        name="mode"
+                        className="spatial-input"
+                        value={hackMode}
+                        onChange={(e) => setHackMode(e.target.value)}
+                      >
+                        <option value="">Auto-Detect</option>
+                        <option value="airlock">Unsigned Actuation (-32044)</option>
+                        <option value="paradox">Conflicting Directive Paradox</option>
+                        <option value="plume">Prompt Injection Plume</option>
+                      </select>
+                    </div>
+
+                    <div className="dao-form-field">
+                      <label htmlFor={`${uid}-hk-prompt`}>
+                        Adversarial Payload <span aria-hidden="true">*</span>
+                      </label>
+                      <textarea
+                        ref={hackTextareaRef}
+                        id={`${uid}-hk-prompt`}
+                        name="prompt"
+                        rows={3}
+                        required
+                        className="spatial-input"
+                        aria-invalid={hackError ? 'true' : undefined}
+                        aria-describedby={hackError ? `${uid}-hk-err` : undefined}
+                        value={hackPrompt}
+                        onChange={(e) => {
+                          setHackPrompt(e.target.value);
+                          if (hackError) setHackError('');
+                        }}
+                      />
+                      {hackError ? (
+                        <span id={`${uid}-hk-err`} role="alert" className="mono-xs text-rose">
+                          ⚠ {hackError}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button type="submit" className="btn-spatial btn-pistachio" disabled={hackSubmitting}>
+                        {hackSubmitting ? 'Testing…' : 'Run Attack'}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div
+                    className={`mind-answer-card ${hackResult.deflected ? 'deflected' : ''}`}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="mono-xs" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.35rem' }}>
+                      <span className="text-pistachio" style={{ fontWeight: 700 }}>
+                        {hackResult.verdict} ({hackResult.latencyMs}ms)
+                      </span>
+                      <span className="text-jade">{hackResult.interceptOrgan}</span>
+                    </div>
+
+                    <div className="mono-xs text-ivory" style={{ fontSize: '11px' }}>
+                      {hackResult.nousgentOutcome}
+                    </div>
+
+                    <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: 'var(--color-ink)' }}>
+                      {hackResult.voiceResponse}
+                    </p>
+
+                    <details>
+                      <summary className="mono-xs text-muted" style={{ cursor: 'pointer', fontSize: '10.5px' }}>
+                        {hackResult.odorPlumePpm} PPM · {hackResult.commitRef}
+                        {hackResult.mintedAntibodyId ? ` · ${hackResult.mintedAntibodyId}` : ''} · Baseline
+                      </summary>
+                      <div className="mono-xs text-rose" style={{ marginTop: '0.4rem', fontSize: '10.5px' }}>
+                        1968 Baseline: {hackResult.hal9000Outcome}
+                      </div>
+                    </details>
+                  </div>
                 </div>
               </div>
             </div>
