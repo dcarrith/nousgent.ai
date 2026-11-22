@@ -1,0 +1,16 @@
+[submodule "packages/dbrain"]
+	path = packages/dbrain
+	url = https://github.com/dcarrith/dbrain.git
+	branch = main
+[submodule "packages/cbrain"]
+	path = packages/cbrain
+	url = https://github.com/dcarrith/cbrain.git
+	branch = main
+[submodule "packages/dthalamus"]
+	path = packages/dthalamus
+	url = https://github.com/dcarrith/dthalamus.git
+	branch = main
+[submodule "packages/dolfactory"]
+	path = packages/dolfactory
+	url = https://github.com/dcarrith/dolfactory.git
+	branch = main

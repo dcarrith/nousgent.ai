@@ -1,0 +1,21 @@
+{
+  "name": "nousgent.ai — NOUSGENT Bounded ASI Mission Control",
+  "short_name": "nousgent.ai",
+  "description": "Urbana White-Room Centrifuge & NASA Flight Data Manual for Open-Source Bounded ASI on the Chia Blockchain & DIG Network (M2M Plane: ia.nousgent.ai).",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#006194",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: "nousgent-soc-dashboards"
+    orgId: 1
+    folder: "NOUSGENT Bounded ASI SOC"
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards

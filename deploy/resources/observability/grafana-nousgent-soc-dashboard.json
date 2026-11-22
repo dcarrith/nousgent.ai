@@ -1,0 +1,58 @@
+{
+  "uid": "nousgent-cleanroom-soc-v1",
+  "title": "NOUSGENT Dual-Host SOC — nousgent.ai (Human UI) vs ia.nousgent.ai (M2M Swarm)",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "tags": ["nousgent", "ia.nousgent.ai", "bounded-asi", "chia", "chip-0043"],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Human UI Requests (nousgent.ai)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(nousgent_http_requests_total{host=\"nousgent.ai\",plane=\"human_ui\"})" }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "M2M Swarm Requests (ia.nousgent.ai)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "expr": "sum(nousgent_http_requests_total{host=\"ia.nousgent.ai\",plane=\"m2m_ia\"})" }]
+    },
+    {
+      "id": 3,
+      "type": "gauge",
+      "title": "Bounded ASI Readiness Index (BARI %)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "expr": "max(nousgent_bari_score_pct)" }]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Active 50-State Enlisted Nodes",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "max(nousgent_enlisted_nodes_total)" }]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "nousgent.ai (Human) vs ia.nousgent.ai (M2M) RPS",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        { "expr": "sum(rate(nousgent_http_requests_total{plane=\"human_ui\"}[1m]))", "legendFormat": "nousgent.ai (human_ui)" },
+        { "expr": "sum(rate(nousgent_http_requests_total{plane=\"m2m_ia\"}[1m]))", "legendFormat": "ia.nousgent.ai (m2m_ia)" }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Pod Bay Red-Team Deflections & CHIP-0043 Signatures",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        { "expr": "sum(nousgent_redteam_deflections_total)", "legendFormat": "Pod Bay Deflections" },
+        { "expr": "sum(nousgent_clear_sign_signatures_total)", "legendFormat": "CHIP-0043 Signatures" }
+      ]
+    }
+  ]
+}

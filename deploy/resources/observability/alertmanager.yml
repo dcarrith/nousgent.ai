@@ -1,0 +1,15 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ["alertname", "plane"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 2h
+  receiver: "nousgent-webhook"
+
+receivers:
+  - name: "nousgent-webhook"
+    webhook_configs:
+      - url: "http://nousgent-web.dbrain.svc.cluster.local/api/nousgent/alerts/webhook"
+        send_resolved: true

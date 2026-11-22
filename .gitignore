@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+queue/
+.nousgent-state/
+.DS_Store
+*.log
+reports/security-scan.json

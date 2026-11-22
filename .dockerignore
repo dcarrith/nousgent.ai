@@ -1,0 +1,7 @@
+node_modules
+.git
+.nousgent-state
+queue
+reports/security-scan.json
+*.log
+.DS_Store

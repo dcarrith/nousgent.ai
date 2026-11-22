@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 96" width="680" height="96" role="img" aria-label="nousgent.ai — NOUSGENT Orbital Cleanroom">
+  <rect width="680" height="96" fill="#f8f9fb" stroke="#bfc7d2" stroke-width="2"/>
+  <rect x="12" y="12" width="72" height="72" fill="#191c1e" stroke="#707881" stroke-width="2"/>
+  <circle cx="48" cy="48" r="26" fill="#001d31" stroke="#006194" stroke-width="2"/>
+  <circle cx="48" cy="48" r="17" fill="#002114" stroke="#00855d" stroke-width="2"/>
+  <circle cx="48" cy="48" r="8" fill="#006948"/>
+  <circle cx="48" cy="48" r="3.5" fill="#85f8c4"/>
+  <text x="102" y="44" fill="#191c1e" font-family="Inter, system-ui, sans-serif" font-size="30" font-weight="700" letter-spacing="-0.5">NOUSGENT</text>
+  <text x="276" y="44" fill="#006194" font-family="JetBrains Mono, monospace" font-size="22" font-weight="600">// nousgent.ai</text>
+  <text x="102" y="70" fill="#3f4850" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600" letter-spacing="1.2">URBANA WHITE-ROOM CENTRIFUGE · M2M WIRE: IA.NOUSGENT.AI · CHIA PoST + DIG</text>
+  <rect x="646" y="16" width="18" height="18" fill="#ba0035"/>
+  <rect x="646" y="62" width="18" height="18" fill="#006948"/>
+</svg>

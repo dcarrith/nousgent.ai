@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "nousgent-alertmanager.dbrain.svc.cluster.local:9093"
+
+rule_files:
+  - "/etc/prometheus/rules/prometheus-nousgent-alerts.yaml"
+
+scrape_configs:
+  - job_name: "nousgent-web"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets:
+          - "nousgent-web-0.nousgent-web-headless.dbrain.svc.cluster.local:3000"
+          - "nousgent-web-1.nousgent-web-headless.dbrain.svc.cluster.local:3000"

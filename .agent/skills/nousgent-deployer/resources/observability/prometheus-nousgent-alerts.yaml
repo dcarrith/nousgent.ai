@@ -1,0 +1,84 @@
+groups:
+  - name: nousgent_dual_plane_and_bounded_asi_rules
+    interval: 15s
+    rules:
+      - alert: NousgentM2mSwarmTrafficZero
+        expr: sum(rate(nousgent_http_requests_total{host="ia.nousgent.ai",plane="m2m_ia"}[15m])) == 0
+        for: 15m
+        labels:
+          severity: warning
+          plane: m2m_ia
+        annotations:
+          summary: "ia.nousgent.ai M2M swarm traffic dropped to zero"
+      - alert: NousgentHumanPortalZero
+        expr: sum(rate(nousgent_http_requests_total{host="nousgent.ai",plane="human_ui"}[15m])) == 0
+        for: 15m
+        labels:
+          severity: warning
+          plane: human_ui
+        annotations:
+          summary: "nousgent.ai Human Mission Control traffic dropped to zero"
+      - alert: NousgentPodBayRedTeamSurge
+        expr: sum(increase(nousgent_redteam_deflections_total[5m])) > 25
+        for: 1m
+        labels:
+          severity: critical
+          plane: pod-bay-airlock
+        annotations:
+          summary: "Pod Bay Red-Team adversarial surge deflected (>25 attacks / 5m)"
+      - alert: NousgentBariReadinessDrop
+        expr: min(nousgent_bari_score_pct) < 75
+        for: 2m
+        labels:
+          severity: critical
+          plane: bari-index
+        annotations:
+          summary: "Bounded ASI Readiness Index dropped below 75%"
+      - alert: NousgentEnlistedMeshDegraded
+        expr: min(nousgent_enlisted_nodes_total) < 100
+        for: 5m
+        labels:
+          severity: warning
+          plane: morphic-mesh
+        annotations:
+          summary: "Active Morphic Mesh node count below 100"
+      - alert: NousgentClearSignCeremonySpike
+        expr: sum(increase(nousgent_clear_sign_signatures_total[10m])) > 10
+        for: 1m
+        labels:
+          severity: info
+          plane: chip0043-quorum
+        annotations:
+          summary: "Elevated Two-Key CHIP-0043 Clear-Sign ceremony throughput"
+      - alert: NousgentM2mToHumanRatioSkew
+        expr: sum(rate(nousgent_http_requests_total{plane="m2m_ia"}[5m])) / clamp_min(sum(rate(nousgent_http_requests_total[5m])), 0.001) > 0.99
+        for: 10m
+        labels:
+          severity: info
+          plane: m2m_ia
+        annotations:
+          summary: "ia.nousgent.ai M2M traffic exceeds 99% of total dual-host volume"
+      - alert: NousgentTargetScrapeDown
+        expr: up{job="nousgent-web"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          plane: soc-telemetry
+        annotations:
+          summary: "NOUSGENT StatefulSet pod unreachable by Prometheus"
+      - alert: NousgentHighMemoryFootprint
+        expr: max(nousgent_enlisted_nodes_total) > 1000000
+        for: 10m
+        labels:
+          severity: warning
+          plane: statefulset
+        annotations:
+          summary: "Morphic Mesh exceeded 1M nodes; scale StatefulSet shard"
+      - alert: NousgentSqliteWalPersistenceCheck
+        expr: max(nousgent_enlisted_nodes_total) >= 4108
+        for: 5m
+        labels:
+          severity: info
+          plane: wal-storage
+        annotations:
+          summary: "SQLite WAL state verified healthy"

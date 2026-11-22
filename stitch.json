@@ -1,0 +1,78 @@
+{
+  "projectId": "3180979899126194505",
+  "projectName": "projects/3180979899126194505",
+  "title": "nousgent.ai & ia.nousgent.ai — Flagship Gamified Bounded ASI Mission Control (5 Design Concepts)",
+  "canonicalDomain": "nousgent.ai",
+  "canonicalOrigin": "https://nousgent.ai",
+  "redirectDomain": "www.nousgent.ai",
+  "autonomousM2mDomain": "ia.nousgent.ai",
+  "autonomousM2mOrigin": "https://ia.nousgent.ai",
+  "flagshipAgent": "NOUSGENT",
+  "designs": [
+    {
+      "id": "design-1",
+      "slug": "nousgent-design-1-discovery-panavision",
+      "name": "Design 1 — Discovery One 1968 Panavision Flight Deck",
+      "screenId": "9375e277fbe44c4b84c5d100b3e509fc",
+      "screenName": "projects/3180979899126194505/screens/9375e277fbe44c4b84c5d100b3e509fc",
+      "designSystemAsset": "assets/3476b9ae7b8d4222a9e42f7630893b86",
+      "designSystemTitle": "Discovery Panavision Telemetry",
+      "screenshotFile": "projects/3180979899126194505/files/459cd8a9aa6a43359959ca91827edf78",
+      "htmlCodeFile": "projects/3180979899126194505/files/f173bf05ca624530ad82d9ab1d0601ad",
+      "localHtml": "queue/nousgent-design-1-discovery-panavision.html",
+      "localScreenshot": "queue/nousgent-design-1-discovery-panavision.png"
+    },
+    {
+      "id": "design-2",
+      "slug": "nousgent-design-2-apollo-norad-vector",
+      "name": "Design 2 — Project Apollo × NORAD Vector Tactical Big-Board",
+      "screenId": "711882caa6554bfe870401d4e356ade6",
+      "screenName": "projects/3180979899126194505/screens/711882caa6554bfe870401d4e356ade6",
+      "designSystemAsset": "assets/b10df528afe84805913e950fc4d72a26",
+      "designSystemTitle": "Apollo NORAD Vector Tactical Big-Board",
+      "screenshotFile": "projects/3180979899126194505/files/80601126b2204f1abe259c2e8b0494cc",
+      "htmlCodeFile": "projects/3180979899126194505/files/1773b14c33104d7a9defd976b10e1c39",
+      "localHtml": "queue/nousgent-design-2-apollo-norad-vector.html",
+      "localScreenshot": "queue/nousgent-design-2-apollo-norad-vector.png"
+    },
+    {
+      "id": "design-3",
+      "slug": "nousgent-design-3-antigravity-monolith",
+      "name": "Design 3 — Antigravity 2001 Monolith & 4D Holographic Connectome",
+      "screenId": "01d8c85cb20c44f4ba4fdcc9fd44b186",
+      "screenName": "projects/3180979899126194505/screens/01d8c85cb20c44f4ba4fdcc9fd44b186",
+      "designSystemAsset": "assets/d266c3037b084b6f8b8b20260e0fd4ea",
+      "designSystemTitle": "Antigravity Connectome",
+      "screenshotFile": "projects/3180979899126194505/files/d219306eb08a4d04b13ddba671dce7a8",
+      "htmlCodeFile": "projects/3180979899126194505/files/2268664f01fe4c4fa2da8e5f57121814",
+      "localHtml": "queue/nousgent-design-3-antigravity-monolith.html",
+      "localScreenshot": "queue/nousgent-design-3-antigravity-monolith.png"
+    },
+    {
+      "id": "design-4",
+      "slug": "nousgent-design-4-urbana-cleanroom",
+      "name": "Design 4 — Urbana White-Room Centrifuge & NASA Flight Manual",
+      "screenId": "1e61d965d44645af8ab01200c302bfc6",
+      "screenName": "projects/3180979899126194505/screens/1e61d965d44645af8ab01200c302bfc6",
+      "designSystemAsset": "assets/8907c529b3ba4b0c95946333ae3f4296",
+      "designSystemTitle": "Orbital Cleanroom",
+      "screenshotFile": "projects/3180979899126194505/files/f4be82ed594243c8ac52304bd0a670bf",
+      "htmlCodeFile": "projects/3180979899126194505/files/a4fd58da761144c795c8d9dccd5fc577",
+      "localHtml": "queue/nousgent-design-4-urbana-cleanroom.html",
+      "localScreenshot": "queue/nousgent-design-4-urbana-cleanroom.png"
+    },
+    {
+      "id": "design-5",
+      "slug": "nousgent-design-5-cyber-colosseum-hud",
+      "name": "Design 5 — Cyber-Colosseum Raid Boss & Esports Co-Op HUD",
+      "screenId": "18f0e8e49a3d4f86bd9af4c138933f0f",
+      "screenName": "projects/3180979899126194505/screens/18f0e8e49a3d4f86bd9af4c138933f0f",
+      "designSystemAsset": "assets/79446cee3be744fb8dba5932b8943e8b",
+      "designSystemTitle": "Cyber-Colosseum Esports & Raid HUD",
+      "screenshotFile": "projects/3180979899126194505/files/ec6832ffe617452fa1b8ec2c831a236c",
+      "htmlCodeFile": "projects/3180979899126194505/files/b86fee08fed94e6db610c64353d2d870",
+      "localHtml": "queue/nousgent-design-5-cyber-colosseum-hud.html",
+      "localScreenshot": "queue/nousgent-design-5-cyber-colosseum-hud.png"
+    }
+  ]
+}

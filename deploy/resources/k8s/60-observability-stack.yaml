@@ -1,0 +1,331 @@
+# ==============================================================================
+# Self-Contained Dual-Host Prometheus + Alertmanager + Grafana SOC Stack for nousgent.ai & ia.nousgent.ai
+# (Enabled via `./deploy/scripts/deploy.sh --with-observability`)
+# ==============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nousgent-prometheus
+  namespace: dbrain
+  labels:
+    app.kubernetes.io/name: nousgent-prometheus
+    app.kubernetes.io/part-of: nousgent
+    app.kubernetes.io/component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nousgent-prometheus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nousgent-prometheus
+        app.kubernetes.io/part-of: nousgent
+        app.kubernetes.io/component: observability
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.55.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time=15d"
+            - "--web.enable-lifecycle"
+          ports:
+            - name: http
+              containerPort: 9090
+              protocol: TCP
+          volumeMounts:
+            - name: observability-configs
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+              readOnly: true
+            - name: observability-configs
+              mountPath: /etc/prometheus/rules/prometheus-nousgent-alerts.yaml
+              subPath: prometheus-nousgent-alerts.yaml
+              readOnly: true
+            - name: prometheus-tsdb
+              mountPath: /prometheus
+            - name: tmp-dir
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        - name: observability-configs
+          configMap:
+            name: nousgent-observability-configs
+        - name: prometheus-tsdb
+          emptyDir: {}
+        - name: tmp-dir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nousgent-prometheus
+  namespace: dbrain
+  labels:
+    app.kubernetes.io/name: nousgent-prometheus
+    app.kubernetes.io/part-of: nousgent
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nousgent-prometheus
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nousgent-alertmanager
+  namespace: dbrain
+  labels:
+    app.kubernetes.io/name: nousgent-alertmanager
+    app.kubernetes.io/part-of: nousgent
+    app.kubernetes.io/component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nousgent-alertmanager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nousgent-alertmanager
+        app.kubernetes.io/part-of: nousgent
+        app.kubernetes.io/component: observability
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - "--storage.path=/alertmanager"
+          ports:
+            - name: http
+              containerPort: 9093
+              protocol: TCP
+          volumeMounts:
+            - name: observability-configs
+              mountPath: /etc/alertmanager/alertmanager.yml
+              subPath: alertmanager.yml
+              readOnly: true
+            - name: alertmanager-data
+              mountPath: /alertmanager
+            - name: tmp-dir
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+      volumes:
+        - name: observability-configs
+          configMap:
+            name: nousgent-observability-configs
+        - name: alertmanager-data
+          emptyDir: {}
+        - name: tmp-dir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nousgent-alertmanager
+  namespace: dbrain
+  labels:
+    app.kubernetes.io/name: nousgent-alertmanager
+    app.kubernetes.io/part-of: nousgent
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nousgent-alertmanager
+  ports:
+    - name: http
+      port: 9093
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nousgent-grafana
+  namespace: dbrain
+  labels:
+    app.kubernetes.io/name: nousgent-grafana
+    app.kubernetes.io/part-of: nousgent
+    app.kubernetes.io/component: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nousgent-grafana
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nousgent-grafana
+        app.kubernetes.io/part-of: nousgent
+        app.kubernetes.io/component: observability
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.3.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_ANALYTICS_REPORTING_ENABLED
+              value: "false"
+            - name: GF_SECURITY_ADMIN_USER
+              value: "nousgent-soc"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nousgent-secrets
+                  key: NOUSGENT_ADMIN_KEY
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - name: observability-configs
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+              subPath: grafana-datasources.yaml
+              readOnly: true
+            - name: observability-configs
+              mountPath: /etc/grafana/provisioning/dashboards/provider.yaml
+              subPath: grafana-dashboards-provider.yaml
+              readOnly: true
+            - name: observability-configs
+              mountPath: /var/lib/grafana/dashboards/grafana-nousgent-soc-dashboard.json
+              subPath: grafana-nousgent-soc-dashboard.json
+              readOnly: true
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: tmp-dir
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: observability-configs
+          configMap:
+            name: nousgent-observability-configs
+        - name: grafana-storage
+          emptyDir: {}
+        - name: tmp-dir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nousgent-grafana
+  namespace: dbrain
+  labels:
+    app.kubernetes.io/name: nousgent-grafana
+    app.kubernetes.io/part-of: nousgent
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nousgent-grafana
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP

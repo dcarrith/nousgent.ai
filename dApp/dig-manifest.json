@@ -1,0 +1,87 @@
+{
+  "protocol": "DIG-DAPP-MANIFEST-v1",
+  "name": "nousgent.ai",
+  "version": "1.0.0",
+  "canonicalOrigin": "https://nousgent.ai",
+  "m2mSwarmOrigin": "https://ia.nousgent.ai",
+  "sisterOrgans": {
+    "olfactory": "https://dolfactory.to",
+    "thalamus": "https://dthalamus.to",
+    "cortex": "https://dbrain.to",
+    "observatory": "https://cbrain.to",
+    "exchange": "https://shi.liquidi.sh"
+  },
+  "builtAt": "2026-11-22T02:38:49.289Z",
+  "contentAddressing": {
+    "manifestTreeSha256": "0x3b14dc4658730244a44aa6014fb0e084008b2bce9b88cd751d4f708646d6c6d2",
+    "totalFiles": 13,
+    "totalBytes": 1652040
+  },
+  "files": [
+    {
+      "path": "api/dbrain-core-docs.json",
+      "bytes": 859781,
+      "sha256": "a4cfab50367173ebfa7fbd8d308b0a0f494ec22f15e4b3c036d0e5427e4fa298"
+    },
+    {
+      "path": "apple-touch-icon.png",
+      "bytes": 20374,
+      "sha256": "a417667065ed53b7cf845731ff99236a7f8d89ff250427d9eed9ba7ca6392811"
+    },
+    {
+      "path": "assets/index-C5BivoVE.css",
+      "bytes": 9377,
+      "sha256": "03f98bc5274ff68d739c98208689a61d2855ebd9f3eb1a0fdb8b3671bf218222"
+    },
+    {
+      "path": "assets/index-DQkaonNW.js",
+      "bytes": 316106,
+      "sha256": "6c123a98b4005295ab107ec6b2c7f6cea78e6998cc1aef5da9dad7fcbb2db1a5"
+    },
+    {
+      "path": "favicon.svg",
+      "bytes": 441,
+      "sha256": "c91afe317911af44ec54d81a4fcc7dd56fd96a83ed00186bfc1c1ad0fa004862"
+    },
+    {
+      "path": "index.html",
+      "bytes": 4874,
+      "sha256": "31addeceb89ad3e460051af4089fb6cc9fa121f7677bb7c1e2ada15dbb790cee"
+    },
+    {
+      "path": "logo-wordmark.svg",
+      "bytes": 1233,
+      "sha256": "5decf2baa60abfde730f60d5828fe39f5732f31529244f6a2095b9821eed9eb4"
+    },
+    {
+      "path": "og-image.jpg",
+      "bytes": 152701,
+      "sha256": "7474a663c8531d939c469ad91fb28b6a76bb2ae8e368fcd288ee8f076b43c415"
+    },
+    {
+      "path": "og-image.png",
+      "bytes": 207509,
+      "sha256": "b1d30f48a5b9339544b815aeb525f64d7f56b8500f8df6b5cd1ef028c1699745"
+    },
+    {
+      "path": "og-square.jpg",
+      "bytes": 77833,
+      "sha256": "caaa747f820eeff04087ec11e346e2c787542c784e9ed03124a7e7d92aa14ae4"
+    },
+    {
+      "path": "robots.txt",
+      "bytes": 241,
+      "sha256": "3d89bcd2701f8a2bf2e7b3f8b5db394806fcfb6698268f8a0bd5e06585ea7d85"
+    },
+    {
+      "path": "site.webmanifest",
+      "bytes": 591,
+      "sha256": "984bf4eeb5e5405f5b00ee5e0dcd2a9cf698d45de5ceb05c758c050286568b23"
+    },
+    {
+      "path": "sitemap.xml",
+      "bytes": 979,
+      "sha256": "acee3dc375db309a7680084693afa69e7946b4e542622290f5aa5ac920f16822"
+    }
+  ]
+}
