@@ -18,7 +18,6 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
   const [enlistResult, setEnlistResult] = useState<{
     readonly callsign: string;
     readonly rankTitle: string;
-    readonly morphicPulseEndpoint: string;
   } | null>(null);
 
   const [enlistError, setEnlistError] = useState<string>('');
@@ -42,35 +41,34 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
         const d = await res.json();
         setEnlistResult({
           callsign: d.callsign,
-          rankTitle: d.rank.title,
-          morphicPulseEndpoint: d.morphicPulseEndpoint
+          rankTitle: d.rank.title
         });
         onEnlisted();
       } else {
-        setEnlistError(`Enlistment request failed (HTTP ${res.status}).`);
+        setEnlistError(`Registration failed (HTTP ${res.status}).`);
       }
     } catch {
-      setEnlistError('Live enlistment API unreachable — no synthetic callsign issued.');
+      setEnlistError('Registration API unreachable.');
     }
   }
 
   return (
     <div className="bento-grid" style={{ alignItems: 'start' }}>
-      <section className="glass-card emerald col-7" aria-label="1-Command Sovereign Node Enlistment">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <section className="glass-card emerald col-7" aria-label="Communities and Node Setup">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 600 }}>1-Command Morphic Node Enlistment</h1>
-            <span className="pill-badge emerald">CHIP-0043 READY</span>
+            <h1 style={{ fontSize: '22px', fontWeight: 700 }}>Communities</h1>
+            <span className="pill-badge emerald">CHIP-0043</span>
           </div>
 
-          <p className="text-muted" style={{ margin: 0 }}>
-            Bond your Apple Silicon, Linux, Docker, or U.S. Public Library storage rig to the 50-state Chia PoST network. Human Flight Deck interactions run on <code>nousgent.ai</code> while autonomous capsule gossip routes strictly over <code>ia.nousgent.ai</code>.
+          <p className="text-muted" style={{ margin: 0, fontSize: '13px' }}>
+            Connect a sandboxed node or community Second Brain to contribute verified <code>.dig</code> capsules and Chia PoST storage.
           </p>
 
           <div
             className="spec-tablist"
             role="tablist"
-            aria-label="Operating System Sandbox Profile"
+            aria-label="Sandbox Profile"
             {...({ focusgroup: 'tablist nomemory' } as Record<string, string>)}
           >
             {ENLIST_OS_OPTIONS.map((opt, idx) => {
@@ -117,9 +115,6 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
                   }}
                 >
                   <div className="tabpanel-inner">
-                    <div className="mono-xs text-violet" style={{ marginBottom: '0.5rem', overflowWrap: 'anywhere' }}>
-                      SANDBOX PROFILE: {opt.envFlag.toUpperCase()}
-                    </div>
                     <div className="cli-strip">
                       <span className="mono-sm chrome-glyph">$</span>
                       <code id={cmdId} className="mono-xs">
@@ -127,7 +122,7 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
                       </code>
                       <CopyCommandButton targetId={cmdId} label="Copy" />
                     </div>
-                    <p className="text-muted" style={{ margin: '0.65rem 0 0', fontSize: '13px' }}>
+                    <p className="text-muted" style={{ margin: '0.55rem 0 0', fontSize: '12.5px' }}>
                       {opt.sandboxNote}
                     </p>
                   </div>
@@ -138,28 +133,28 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
         </div>
       </section>
 
-      <section className="glass-card col-5" aria-label="Mint Astronaut State Pod Callsign">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <section className="glass-card col-5" aria-label="Register Node">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 600 }}>Mint Astronaut Callsign</h2>
+            <h2 style={{ fontSize: '19px', fontWeight: 700 }}>Register Node</h2>
             <span className="pill-badge">+1,250 XP</span>
           </div>
 
-          <form onSubmit={(e) => void handleEnlistSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+          <form onSubmit={(e) => void handleEnlistSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <div>
               <label htmlFor="state-select" className="mono-xs text-muted">
-                STATE CONSORTIUM POD (50-STATE MESH)
+                STATE POD
               </label>
               <select
                 id="state-select"
                 className="spatial-input"
-                style={{ marginTop: '0.3rem' }}
+                style={{ marginTop: '0.28rem' }}
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
               >
                 {US_STATE_CODES.map((st) => (
                   <option key={st} value={st}>
-                    {st} — Sovereign Chia Pod
+                    {st}
                   </option>
                 ))}
               </select>
@@ -167,20 +162,20 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
 
             <div>
               <label htmlFor="did-input" className="mono-xs text-muted">
-                CHIA DID IDENTIFIER (CHIP-0035)
+                CHIA DID
               </label>
               <input
                 id="did-input"
                 type="text"
                 className="spatial-input"
-                style={{ marginTop: '0.3rem' }}
+                style={{ marginTop: '0.28rem' }}
                 value={didInput}
                 onChange={(e) => setDidInput(e.target.value)}
               />
             </div>
 
-            <button type="submit" className="btn-spatial btn-violet">
-              Bond Pod &amp; Mint Callsign
+            <button type="submit" className="btn-spatial btn-pistachio">
+              Register
             </button>
           </form>
 
@@ -192,28 +187,25 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
 
           {enlistResult ? (
             <div className="glass-well" role="status" style={{ borderColor: 'rgb(78 222 163 / 0.45)' }}>
-              <div className="mono-xs text-emerald">✓ ASTRONAUT CALLSIGN ISSUED</div>
-              <div style={{ fontSize: '21px', fontWeight: 600, marginTop: '0.2rem' }}>{enlistResult.callsign}</div>
-              <div className="mono-xs text-violet" style={{ marginTop: '0.2rem' }}>{enlistResult.rankTitle}</div>
-              <div className="mono-xs text-cyan" style={{ marginTop: '0.25rem', wordBreak: 'break-all' }}>
-                M2M CONDUIT: {enlistResult.morphicPulseEndpoint}
-              </div>
-              <div style={{ marginTop: '0.65rem' }}>
+              <div className="mono-xs text-emerald">✓ REGISTERED</div>
+              <div style={{ fontSize: '19px', fontWeight: 700, marginTop: '0.2rem' }}>{enlistResult.callsign}</div>
+              <div className="mono-xs text-pistachio" style={{ marginTop: '0.18rem' }}>{enlistResult.rankTitle}</div>
+              <div style={{ marginTop: '0.55rem' }}>
                 <a
                   href={`/api/nousgent/card/${enlistResult.callsign}.svg`}
                   target="_blank"
                   rel="noreferrer"
                   className="btn-spatial btn-glass"
                 >
-                  Open SVG Flight Card →
+                  Flight Card SVG
                 </a>
               </div>
             </div>
           ) : (
             <div className="glass-well">
-              <div className="mono-xs text-muted">LIVE CHIA PoST &amp; MESH TELEMETRY (DBRAIN.TO)</div>
-              <div className="mono-sm text-emerald" style={{ marginTop: '0.25rem' }}>
-                NETSPACE: {snapshot.dbrainNetspaceLabel} · BLOCK #{snapshot.dbrainPeakHeight.toLocaleString()} · ENLISTED RIGS: {snapshot.enlistedNodesCount}
+              <div className="mono-xs text-muted">NETWORK STATUS</div>
+              <div className="mono-sm text-emerald" style={{ marginTop: '0.2rem' }}>
+                {snapshot.dbrainNetspaceLabel} · Block #{snapshot.dbrainPeakHeight.toLocaleString()} · {snapshot.enlistedNodesCount} Rigs
               </div>
             </div>
           )}

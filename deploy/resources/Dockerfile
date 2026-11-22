@@ -14,9 +14,27 @@ RUN mkdir -p /out && \
       /src/dbrain_core_rs_napi.c \
       -o "/out/dbrain_core_rs.linux-${ARCH}.node"
 
+FROM node:22-alpine AS voice-builder
+ARG VOICE_MODEL=en_US-joe-medium
+WORKDIR /voice-deps
+RUN npm init -y >/dev/null && \
+    npm install --omit=dev --no-audit --no-fund onnxruntime-web@1.31.1 phonemizer@1.2.1 && \
+    rm -f node_modules/onnxruntime-web/dist/*.map \
+          node_modules/onnxruntime-web/dist/*.jsep.* \
+          node_modules/onnxruntime-web/dist/*.asyncify.* \
+          node_modules/onnxruntime-web/dist/*.jspi.* \
+          node_modules/onnxruntime-web/dist/ort.all.* \
+          node_modules/onnxruntime-web/dist/ort.webgl.* \
+          node_modules/onnxruntime-web/dist/ort.webgpu.* && \
+    mkdir -p /voices && \
+    wget -q -O "/voices/${VOICE_MODEL}.onnx.json" \
+      "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/joe/medium/${VOICE_MODEL}.onnx.json" && \
+    wget -q -O "/voices/${VOICE_MODEL}.onnx" \
+      "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/joe/medium/${VOICE_MODEL}.onnx"
+
 FROM node:22-alpine AS production
 
-ARG APP_VERSION=1.7.0
+ARG APP_VERSION=1.10.0
 LABEL org.opencontainers.image.title="nousgent-web" \
       org.opencontainers.image.description="nousgent.ai & ia.nousgent.ai — NOUSGENT Flagship Gamified Mission Control & M2M Swarm Plane for Bounded ASI on the Chia Blockchain" \
       org.opencontainers.image.version="${APP_VERSION}" \
@@ -26,8 +44,8 @@ LABEL org.opencontainers.image.title="nousgent-web" \
 RUN apk upgrade --no-cache && \
     addgroup -g 1001 -S nodejs && \
     adduser -S nousgent -u 1001 -G nodejs && \
-    mkdir -p /var/lib/nousgent /tmp/nousgent-state && \
-    chown -R nousgent:nodejs /var/lib/nousgent /tmp/nousgent-state && \
+    mkdir -p /var/lib/nousgent /tmp/nousgent-state /opt/nousgent-voices && \
+    chown -R nousgent:nodejs /var/lib/nousgent /tmp/nousgent-state /opt/nousgent-voices && \
     rm -rf /usr/local/lib/node_modules/npm \
            /usr/local/lib/node_modules/corepack \
            /usr/local/bin/npm \
@@ -38,6 +56,8 @@ RUN apk upgrade --no-cache && \
 WORKDIR /app
 
 COPY --chown=nousgent:nodejs . /app/
+COPY --from=voice-builder --chown=nousgent:nodejs /voice-deps/node_modules /app/node_modules
+COPY --from=voice-builder --chown=nousgent:nodejs /voices /opt/nousgent-voices
 COPY --from=native-builder --chown=nousgent:nodejs /out/*.node /app/packages/dbrain/vendor/dbrain-core-rs/
 
 USER nousgent
@@ -49,6 +69,11 @@ ENV PORT=3000
 ENV CANONICAL_ORIGIN=https://nousgent.ai
 ENV M2M_ORIGIN=https://ia.nousgent.ai
 ENV NOUSGENT_STATE_DIR=/var/lib/nousgent
+ENV NOUSGENT_MASK_OPACITY_PCT=65
+ENV NOUSGENT_VOICE_ENABLED=true
+ENV NOUSGENT_VOICE_MODEL=en_US-joe-medium
+ENV NOUSGENT_VOICE_PERSONA=afrobeat-baritone
+ENV NOUSGENT_VOICE_MODEL_DIR=/opt/nousgent-voices
 ENV APP_VERSION=${APP_VERSION}
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

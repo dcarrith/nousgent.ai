@@ -5,14 +5,38 @@ metadata:
   namespace: dbrain
   labels:
     app.kubernetes.io/name: nousgent
-    app.kubernetes.io/version: "1.7.0"
+    app.kubernetes.io/version: "1.10.0"
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  APP_VERSION: "1.7.0"
+  APP_VERSION: "1.10.0"
   CANONICAL_ORIGIN: "https://nousgent.ai"
   M2M_ORIGIN: "https://ia.nousgent.ai"
   NOUSGENT_STATE_DIR: "/var/lib/nousgent"
+  NOUSGENT_MASK_OPACITY_PCT: "65"
+  NOUSGENT_VOICE_ENABLED: "true"
+  NOUSGENT_VOICE_MODEL: "en_US-joe-medium"
+  NOUSGENT_VOICE_PERSONA: "afrobeat-baritone"
+  NOUSGENT_VOICE_MODEL_DIR: "/opt/nousgent-voices"
+  NOUSGENT_VOICE_LENGTH_SCALE: "0.96"
+  # Local Voice / Neural TTS Endpoint Override (OpenAI /v1/audio/speech or Piper HTTP)
+  NOUSGENT_VOICE_TTS_URL: ""
+  NOUSGENT_VOICE_TTS_PROTOCOL: "openai"
+  NOUSGENT_VOICE_TTS_MODEL: "en_US-joe-medium"
+  NOUSGENT_VOICE_TTS_VOICE: "en_US-joe-medium"
+  # Local AMD Ryzen AI Halo ("Strix Halo") OpenAI-Compatible Inference Router
+  # Set NOUSGENT_HALO_BASE_URL (e.g. "http://halo.local:11434/v1" or "http://host.docker.internal:8000/v1")
+  # to wire Frontier Q&A fallback, autonomous RSI/Dream/Redteam agents, and embeddings at once,
+  # or override any component URL/model individually below:
+  NOUSGENT_HALO_BASE_URL: ""
+  NOUSGENT_LLM_URL: ""
+  NOUSGENT_LLM_MODEL: "qwen3:32b"
+  NOUSGENT_LLM_TIMEOUT_MS: "12000"
+  NOUSGENT_LLM_MAX_TOKENS: "320"
+  NOUSGENT_RSI_AGENT_LLM_URL: ""
+  NOUSGENT_RSI_AGENT_MODEL: "qwen3:32b"
+  NOUSGENT_EMBEDDING_URL: ""
+  NOUSGENT_EMBEDDING_MODEL: "nomic-embed-text"
   DOLFACTORY_ORIGIN: "https://dolfactory.to"
   DOLFACTORY_UPSTREAM_URL: "http://dolfactory-web.dbrain.svc.cluster.local:80"
   DTHALAMUS_ORIGIN: "https://dthalamus.to"

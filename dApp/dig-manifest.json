@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.7.0",
+  "version": "1.10.0",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,11 +11,11 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-22T16:22:49.379Z",
+  "builtAt": "2026-11-22T19:07:09.016Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0xe2a20d43f52c5ee4354d376fd4b71483baccdc3b50971af1cd54280cc5a62333",
+    "manifestTreeSha256": "0x3c44955c4c8fea882d85f9a0c16fbad304a63f88dc7852fa4b1ebe1036b78d17",
     "totalFiles": 23,
-    "totalBytes": 3774665
+    "totalBytes": 3238533
   },
   "files": [
     {
@@ -34,14 +34,14 @@
       "sha256": "dd1f0c6432bbd3da59d49b2a227498b688a71d50e301a56144ffaa8eef5267ca"
     },
     {
-      "path": "assets/index-IAxzGU-g.js",
-      "bytes": 102118,
-      "sha256": "1b0881ea90342cd375e444a82c284bd3db383fc4161183555a8addc04e17bc1a"
+      "path": "assets/index-BCADlG2j.js",
+      "bytes": 106338,
+      "sha256": "d1518085417e4e5ff3decff92fd2eba1cc6363113587aa0d25af4beab4c00761"
     },
     {
-      "path": "assets/index-LSJendXG.css",
-      "bytes": 23965,
-      "sha256": "799b879234b50a0665f1084419e070ef99a222e4bca403577b0199a7dfd1a384"
+      "path": "assets/index-CKZtpHnx.css",
+      "bytes": 34258,
+      "sha256": "83d711992f07847244183aa5a6e86c90c5b210461772bd5bc3a332f5d578c20f"
     },
     {
       "path": "assets/react-vendor-DbuZmYU1.js",
@@ -55,33 +55,33 @@
     },
     {
       "path": "brand/logo-concept-b-bipartite-crest.svg",
-      "bytes": 3275,
-      "sha256": "8da6db1c2c1d190a0b1fa92b408f9705ae95c5491df15cd17d9165aec9594b03"
+      "bytes": 3154,
+      "sha256": "825bc5979b0ae68c2da709a1605bd749ae61efd8e662b7303045ce32d8cab33d"
     },
     {
       "path": "brand/logo-concept-c-monoline-glyph.svg",
-      "bytes": 2333,
-      "sha256": "92bf911a6e334f7766e153c593fb70a324aeaeb16a756a955a514d1015b9f19d"
+      "bytes": 2215,
+      "sha256": "b1227dcd5078f9b4e39987a8c8c5e7afbde1d14295aa159b206e7d311f0cacc4"
     },
     {
       "path": "brand/og-design-1-solar-xray.jpg",
-      "bytes": 122392,
-      "sha256": "ebf8ab7564f7ecd9191619d3bc54a919585b3fcf5052384adca708704343a439"
+      "bytes": 87702,
+      "sha256": "d45e35ff3f072463d476b9dcca588c72e4b9c26531d992edb54d0e87afbb5778"
     },
     {
       "path": "brand/og-design-2-sculptural-totem.jpg",
-      "bytes": 138773,
-      "sha256": "54a10bf91d507ce10858a84e2e1eeddc9756b6f7908976368b11a003960f3572"
+      "bytes": 100017,
+      "sha256": "a7e4adb5fcd8a57b6810bafee5cd1501b87d00f908ff57d1574fbb30b9a1f561"
     },
     {
       "path": "brand/og-design-3-bipartite-heraldic.jpg",
-      "bytes": 121520,
-      "sha256": "1b6f1c83c7b1be30ee861cd4d730fb7f7fa376baf58040ef90ec20e82f8fec6d"
+      "bytes": 98370,
+      "sha256": "21c6686b656a57fcc93e3628889fb71c23f5e306a5b5e6ef8e080c85c1f1aa22"
     },
     {
       "path": "favicon.svg",
-      "bytes": 2382,
-      "sha256": "7b8786caa4d700fed06a40e90ab4bb3c1db4d68fa7e41ecc2606ffbc50bca811"
+      "bytes": 2269,
+      "sha256": "1e016089c1a93b64f0fa11014fbcff6f70c24703fa40e3c10fb71d7299987352"
     },
     {
       "path": "icon-192.png",
@@ -95,28 +95,28 @@
     },
     {
       "path": "index.html",
-      "bytes": 5894,
-      "sha256": "9e6a44848168955839e3c25b1e177976c5c63bcf728d9883b5e823c79316d5f2"
+      "bytes": 5788,
+      "sha256": "0bd0960c7de1dd118b20498c10098ae0ae4e0a2453751f20178e9e17d490e764"
     },
     {
       "path": "logo-wordmark.svg",
-      "bytes": 4665,
-      "sha256": "8addbb43581794e390c9f688bf11147b3cb400f42c51628dc9ee859da22e5965"
+      "bytes": 4049,
+      "sha256": "aa774720a01028daf750f7bc23b3f775cf8421fe3db9a82e659f714dad195011"
     },
     {
       "path": "og-image.jpg",
-      "bytes": 112549,
-      "sha256": "3fee3fb86f88efdbeee56fab9501e0a28d7ca6a9f9c0bc06d1ee23b27caa2970"
+      "bytes": 93235,
+      "sha256": "4904a1e89c0f98c675d2145b4cfac33474790ec5eef931d35a47cbf0dfedfd55"
     },
     {
       "path": "og-image.png",
-      "bytes": 754716,
-      "sha256": "a452b10898207fcfadfee8ce769b8fcc57b9e7755aa16a361d9f9dab37210f17"
+      "bytes": 353343,
+      "sha256": "e388f38b6d3eb05f20513a6f267d1c23e9b90373674a6d40172f5bc00f38176e"
     },
     {
       "path": "og-square.jpg",
-      "bytes": 176186,
-      "sha256": "15a63ed5c59a1cb8cb95fbef8fa0a2d6e1119d8fbbb8685ed31ebc3fbe68f454"
+      "bytes": 144180,
+      "sha256": "102b61e8e661dc9b1b7ce0a53f2f347267f1a11e4a00175812c07815a966d8ba"
     },
     {
       "path": "robots.txt",
@@ -125,13 +125,13 @@
     },
     {
       "path": "site.webmanifest",
-      "bytes": 909,
-      "sha256": "2347f72cc1975e483275058aaff74fa4d6d49ed8e92824b18df4d7e801dd1200"
+      "bytes": 738,
+      "sha256": "4e2a4f4fc7935c6886403c9b44e61d19eac557f3bb6d2f32981aa3ffd770f0c6"
     },
     {
       "path": "sitemap.xml",
-      "bytes": 979,
-      "sha256": "acee3dc375db309a7680084693afa69e7946b4e542622290f5aa5ac920f16822"
+      "bytes": 868,
+      "sha256": "e9ebfbba898f1e58c2ca0d846e26745fc506251a145db71c0446052bae8f3a0e"
     }
   ]
 }

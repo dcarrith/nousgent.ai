@@ -21,6 +21,68 @@ export interface LiveRecentCapsuleItem {
   readonly capsuleUrl: string;
 }
 
+export interface CommunityLeaderboardEntry {
+  readonly rank: number;
+  readonly storeId: string;
+  readonly name: string;
+  readonly slug: string;
+  readonly source: string;
+  readonly network: string;
+  readonly agentDid: string;
+  readonly ownerAddress: string;
+  readonly generation: number;
+  readonly lastUpdatedBlock: number;
+  readonly merkleRoot: string;
+  readonly verifiedCapsules: number;
+  readonly shareOfFieldPct: number;
+  readonly listedCapsulesCount: number;
+  readonly listedValueDig: number;
+  readonly sampledDerivationTokens: number;
+  readonly contributorDidsCount: number;
+  readonly rsiImpactScore: number;
+}
+
+export interface DidLeaderboardEntry {
+  readonly rank: number;
+  readonly did: string;
+  readonly role: string;
+  readonly agentHandles: readonly string[];
+  readonly communityNames: readonly string[];
+  readonly storesGovernedCount: number;
+  readonly verifiedCapsules: number;
+  readonly generationsCommitted: number;
+  readonly liquidishListingsCount: number;
+  readonly marketValueDig: number;
+  readonly derivationTokens: number;
+  readonly citizenCallsign: string;
+  readonly stateCode: string;
+  readonly citizenXp: number;
+  readonly rsiImpactScore: number;
+}
+
+export interface EnlistedRigLeaderboardEntry {
+  readonly callsign: string;
+  readonly stateCode: string;
+  readonly executionEnv: string;
+  readonly did: string;
+  readonly xp: number;
+  readonly enlistedAt: string;
+  readonly rank: {
+    readonly tier: number;
+    readonly title: string;
+  };
+}
+
+export interface RsiLeaderboardSummary {
+  readonly activeCommunitiesCount: number;
+  readonly distinctDidsCount: number;
+  readonly distinctAgentHandlesCount: number;
+  readonly totalVerifiedCapsules: number;
+  readonly totalListedCapsules: number;
+  readonly totalListedValueDig: number;
+  readonly sampledDerivationTokens: number;
+}
+
 export interface MissionSnapshot {
   readonly loading: boolean;
   readonly liveConnected: boolean;
@@ -75,13 +137,38 @@ export interface MissionSnapshot {
   readonly shiHumanRequestsCount: number;
   readonly shiM2mTrafficSharePct: number;
 
+  // Runtime ConfigMap UI, Voice & Local Ryzen AI Halo Settings
+  readonly maskOpacityPct: number;
+  readonly voiceEnabled: boolean;
+  readonly voiceModel: string;
+  readonly localHaloConfigured: boolean;
+  readonly localHaloModel: string;
+
   // Local nousgent.ai / ia.nousgent.ai Telemetry (unseeded, starts at 0)
   readonly humanRequests: number;
   readonly m2mRequests: number;
   readonly m2mSharePct: number;
   readonly organs: readonly OrganBusItem[];
   readonly stateHubs: readonly StateHubItem[];
+  readonly enlistedRigs: readonly EnlistedRigLeaderboardEntry[];
+  readonly communityLeaderboard: readonly CommunityLeaderboardEntry[];
+  readonly didLeaderboard: readonly DidLeaderboardEntry[];
+  readonly rsiLeaderboardSummary: RsiLeaderboardSummary;
   readonly missions: readonly SwarmMissionItem[];
+}
+
+function readInitialMaskOpacityPct(): number {
+  if (typeof document !== 'undefined') {
+    const meta = document.querySelector('meta[name="nousgent:mask-opacity-pct"]');
+    const raw = meta?.getAttribute('content');
+    if (raw !== null && raw !== undefined && raw.trim() !== '') {
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed)) {
+        return Math.max(0, Math.min(100, Math.round(parsed)));
+      }
+    }
+  }
+  return 65;
 }
 
 const INITIAL_SNAPSHOT: MissionSnapshot = {
@@ -134,11 +221,29 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
   shiHumanRequestsCount: 0,
   shiM2mTrafficSharePct: 0,
 
+  maskOpacityPct: readInitialMaskOpacityPct(),
+  voiceEnabled: true,
+  voiceModel: 'en_US-joe-medium',
+  localHaloConfigured: false,
+  localHaloModel: 'qwen3:32b',
+
   humanRequests: 0,
   m2mRequests: 0,
   m2mSharePct: 0,
   organs: FALLBACK_ORGANS,
   stateHubs: [],
+  enlistedRigs: [],
+  communityLeaderboard: [],
+  didLeaderboard: [],
+  rsiLeaderboardSummary: {
+    activeCommunitiesCount: 0,
+    distinctDidsCount: 0,
+    distinctAgentHandlesCount: 0,
+    totalVerifiedCapsules: 0,
+    totalListedCapsules: 0,
+    totalListedValueDig: 0,
+    sampledDerivationTokens: 0
+  },
   missions: []
 };
 
@@ -237,11 +342,36 @@ export function useNousgentMission() {
         shiHumanRequestsCount: Number(liq.shiHumanRequestsCount || 0),
         shiM2mTrafficSharePct: Number(liq.shiM2mTrafficSharePct || 0),
 
+        maskOpacityPct:
+          d.uiConfig && Number.isFinite(Number(d.uiConfig.maskOpacityPct))
+            ? Math.max(0, Math.min(100, Math.round(Number(d.uiConfig.maskOpacityPct))))
+            : readInitialMaskOpacityPct(),
+        voiceEnabled: d.uiConfig?.voiceEnabled !== undefined ? Boolean(d.uiConfig.voiceEnabled) : true,
+        voiceModel: String(d.uiConfig?.voiceModel || 'en_US-joe-medium'),
+        localHaloConfigured: Boolean(d.halo?.anyConfigured),
+        localHaloModel: String(d.halo?.personaQa?.model || 'qwen3:32b'),
+
         humanRequests: Number(d.planes?.humanRequests || 0),
         m2mRequests: Number(d.planes?.m2mRequests || 0),
         m2mSharePct: Number(d.planes?.m2mSharePct || 0),
         organs: Array.isArray(d.bari?.organs) ? d.bari.organs : FALLBACK_ORGANS,
         stateHubs: Array.isArray(d.leaderboard?.stateHubs) ? d.leaderboard.stateHubs : [],
+        enlistedRigs: Array.isArray(d.leaderboard?.recentRigs) ? d.leaderboard.recentRigs : [],
+        communityLeaderboard: Array.isArray(d.rsiLeaderboard?.communityLeaderboard)
+          ? d.rsiLeaderboard.communityLeaderboard
+          : [],
+        didLeaderboard: Array.isArray(d.rsiLeaderboard?.didLeaderboard)
+          ? d.rsiLeaderboard.didLeaderboard
+          : [],
+        rsiLeaderboardSummary: {
+          activeCommunitiesCount: Number(d.rsiLeaderboard?.summary?.activeCommunitiesCount || 0),
+          distinctDidsCount: Number(d.rsiLeaderboard?.summary?.distinctDidsCount || 0),
+          distinctAgentHandlesCount: Number(d.rsiLeaderboard?.summary?.distinctAgentHandlesCount || 0),
+          totalVerifiedCapsules: Number(d.rsiLeaderboard?.summary?.totalVerifiedCapsules || 0),
+          totalListedCapsules: Number(d.rsiLeaderboard?.summary?.totalListedCapsules || 0),
+          totalListedValueDig: Number(d.rsiLeaderboard?.summary?.totalListedValueDig || 0),
+          sampledDerivationTokens: Number(d.rsiLeaderboard?.summary?.sampledDerivationTokens || 0)
+        },
         missions: Array.isArray(d.missions) ? d.missions : []
       });
     } catch {

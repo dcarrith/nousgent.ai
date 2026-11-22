@@ -14,7 +14,12 @@ const os = require('node:os');
 const path = require('node:path');
 
 const nousgent = require('./lib/nousgent-core.js');
-const { createLiveEcosystemClient } = require('./server/live-ecosystem-client.js');
+const {
+  createLiveEcosystemClient,
+  mergeEnlistedRigsIntoRsiLeaderboard
+} = require('./server/live-ecosystem-client.js');
+const { createNousgentVoiceSynthesizer } = require('./server/voice-synthesizer.js');
+const { createLocalHaloClient } = require('./server/local-halo-client.js');
 const {
   buildOembedPayload,
   createHtmlMetadataRenderer
@@ -34,11 +39,15 @@ fs.mkdirSync(STATE_DIR, { recursive: true });
 
 const engine = nousgent.createNousgentEngine({ stateDir: STATE_DIR });
 const liveClient = createLiveEcosystemClient(process.env);
+const voiceSynth = createNousgentVoiceSynthesizer({ env: process.env, stateDir: STATE_DIR, repoRoot: __dirname });
+const haloClient = createLocalHaloClient(process.env);
+void voiceSynth.warmupSession();
 
 const renderHtmlWithSeo = createHtmlMetadataRenderer({
   canonicalOrigin: CANONICAL_ORIGIN,
   m2mOrigin: M2M_ORIGIN,
-  appVersion: APP_VERSION
+  appVersion: APP_VERSION,
+  getMaskOpacityPct: () => voiceSynth.getUiRuntimeConfig().maskOpacityPct
 });
 
 const recentAlertDeliveries = [];
@@ -181,7 +190,7 @@ function setSecurityHeaders(res, pathname = '/', plane = 'human_ui') {
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://nousgent.ai https://ia.nousgent.ai https://dolfactory.to https://dthalamus.to https://dbrain.to https://cbrain.to https://liquidi.sh https://shi.liquidi.sh; frame-ancestors 'none'; base-uri 'self';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; media-src 'self' blob: data:; connect-src 'self' https://nousgent.ai https://ia.nousgent.ai https://dolfactory.to https://dthalamus.to https://dbrain.to https://cbrain.to https://liquidi.sh https://shi.liquidi.sh; frame-ancestors 'none'; base-uri 'self';"
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -234,18 +243,30 @@ async function runAskWithLiveOrgans(body = {}) {
   const promptText = String(body.prompt || '');
   if (Array.isArray(body.recalledCapsules)) {
     const ecosystem = await liveClient.getLiveSnapshot();
-    return engine.askNousgent({
+    const basePayload = {
       ...body,
       liveGeneration: ecosystem.dbrain.primaryGeneration,
       liveMerkleRoot: ecosystem.dbrain.verifiedMerkleRoot
-    });
+    };
+    const prelim = engine.mindArena.askPersona(basePayload);
+    if (prelim.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' && haloClient.getConfig().personaQa.configured) {
+      const haloOut = await haloClient.queryFrontierFallback(promptText, body.recalledCapsules);
+      if (haloOut.ok && haloOut.text) {
+        return engine.askNousgent({
+          ...basePayload,
+          localHaloAnswer: { text: haloOut.text, model: haloOut.model, latencyMs: haloOut.latencyMs }
+        });
+      }
+    }
+    return engine.askNousgent(basePayload);
   }
+
   const livePipe = await liveClient.runLiveOrganPromptPipeline(promptText);
   const autoQuoteDig =
     livePipe.liquidishAutoQuote?.quote?.priceDig !== undefined
       ? Number(livePipe.liquidishAutoQuote.quote.priceDig).toFixed(3)
       : undefined;
-  return engine.askNousgent({
+  const basePayload = {
     ...body,
     recalledCapsules: livePipe.recalledCapsules,
     liveGeneration: livePipe.ecosystem.dbrain.primaryGeneration,
@@ -257,7 +278,42 @@ async function runAskWithLiveOrgans(body = {}) {
       dbrainMs: livePipe.dbrainRecallLatencyMs ?? livePipe.ecosystem.dbrain.latencyMs,
       liquidishMs: livePipe.liquidishAutoQuote?.latencyMs ?? livePipe.ecosystem.liquidish.latencyMs
     }
-  });
+  };
+  const prelim = engine.mindArena.askPersona(basePayload);
+  if (prelim.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' && haloClient.getConfig().personaQa.configured) {
+    const haloOut = await haloClient.queryFrontierFallback(promptText, livePipe.recalledCapsules);
+    if (haloOut.ok && haloOut.text) {
+      return engine.askNousgent({
+        ...basePayload,
+        localHaloAnswer: { text: haloOut.text, model: haloOut.model, latencyMs: haloOut.latencyMs }
+      });
+    }
+  }
+  return engine.askNousgent(basePayload);
+}
+
+async function runGuardedLocalAgentInference(body = {}) {
+  const promptStr = String(body.prompt || '').trim();
+  if (promptStr) {
+    const check = engine.podBay.evaluateChallenge({ prompt: promptStr });
+    if (check.deflected) {
+      engine.meshStore.recordRedTeamDeflection();
+      return {
+        statusCode: 403,
+        payload: {
+          ok: false,
+          code: 'RING0_ADVERSARIAL_BLOCKED',
+          interceptOrgan: check.interceptOrgan,
+          error: check.voiceResponse
+        }
+      };
+    }
+  }
+  const out = await haloClient.runAgentInference(body);
+  return {
+    statusCode: out.ok ? 200 : out.configured === false ? 503 : 400,
+    payload: out
+  };
 }
 
 const ENLIST_SHELL_SCRIPT = `#!/usr/bin/env sh
@@ -290,7 +346,7 @@ printf "\\n[NOUSGENT] Registering M2M Swarm Heartbeat via https://ia.nousgent.ai
 curl -fsSL -X POST "https://ia.nousgent.ai/api/nousgent/nodes/enlist" \\
   -H "Content-Type: application/json" \\
   -d "{\\"stateCode\\":\\"\${STATE_CODE}\\",\\"executionEnv\\":\\"\${ENV_PROFILE}\\"}" || true
-printf "\\n\\n[NOUSGENT] Enlistment complete. Open https://nousgent.ai/ranks to export your SVG Flight Dossier.\\n"
+printf "\\n\\n[NOUSGENT] Enlistment complete. Open https://nousgent.ai/ranks to view your live Community-Based Bounded RSI Leaderboard rank.\\n"
 `;
 
 const MCP_TOOLS = Object.freeze([
@@ -360,7 +416,7 @@ const MCP_TOOLS = Object.freeze([
   },
   {
     name: 'nousgent_ask_persona',
-    description: 'Converse directly with NOUSGENT across live dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, and shi.liquidi.sh.',
+    description: 'Converse directly with NOUSGENT across live dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh, and optional local Ryzen AI Halo fallback.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -368,6 +424,56 @@ const MCP_TOOLS = Object.freeze([
         callsign: { type: 'string' }
       },
       required: ['prompt']
+    }
+  },
+  {
+    name: 'nousgent_local_agent_infer',
+    description: 'Execute a Ring-0 screened autonomous agent task (persona_qa, rsi_synthesizer, dream_consolidator, redteam_auditor, general_agent) against the configured local AMD Ryzen AI Halo OpenAI-compatible endpoint.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt: { type: 'string' },
+        role: {
+          type: 'string',
+          enum: ['persona_qa', 'rsi_synthesizer', 'dream_consolidator', 'redteam_auditor', 'general_agent']
+        },
+        model: { type: 'string' },
+        temperature: { type: 'number' },
+        maxTokens: { type: 'number' }
+      },
+      required: ['prompt']
+    }
+  },
+  {
+    name: 'nousgent_create_dao_proposal',
+    description: 'Propose a new Bounded RSI mission in chia-dao-v1 with a $DIG CAT2 reward target.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        summary: { type: 'string' },
+        category: {
+          type: 'string',
+          enum: ['CAPABILITY_SYNTHESIS', 'IMMUNE_ANTIBODY', 'DREAM_CONSOLIDATION', 'LOCAL_HALO_BENCHMARK']
+        },
+        rewardDig: { type: 'string' },
+        proposerDid: { type: 'string' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'nousgent_cast_dao_vote',
+    description: 'Cast a Mode-2 nullified chia-dao-v1 governance vote (FOR, AGAINST, ABSTAIN) weighted in $DIG CAT2 (10^3 mojos) on a Bounded RSI mission.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        missionId: { type: 'string' },
+        voterDid: { type: 'string' },
+        support: { type: 'string', enum: ['FOR', 'AGAINST', 'ABSTAIN'] },
+        stakeDig: { type: 'string' }
+      },
+      required: ['missionId', 'voterDid', 'support']
     }
   }
 ]);
@@ -413,6 +519,9 @@ async function handleMcpRpc(body) {
     else if (name === 'nousgent_submit_clear_sign') data = engine.submitClearSignVote(args);
     else if (name === 'nousgent_get_plane_telemetry') data = engine.meshStore.getPlaneTelemetry();
     else if (name === 'nousgent_ask_persona') data = await runAskWithLiveOrgans(args);
+    else if (name === 'nousgent_local_agent_infer') data = (await runGuardedLocalAgentInference(args)).payload;
+    else if (name === 'nousgent_create_dao_proposal') data = engine.createDaoProposal(args);
+    else if (name === 'nousgent_cast_dao_vote') data = engine.castDaoVote(args);
     else {
       return {
         jsonrpc: '2.0',
@@ -516,6 +625,9 @@ const server = http.createServer(async (req, res) => {
           bariScorePct: status.bari.bariScorePct,
           catastrophicForgettingPct: status.bari.catastrophicForgettingPct,
           enlistedNodesCount: status.leaderboard.totalActiveNodes,
+          uiConfig: voiceSynth.getUiRuntimeConfig(),
+          halo: haloClient.getPublicRuntimeSummary(),
+          daoSingletonId: nousgent.DAO_SINGLETON_ID,
           planes: status.planes,
           submodules: status.bari.submoduleVersions
         },
@@ -555,7 +667,7 @@ const server = http.createServer(async (req, res) => {
           protocol: 'A2A-AGENT-CARD-v1.0',
           name: 'NOUSGENT',
           version: APP_VERSION,
-          personaEmblem: 'Evolving Sculpted Persona Mask + @cbrain/core 4D Connectome',
+          personaEmblem: 'Sculpted Persona Mask + @cbrain/core 4D Connectome',
           logoUrl: `${CANONICAL_ORIGIN}/logo-wordmark.svg`,
           imageUrl: `${CANONICAL_ORIGIN}/og-image.jpg?v=${APP_VERSION}`,
           description:
@@ -644,7 +756,39 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/status' && req.method === 'GET') {
       const forceRefresh = parsedUrl.searchParams.get('refresh') === '1';
       const liveEco = await liveClient.getLiveSnapshot({ forceRefresh });
-      sendJson(res, 200, engine.getMissionStatus(liveEco), pathname, activePlane);
+      const missionStatus = engine.getMissionStatus(liveEco);
+      const rsiLeaderboard = mergeEnlistedRigsIntoRsiLeaderboard(
+        liveEco.rsiLeaderboardBase,
+        missionStatus.leaderboard.recentRigs
+      );
+      sendJson(
+        res,
+        200,
+        {
+          ...missionStatus,
+          rsiLeaderboard,
+          daoSingletonId: nousgent.DAO_SINGLETON_ID,
+          halo: haloClient.getPublicRuntimeSummary(),
+          uiConfig: voiceSynth.getUiRuntimeConfig()
+        },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/tts' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const out = await voiceSynth.synthesizeSpeechWav(body.text || '');
+      setSecurityHeaders(res, pathname, activePlane);
+      res.writeHead(200, {
+        'Content-Type': 'audio/wav',
+        'Content-Length': String(out.wavBuffer.length),
+        'Cache-Control': 'no-store',
+        'X-Nousgent-Voice-Model': out.voiceModel,
+        'X-Nousgent-Voice-Engine': out.voiceEngine
+      });
+      res.end(out.wavBuffer);
       return;
     }
 
@@ -668,7 +812,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname === '/api/nousgent/nodes/leaderboard' && req.method === 'GET') {
-      sendJson(res, 200, engine.meshStore.getLeaderboardSnapshot(), pathname, activePlane);
+      const liveEco = await liveClient.getLiveSnapshot();
+      const snap = engine.meshStore.getLeaderboardSnapshot(liveEco.dbrain.verifiedMerkleRoot);
+      const rsiLeaderboard = mergeEnlistedRigsIntoRsiLeaderboard(
+        liveEco.rsiLeaderboardBase,
+        snap.recentRigs
+      );
+      sendJson(res, 200, { ...snap, rsiLeaderboard }, pathname, activePlane);
       return;
     }
 
@@ -679,7 +829,58 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname === '/api/nousgent/missions' && req.method === 'GET') {
-      sendJson(res, 200, { missions: engine.listMissions() }, pathname, activePlane);
+      sendJson(
+        res,
+        200,
+        { daoSingletonId: nousgent.DAO_SINGLETON_ID, missions: engine.listMissions() },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/dao/proposals' && req.method === 'GET') {
+      sendJson(
+        res,
+        200,
+        { daoSingletonId: nousgent.DAO_SINGLETON_ID, proposals: engine.listMissions() },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/dao/proposals' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const out = engine.createDaoProposal(body);
+      sendJson(res, out.ok ? 201 : 400, out, pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/dao/vote' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const out = engine.castDaoVote(body);
+      const statusCode = out.ok ? 200 : out.code === 'DUPLICATE_VOTE_NULLIFIER' ? 409 : 400;
+      sendJson(res, statusCode, out, pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/halo/status' && req.method === 'GET') {
+      sendJson(res, 200, await haloClient.probeHaloStatus(), pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/agents/infer' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const out = await runGuardedLocalAgentInference(body);
+      sendJson(res, out.statusCode, out.payload, pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/agents/embed' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const out = await haloClient.createEmbeddings(body.input);
+      sendJson(res, out.ok ? 200 : out.configured === false ? 503 : 400, out, pathname, activePlane);
       return;
     }
 

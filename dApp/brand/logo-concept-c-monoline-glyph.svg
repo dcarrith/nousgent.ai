@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="monoTitle monoDesc">
-  <title id="monoTitle">nousgent.ai Concept C — Monoline Merkle Wireframe Persona Glyph</title>
-  <desc id="monoDesc">Minimalist monoline vector glyph uniting sculpted horns, solar disk, and 5-lobe @cbrain/core Merkle graph for CLI, M2M ia.nousgent.ai headers, and CSS mask icons.</desc>
+  <title id="monoTitle">NOUSGENT — Monoline Glyph</title>
+  <desc id="monoDesc">Minimalist monoline vector glyph uniting the persona mask and 5-lobe Merkle graph.</desc>
   <rect width="256" height="256" rx="44" fill="#120a07" stroke="#2dd4bf" stroke-opacity="0.45" stroke-width="2.5"/>
   <!-- Dual M2M / Human Antenna Horns -->
   <path d="M 96 76 C 54 50, 56 18, 108 18" fill="none" stroke="#7ed957" stroke-width="5" stroke-linecap="round"/>

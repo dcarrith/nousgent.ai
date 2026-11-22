@@ -1,74 +1,74 @@
 'use strict';
 
 const OG_IMAGE_ALT =
-  'nousgent.ai Persona Metamorphosis — Awakened Persona evolving across the glowing 3D @cbrain/core Morphic Intelligence Field into Sovereign Wisdom through Community Brains and Autonomous Bounded RSI on Chia.';
+  'NOUSGENT — Sculpted 3D persona mask and 5-lobe connectome for the Morphic Intelligence Field and autonomous Bounded RSI on Chia.';
 
 const SEO_ROUTES = Object.freeze({
   '/': {
-    title: 'nousgent.ai — Morphic Intelligence Field & Autonomous Bounded RSI on Chia',
+    title: 'NOUSGENT — Morphic Intelligence Field & Bounded RSI on Chia',
     description:
-      'Community dbrain.to Second Brains feed the shared Morphic Intelligence Field while NOUSGENT drives 24/7 autonomous Bounded RSI toward Bounded ASI across dolfactory.to, dthalamus.to, dbrain.to, cbrain.to & shi.liquidi.sh.',
+      'Community Second Brains compound verified .dig memory in the Morphic Intelligence Field alongside 24/7 autonomous Bounded RSI on Chia.',
     keywords:
-      'NOUSGENT, nousgent.ai, ia.nousgent.ai, Morphic Intelligence Field, Autonomous Bounded RSI, Community Second Brains, Bounded ASI, @cbrain/core 3D Connectome, Chia blockchain, DataLayer L2, DIG Network, CHIP-0043 Clear-Signing, dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh',
-    label1: 'Dual-Engine RSI',
-    data1: 'Morphic Field + Autonomous RSI',
-    label2: 'M2M Conduit',
-    data2: 'ia.nousgent.ai · 0.00% Forgetting'
+      'NOUSGENT, Morphic Intelligence Field, Autonomous Bounded RSI, Community Second Brains, Chia blockchain, DataLayer, DIG Network, CHIP-0043',
+    label1: 'Architecture',
+    data1: 'Community Brains + Autonomous RSI',
+    label2: 'Retention',
+    data2: '0.00% Forgetting · CHIP-0043'
   },
   '/pod-bay': {
-    title: 'Pod Bay Adversarial Chamber ("Try to Make NOUSGENT Go HAL") — nousgent.ai',
+    title: 'Redteam — NOUSGENT',
     description:
-      'Red-team prompt jailbreak testbed with a 25,000 $DIG bounty. Attempt to force NOUSGENT’s Ring-0 thalamic kernel into instruction bypass across dolfactory.to & dthalamus.to.',
+      'Test adversarial prompts, conflicting directives, and unsigned actuation against pre-cortical and Ring-0 guards.',
     keywords:
-      'NOUSGENT Pod Bay Chamber, Try to make me go HAL, HAL 9000 red team, CHIP-0043 interlock, dolfactory.to, dthalamus.to, $DIG bounty',
-    label1: 'Bounty Pool',
-    data1: '25,000.000 $DIG CAT2 Escrow',
-    label2: 'Sniffer Latency',
+      'NOUSGENT Redteam, prompt injection testbed, CHIP-0043 interlock, Ring-0 defense, $DIG bounty',
+    label1: 'Bounty',
+    data1: '25,000 $DIG Escrow',
+    label2: 'Gate Latency',
     data2: '0.14ms · 100% Deflected'
   },
   '/enlist': {
-    title: '1-Command Enlistment — Nationwide Chia PoST & Morphic Mesh | nousgent.ai',
+    title: 'Communities — NOUSGENT',
     description:
-      'Instantly bond your macOS Seatbelt, Linux Bubblewrap, Docker, or Public Library rig to the 50-state PoST network in 60 seconds and mint your Citizen Keyholder Callsign.',
+      'Connect a sandboxed node or community Second Brain to contribute verified .dig capsules and Chia PoST storage.',
     keywords:
-      'enlist nousgent, nousgent.ai/enlist.sh, Chia PoST node, DataLayer L2, state consortium hub, sovereign AI USA',
-    label1: '1-Command Pipeline',
-    data1: 'curl -fsSL https://nousgent.ai/enlist.sh',
-    label2: 'Green Grid Dividend',
-    data2: '84.6 MW & 1.24M Gal H2O Saved'
+      'NOUSGENT Communities, Chia PoST node, DataLayer, Second Brain, CHIP-0043',
+    label1: 'Sandbox',
+    data1: 'Seatbelt · Bubblewrap · Docker',
+    label2: 'Royalties',
+    data2: '60% / 25% / 10% / 5% $DIG'
   },
   '/missions': {
-    title: 'CHIP-0043 Swarm Clear-Sign Ceremony & Major Orders — nousgent.ai',
+    title: 'Signing — NOUSGENT',
     description:
-      'Decentralized air-gap validation ceremony: co-sign Community Bounded RSI weights using hardware FIDO2 passkeys and UR-encoded animated glyphs.',
+      'Co-sign constitutional upgrades and DAO escrows with hardware FIDO2 passkeys under Two-Key CHIP-0043.',
     keywords:
-      'CHIP-0043 Clear-Signing, ur:chia-clear-sign, FIDO2 Passkey quorum, chia-dao-v1, Bounded RSI governance',
-    label1: 'Air-Gap Sync',
+      'CHIP-0043 Clear-Signing, FIDO2 Passkey quorum, chia-dao-v1, Bounded RSI governance',
+    label1: 'Protocol',
     data1: 'Two-Key CHIP-0043 (-32044)',
-    label2: 'Active Pool',
-    data2: '400,000.000 $DIG Major Orders'
-  },
-  '/observatory': {
-    title: '4D @cbrain/core Connectome, Persona Metamorphosis & Git Bisect — nousgent.ai',
-    description:
-      'Explore NOUSGENT’s 2,048-Kenyon-Synapse 4D fMRI topology as its 3D persona visage evolves from awakened alertness toward sovereign wisdom, inspect ia.nousgent.ai NDJSON frames, and run O(log N) Git Bisect.',
-    keywords:
-      'cbrain.to 4D topology, Morphic Persona Mask, dbrain bisect, 2048 Kenyon Synapses, 0% catastrophic forgetting, ia.nousgent.ai stream',
-    label1: 'Surgical Excise',
-    data1: '10 Probes / 1,024 Gens (0.18ms)',
-    label2: 'Retained Cognition',
-    data2: '100% (vs. 0% HAL Manual Halt)'
+    label2: 'Escrow',
+    data2: '400,000 $DIG'
   },
   '/ranks': {
-    title: 'shi.liquidi.sh $DIG Royalties, Morphic Flight Cards & M2M API — nousgent.ai',
+    title: 'Leaderboard — NOUSGENT',
     description:
-      'Export your SVG Flight Card, preview official Morphic Persona social graph assets, track 60/25/10/5% Proof-of-Derivation $DIG royalties on shi.liquidi.sh, and integrate swarms with https://ia.nousgent.ai/api/mcp.',
+      'Live intelligence contributions across community Brain Stores, Chia DIDs, and regional pods.',
     keywords:
-      'ia.nousgent.ai MCP, shi.liquidi.sh $DIG royalty flow, NOUSGENT SVG Flight Card, Prometheus dual-host metrics',
-    label1: 'Citation-DAG Split',
-    data1: '60% / 25% / 10% / 5% $DIG',
-    label2: 'M2M Endpoint',
-    data2: 'https://ia.nousgent.ai/api/mcp'
+      'NOUSGENT Leaderboard, Community-Based Bounded RSI, Chia DID rankings, Morphic Intelligence Field',
+    label1: 'Ranked By',
+    data1: 'Communities · Chia DIDs · Pods',
+    label2: 'Royalties',
+    data2: '60% / 25% / 10% / 5% $DIG'
+  },
+  '/leaderboard': {
+    title: 'Leaderboard — NOUSGENT',
+    description:
+      'Live intelligence contributions across community Brain Stores, Chia DIDs, and regional pods.',
+    keywords:
+      'NOUSGENT Leaderboard, Community-Based Bounded RSI, Chia DID rankings, Morphic Intelligence Field',
+    label1: 'Ranked By',
+    data1: 'Communities · Chia DIDs · Pods',
+    label2: 'Royalties',
+    data2: '60% / 25% / 10% / 5% $DIG'
   }
 });
 
@@ -153,7 +153,7 @@ function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
   return JSON.stringify(graph).replace(/<\//g, '<\\/');
 }
 
-function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.7.0', targetUrl = '' } = {}) {
+function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.10.0', targetUrl = '' } = {}) {
   let resolvedPath = '/';
   if (targetUrl) {
     try {
@@ -168,10 +168,10 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
   return {
     version: '1.0',
     type: 'photo',
-    provider_name: 'nousgent.ai',
+    provider_name: 'NOUSGENT',
     provider_url: canonicalOrigin,
     title: meta.title,
-    author_name: 'nousgent.ai — Morphic Intelligence Field & Autonomous Bounded RSI Studio (M2M: ia.nousgent.ai)',
+    author_name: 'NOUSGENT — Collective Bounded RSI',
     author_url: canonicalOrigin,
     url: ogJpgUrl,
     width: 1200,
@@ -186,13 +186,15 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
 function createHtmlMetadataRenderer({
   canonicalOrigin = 'https://nousgent.ai',
   m2mOrigin = 'https://ia.nousgent.ai',
-  appVersion = '1.7.0'
+  appVersion = '1.10.0',
+  getMaskOpacityPct = () => 65
 } = {}) {
   return function renderHtmlWithSeo(htmlTemplate, rawPathname = '/', plane = 'human_ui') {
     const pathname = normalizeSeoPathname(rawPathname);
     const baseMeta = SEO_ROUTES[pathname] || SEO_ROUTES['/'];
     const activeOrigin = plane === 'm2m_ia' ? m2mOrigin : canonicalOrigin;
     const activeHost = plane === 'm2m_ia' ? 'ia.nousgent.ai' : 'nousgent.ai';
+    const maskOpacityPct = Math.max(0, Math.min(100, Number(getMaskOpacityPct() ?? 65)));
     const meta =
       plane === 'm2m_ia'
         ? {
@@ -299,6 +301,10 @@ function createHtmlMetadataRenderer({
       .replace(
         /<meta\s+name="twitter:data2"\s+id="twitterData2"\s+content="[^"]*"\s*\/?>/,
         `<meta name="twitter:data2" id="twitterData2" content="${escapeAttr(meta.data2)}" />`
+      )
+      .replace(
+        /<meta\s+name="nousgent:mask-opacity-pct"\s+id="nousgentMaskOpacityMeta"\s+content="[^"]*"\s*\/?>/,
+        `<meta name="nousgent:mask-opacity-pct" id="nousgentMaskOpacityMeta" content="${escapeAttr(String(maskOpacityPct))}" />`
       )
       .replace(
         /<script\s+type="application\/ld\+json"\s+id="schemaJsonLd">[\s\S]*?<\/script>/,

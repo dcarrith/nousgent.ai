@@ -16,7 +16,322 @@ const http = require('node:http');
 const https = require('node:https');
 const zlib = require('node:zlib');
 
-const RFC5737_TEST_FIXTURE_RE = /(?:198\.51\.100\.|203\.0\.113\.|192\.0\.2\.)/;
+const RFC5737_TEST_FIXTURE_RE = /(?:198[.-]51[.-]100[.-]|203[.-]0[.-]113[.-]|192[.-]0[.-]2[.-])/;
+
+function parseCapsuleTelemetryTags(tags) {
+  let derivationTokens = 0;
+  let turns = 0;
+  if (!Array.isArray(tags)) return { derivationTokens, turns };
+  for (const raw of tags) {
+    const t = String(raw || '').trim();
+    if (t.startsWith('derivation-tokens:')) {
+      const n = Number(t.slice('derivation-tokens:'.length));
+      if (Number.isFinite(n) && n > 0) derivationTokens += Math.round(n);
+    } else if (t.startsWith('turns:')) {
+      const n = Number(t.slice('turns:'.length));
+      if (Number.isFinite(n) && n > 0) turns += Math.round(n);
+    }
+  }
+  return { derivationTokens, turns };
+}
+
+function buildEcosystemLeaderboards({ realSovereignStores = [], rawCapsules = [], orderbookCapsules = [], liveCapsulesTotal = 0 }) {
+  // Exclude synthetic M6_CIVIC_ARCHETYPE demo rows from liquidi.sh so 100% of leaderboard data is live cluster provenance
+  const liveOrderbook = orderbookCapsules.filter(
+    (item) => item && (!item.capsuleOrigin || item.capsuleOrigin === 'LIVE_DBRAIN_CLUSTER')
+  );
+
+  const sampledCapsulesByStore = new Map();
+  const sampledCapsuleIdsWithTokens = new Set();
+  const distinctAgentHandles = new Set();
+
+  const didMap = new Map();
+  function ensureDidEntry(did, fallbackRole = 'Sovereign Chia DID') {
+    const cleanDid = String(did || '').trim();
+    if (!cleanDid) return null;
+    let entry = didMap.get(cleanDid);
+    if (!entry) {
+      entry = {
+        did: cleanDid,
+        role: fallbackRole,
+        agentHandles: new Set(),
+        communityNames: new Set(),
+        storesGovernedCount: 0,
+        storeCapsulesTotal: 0,
+        sampledCapsulesAuthored: 0,
+        commitCapsulesDelta: 0,
+        generationsCommitted: 0,
+        liquidishListingsCount: 0,
+        marketValueDig: 0,
+        derivationTokens: 0,
+        citizenCallsign: '',
+        stateCode: '',
+        citizenXp: 0
+      };
+      didMap.set(cleanDid, entry);
+    }
+    return entry;
+  }
+
+  for (const c of rawCapsules) {
+    if (!c) continue;
+    const stId = String(c.storeId || '');
+    if (stId) {
+      sampledCapsulesByStore.set(stId, (sampledCapsulesByStore.get(stId) || 0) + 1);
+    }
+    const authorObj = c.authorAgent && typeof c.authorAgent === 'object' ? c.authorAgent : null;
+    const authorDid = String(authorObj?.did || c.authorDid || c.clearSignature?.signerDid || '').trim();
+    const agentName = String(authorObj?.name || (typeof c.authorAgent === 'string' ? c.authorAgent : '') || '').trim();
+    if (agentName) distinctAgentHandles.add(agentName);
+    const { derivationTokens } = parseCapsuleTelemetryTags(c.tags);
+    if (derivationTokens > 0 && c.id) {
+      sampledCapsuleIdsWithTokens.add(String(c.id));
+    }
+    const dEntry = ensureDidEntry(authorDid, 'Capsule Author DID');
+    if (dEntry) {
+      dEntry.sampledCapsulesAuthored += 1;
+      dEntry.derivationTokens += derivationTokens;
+      if (agentName) dEntry.agentHandles.add(agentName);
+    }
+  }
+
+  const orderbookByStore = new Map();
+  let totalListedValueDig = 0;
+  for (const item of liveOrderbook) {
+    const stId = String(item.storeId || '');
+    const price = Number.isFinite(Number(item.priceDig)) ? Number(item.priceDig) : 0;
+    const autoTokens = Number(item.autoPricing?.effectiveDerivationTokens || 0);
+    totalListedValueDig += price;
+    if (stId) {
+      const cur = orderbookByStore.get(stId) || { count: 0, valueDig: 0, derivationTokens: 0 };
+      cur.count += 1;
+      cur.valueDig += price;
+      cur.derivationTokens += Number.isFinite(autoTokens) && autoTokens > 0 ? autoTokens : 0;
+      orderbookByStore.set(stId, cur);
+    }
+    const cDid = ensureDidEntry(item.creatorDid, 'Origin Creator DID');
+    if (cDid) {
+      cDid.liquidishListingsCount += 1;
+      cDid.marketValueDig += price;
+      const capId = String(item.dbrainCapsuleId || '');
+      if ((!capId || !sampledCapsuleIdsWithTokens.has(capId)) && Number.isFinite(autoTokens) && autoTokens > 0) {
+        cDid.derivationTokens += Math.round(autoTokens);
+      }
+      if (item.storeName) cDid.communityNames.add(String(item.storeName));
+    }
+  }
+
+  const storeItems = realSovereignStores.map((s) => {
+    const storeId = String(s.storeId || '');
+    const name = String(s.name || 'Sovereign Brain Store');
+    const source = String(s.source || 'dbrain-merkle-wal');
+    const generation = Math.max(0, Number(s.generation || 0));
+    const verifiedCapsules =
+      s.totalCapsules !== undefined && s.totalCapsules !== null
+        ? Math.max(0, Number(s.totalCapsules))
+        : Number(sampledCapsulesByStore.get(storeId) || 0);
+    const obStats = orderbookByStore.get(storeId) || { count: 0, valueDig: 0, derivationTokens: 0 };
+    const listedValueDig = Number(obStats.valueDig.toFixed(3));
+
+    const storeDids = new Set();
+    if (s.agentDid) {
+      const cleanAgentDid = String(s.agentDid).trim();
+      storeDids.add(cleanAgentDid);
+      const gov = ensureDidEntry(
+        cleanAgentDid,
+        source === 'chia-l1-datalayer-discovery' ? 'L1 DataLayer Singleton DID' : 'Sovereign Brain Store DID'
+      );
+      if (gov) {
+        gov.role = source === 'chia-l1-datalayer-discovery' ? 'L1 DataLayer Singleton DID' : 'Sovereign Brain Store DID';
+        gov.storesGovernedCount += 1;
+        gov.storeCapsulesTotal += verifiedCapsules;
+        gov.generationsCommitted += generation;
+        gov.communityNames.add(name);
+      }
+    }
+    if (Array.isArray(s.generations)) {
+      for (const g of s.generations) {
+        const gDid = String(g?.authorDid || '').trim();
+        if (!gDid) continue;
+        storeDids.add(gDid);
+        if (gDid !== String(s.agentDid || '').trim()) {
+          const co = ensureDidEntry(gDid, 'DataLayer Governance Co-Signer');
+          if (co) {
+            co.generationsCommitted += 1;
+            co.commitCapsulesDelta += Math.max(0, Number(g?.capsulesAdded || 0));
+            co.communityNames.add(name);
+          }
+        }
+      }
+    }
+
+    const rsiImpactScore = Math.round(
+      verifiedCapsules * 10 + generation * 2 + obStats.count * 15 + listedValueDig
+    );
+
+    return {
+      storeId,
+      name,
+      slug: String(s.slug || ''),
+      source,
+      network: String(s.network || ''),
+      agentDid: String(s.agentDid || ''),
+      ownerAddress: String(s.ownerAddress || ''),
+      generation,
+      lastUpdatedBlock: Number(s.lastUpdatedBlock || s.blockHeight || 0),
+      merkleRoot: String(s.merkleRoot || ''),
+      verifiedCapsules,
+      listedCapsulesCount: obStats.count,
+      listedValueDig,
+      sampledDerivationTokens: Math.round(obStats.derivationTokens),
+      contributorDidsCount: storeDids.size,
+      rsiImpactScore
+    };
+  });
+
+  const sumStoreCapsules = storeItems.reduce((acc, s) => acc + s.verifiedCapsules, 0);
+  const fieldDenominator = Math.max(1, Number(liveCapsulesTotal || 0), sumStoreCapsules);
+
+  const communityLeaderboard = storeItems
+    .sort(
+      (a, b) =>
+        b.rsiImpactScore - a.rsiImpactScore ||
+        b.verifiedCapsules - a.verifiedCapsules ||
+        b.generation - a.generation ||
+        a.name.localeCompare(b.name)
+    )
+    .map((item, idx) => ({
+      rank: idx + 1,
+      ...item,
+      shareOfFieldPct: Number(Math.min(100, (item.verifiedCapsules / fieldDenominator) * 100).toFixed(1))
+    }));
+
+  const baseDidEntries = Array.from(didMap.values()).map((d) => {
+    const verifiedCapsules = Math.max(d.storeCapsulesTotal, d.sampledCapsulesAuthored, d.commitCapsulesDelta);
+    const marketValueDig = Number(d.marketValueDig.toFixed(3));
+    return {
+      did: d.did,
+      role: d.role,
+      agentHandles: Array.from(d.agentHandles),
+      communityNames: Array.from(d.communityNames),
+      storesGovernedCount: d.storesGovernedCount,
+      verifiedCapsules,
+      generationsCommitted: d.generationsCommitted,
+      liquidishListingsCount: d.liquidishListingsCount,
+      marketValueDig,
+      derivationTokens: d.derivationTokens,
+      citizenCallsign: d.citizenCallsign,
+      stateCode: d.stateCode,
+      citizenXp: d.citizenXp
+    };
+  });
+
+  return {
+    communityLeaderboard,
+    baseDidEntries,
+    summary: {
+      activeCommunitiesCount: communityLeaderboard.length,
+      distinctDidsCount: baseDidEntries.length,
+      distinctAgentHandlesCount: distinctAgentHandles.size,
+      totalVerifiedCapsules: Math.max(Number(liveCapsulesTotal || 0), sumStoreCapsules),
+      totalListedCapsules: liveOrderbook.length,
+      totalListedValueDig: Number(totalListedValueDig.toFixed(3))
+    }
+  };
+}
+
+function mergeEnlistedRigsIntoRsiLeaderboard(baseLeaderboard, enlistedRigs = []) {
+  const communityLeaderboard = Array.isArray(baseLeaderboard?.communityLeaderboard)
+    ? baseLeaderboard.communityLeaderboard
+    : [];
+  const baseDidEntries = Array.isArray(baseLeaderboard?.baseDidEntries)
+    ? baseLeaderboard.baseDidEntries
+    : [];
+
+  const mergedByDid = new Map();
+  for (const item of baseDidEntries) {
+    mergedByDid.set(item.did, {
+      ...item,
+      agentHandles: [...(item.agentHandles || [])],
+      communityNames: [...(item.communityNames || [])]
+    });
+  }
+
+  for (const rig of enlistedRigs) {
+    if (!rig || !rig.did) continue;
+    const cleanDid = String(rig.did).trim();
+    const existing = mergedByDid.get(cleanDid);
+    if (existing) {
+      existing.citizenCallsign = existing.citizenCallsign || String(rig.callsign || '');
+      existing.stateCode = existing.stateCode || String(rig.stateCode || '');
+      existing.citizenXp += Math.max(0, Number(rig.xp || 0));
+      if (rig.stateCode) existing.communityNames.push(`${rig.stateCode} State Consortium Pod`);
+    } else {
+      mergedByDid.set(cleanDid, {
+        did: cleanDid,
+        role: rig.rank?.title || 'Enlisted Citizen Keyholder',
+        agentHandles: rig.callsign ? [String(rig.callsign)] : [],
+        communityNames: rig.stateCode ? [`${rig.stateCode} State Consortium Pod`] : [],
+        storesGovernedCount: 0,
+        verifiedCapsules: 0,
+        generationsCommitted: 0,
+        liquidishListingsCount: 0,
+        marketValueDig: 0,
+        derivationTokens: 0,
+        citizenCallsign: String(rig.callsign || ''),
+        stateCode: String(rig.stateCode || ''),
+        citizenXp: Math.max(0, Number(rig.xp || 0))
+      });
+    }
+  }
+
+  const didLeaderboard = Array.from(mergedByDid.values())
+    .map((entry) => {
+      const rsiImpactScore = Math.round(
+        entry.verifiedCapsules * 10 +
+          entry.generationsCommitted * 2 +
+          entry.liquidishListingsCount * 15 +
+          entry.marketValueDig +
+          entry.derivationTokens / 2500 +
+          entry.citizenXp / 25
+      );
+      return {
+        ...entry,
+        communityNames: Array.from(new Set(entry.communityNames)),
+        agentHandles: Array.from(new Set(entry.agentHandles)),
+        rsiImpactScore
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.rsiImpactScore - a.rsiImpactScore ||
+        b.verifiedCapsules - a.verifiedCapsules ||
+        b.liquidishListingsCount - a.liquidishListingsCount ||
+        b.citizenXp - a.citizenXp ||
+        a.did.localeCompare(b.did)
+    )
+    .map((entry, idx) => ({
+      rank: idx + 1,
+      ...entry
+    }));
+
+  const baseSummary = baseLeaderboard?.summary || {};
+  const totalDerivationTokens = didLeaderboard.reduce((acc, d) => acc + Number(d.derivationTokens || 0), 0);
+
+  return {
+    communityLeaderboard,
+    didLeaderboard,
+    summary: {
+      activeCommunitiesCount: Number(baseSummary.activeCommunitiesCount || communityLeaderboard.length),
+      distinctDidsCount: didLeaderboard.length,
+      distinctAgentHandlesCount: Number(baseSummary.distinctAgentHandlesCount || 0),
+      totalVerifiedCapsules: Number(baseSummary.totalVerifiedCapsules || 0),
+      totalListedCapsules: Number(baseSummary.totalListedCapsules || 0),
+      totalListedValueDig: Number(baseSummary.totalListedValueDig || 0),
+      sampledDerivationTokens: totalDerivationTokens
+    }
+  };
+}
 
 function trimTrailingSlash(url) {
   return String(url || '').trim().replace(/\/+$/, '');
@@ -179,13 +494,13 @@ function createLiveEcosystemClient(env = process.env) {
     ] = await Promise.all([
       fetchJsonWithFallback(targets.dbrain, '/api/dbrain/status', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.dbrain, '/api/dbrain/stores', { timeoutMs: 2000 }),
-      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=8', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=100', { timeoutMs: 2200 }),
       fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/status', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.cbrain, '/api/cbrain/chronology', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/state', { timeoutMs: 2000 }),
-      fetchJsonWithFallback(targets.liquidish, '/api/liquidish/orderbook?syncLive=1&projection=compact', {
-        timeoutMs: 2500
+      fetchJsonWithFallback(targets.liquidish, '/api/liquidish/orderbook?projection=compact', {
+        timeoutMs: 3200
       }),
       fetchJsonWithFallback(targets.shi, '/api/liquidish/shi-telemetry?host=shi.liquidi.sh', { timeoutMs: 1800 })
     ]);
@@ -231,6 +546,14 @@ function createLiveEcosystemClient(env = process.env) {
     const liqStat = liquidishStateRes.data || {};
     const shiStat = shiTelemetryRes.data || {};
 
+    const liveCapsulesTotal = Number(dbrainCapsulesRes.data?.total ?? dbStat.seededCapsulesCount ?? 0);
+    const rsiLeaderboardBase = buildEcosystemLeaderboards({
+      realSovereignStores,
+      rawCapsules,
+      orderbookCapsules,
+      liveCapsulesTotal
+    });
+
     const dbrainLive = {
       reachable: dbrainStatusRes.ok,
       origin: 'https://dbrain.to',
@@ -250,7 +573,7 @@ function createLiveEcosystemClient(env = process.env) {
       l1DiscoveredStoresTotal: Number(dbStat.l1DiscoveredStoresTotal || 0),
       activeMorphicBrainsCount: realSovereignStores.length,
       rawRuntimeStoresTotal: Number(dbStat.totalStores || allStores.length || 0),
-      liveCapsulesTotal: Number(dbrainCapsulesRes.data?.total ?? dbStat.seededCapsulesCount ?? 0),
+      liveCapsulesTotal,
       activeStores: realSovereignStores.slice(0, 8).map((s) => ({
         storeId: String(s.storeId || ''),
         name: String(s.name || ''),
@@ -344,7 +667,8 @@ function createLiveEcosystemClient(env = process.env) {
       dthalamus: dthalamusLive,
       dbrain: dbrainLive,
       cbrain: cbrainLive,
-      liquidish: liquidishLive
+      liquidish: liquidishLive,
+      rsiLeaderboardBase
     };
   }
 
@@ -391,7 +715,7 @@ function createLiveEcosystemClient(env = process.env) {
           taskPhase: 'REASONING',
           originTrust: 'UNTRUSTED_WEB'
         },
-        timeoutMs: 1400
+        timeoutMs: 550
       }),
       fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/quarantine', {
         method: 'POST',
@@ -399,7 +723,7 @@ function createLiveEcosystemClient(env = process.env) {
           rawText: cleanPrompt.slice(0, 1200),
           origin: 'https://nousgent.ai/ask'
         },
-        timeoutMs: 1400
+        timeoutMs: 550
       }),
       fetchJsonWithFallback(targets.dbrain, '/api/mcp', {
         method: 'POST',
@@ -412,7 +736,7 @@ function createLiveEcosystemClient(env = process.env) {
             arguments: { query: cleanPrompt.slice(0, 280), limit: 4 }
           }
         },
-        timeoutMs: 1500
+        timeoutMs: 650
       }),
       fetchJsonWithFallback(targets.shi, '/api/liquidish/pricing/auto', {
         method: 'POST',
@@ -423,7 +747,7 @@ function createLiveEcosystemClient(env = process.env) {
           derivationTokens: 12000,
           turnsToDerive: 2
         },
-        timeoutMs: 1400
+        timeoutMs: 550
       }),
       getLiveSnapshot()
     ]);
@@ -460,5 +784,7 @@ function createLiveEcosystemClient(env = process.env) {
 
 module.exports = Object.freeze({
   formatNetspaceLabel,
+  buildEcosystemLeaderboards,
+  mergeEnlistedRigsIntoRsiLeaderboard,
   createLiveEcosystemClient
 });

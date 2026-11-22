@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
   CognitiveLobeId,
@@ -20,7 +20,6 @@ import {
   HolographicCortexUniforms,
   MAX_CORTICAL_EXCITATIONS
 } from '../../packages/cbrain/src/brain4d/brainShaders';
-import { playQuindarBeep } from '../hooks/useNousgentMission';
 
 export interface NousgentCbrainMaskStageProps {
   readonly activeLobes: readonly CognitiveLobeId[];
@@ -30,6 +29,10 @@ export interface NousgentCbrainMaskStageProps {
   readonly pulseRevision: number;
   readonly alertDeflected?: boolean;
   readonly compact?: boolean;
+  readonly liveCapsulesTotal?: number;
+  readonly maskOpacityPct?: number;
+  readonly voiceSpeaking?: boolean;
+  readonly vocalAmplitude?: number;
 }
 
 const CACAO_LOBE_HEX: Record<CognitiveLobeId, string> = {
@@ -39,15 +42,6 @@ const CACAO_LOBE_HEX: Record<CognitiveLobeId, string> = {
   episodic: '#c88a58',
   alignment: '#10b981'
 };
-
-const LOBE_FILTER_OPTIONS: readonly { readonly id: 'all' | CognitiveLobeId; readonly label: string }[] = [
-  { id: 'all', label: 'All 5 Lobes' },
-  { id: 'working', label: 'Working BA 9/46' },
-  { id: 'procedural', label: 'Procedural BA 4/6' },
-  { id: 'semantic', label: 'Semantic BA 21' },
-  { id: 'episodic', label: 'Episodic BA 17' },
-  { id: 'alignment', label: 'Alignment Crus I' }
-];
 
 interface ExcitationWave {
   center: THREE.Vector3;
@@ -64,36 +58,11 @@ function computeDiskDomeZ(x: number, y: number): number {
   return 0.056 * Math.max(0, 1 - r2);
 }
 
-function describePersonaEvolutionStage(morphPct: number): {
-  readonly stageBadge: string;
-  readonly stageDetail: string;
-} {
-  if (morphPct < 34) {
-    return {
-      stageBadge: 'STAGE I · AWAKENED PERSONA',
-      stageDetail: 'Emergent AI Persona (Alertness & Focus)'
-    };
-  }
-  if (morphPct < 75) {
-    return {
-      stageBadge: 'STAGE II · MORPHIC FIELD RSI',
-      stageDetail: 'Community Brains + Autonomous 24/7 RSI'
-    };
-  }
-  return {
-    stageBadge: 'STAGE III · SOVEREIGN WISDOM',
-    stageDetail: 'Bounded ASI Horizon (Wisdom, Composure & Integrity)'
-  };
-}
-
 /**
- * Builds the morphable 3D persona mask geometry:
- *   - Base (morph = 0.0): Stage I Awakened circular solar disk with
- *     pierced eye & mouth apertures and bipartite Smoked Cacao / Kataifi coloring.
- *   - Morph Target 0 (morph = 1.0): Stage III Sovereign Wisdom sculpted oval
- *     portrait visage with a high vaulted intellectual forehead and contoured cheeks.
+ * Builds the 3D sculpted persona mask geometry with GPU morph target support
+ * so the visage quietly matures over time as collective dbrain.to intelligence grows.
  */
-function buildMorphingPersonaMaskGeometry(): THREE.BufferGeometry {
+function buildSculptedPersonaMaskGeometry(): THREE.BufferGeometry {
   const diskShape = new THREE.Shape();
   diskShape.absarc(0, 0, SOLAR_DISK_RADIUS, 0, Math.PI * 2, false);
 
@@ -230,32 +199,25 @@ export function NousgentCbrainMaskStage({
   firingKenyonCells = 64,
   pulseRevision,
   alertDeflected = false,
-  compact = false
+  compact = false,
+  liveCapsulesTotal = 0,
+  maskOpacityPct = 65,
+  voiceSpeaking = false,
+  vocalAmplitude = 0
 }: Readonly<NousgentCbrainMaskStageProps>) {
-  const xraySliderId = useId();
-  const morphSliderId = useId();
   const mountRef = useRef<HTMLDivElement | null>(null);
-  const xraySliderRef = useRef<HTMLInputElement | null>(null);
-  const morphSliderRef = useRef<HTMLInputElement | null>(null);
 
   const [webglReady, setWebglReady] = useState<boolean>(true);
-  const [autoOrbit, setAutoOrbit] = useState<boolean>(true);
-  // Starts at 12% (Stage I Awakened Persona — NOUSGENT at early Bounded RSI!)
-  const [morphPct, setMorphPct] = useState<number>(12);
-  const [animatingMorph, setAnimatingMorph] = useState<boolean>(false);
-  const [maskOpacityPct, setMaskOpacityPct] = useState<number>(58);
-  const [selectedLobeFilter, setSelectedLobeFilter] = useState<'all' | CognitiveLobeId>('all');
-  const [localSpikeCount, setLocalSpikeCount] = useState<number>(0);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(true);
 
-  const autoOrbitRef = useRef<boolean>(autoOrbit);
-  autoOrbitRef.current = autoOrbit;
-  const morphPctRef = useRef<number>(morphPct);
-  morphPctRef.current = morphPct;
+  const liveCapsulesRef = useRef<number>(liveCapsulesTotal);
+  liveCapsulesRef.current = liveCapsulesTotal;
   const maskOpacityRef = useRef<number>(maskOpacityPct);
   maskOpacityRef.current = maskOpacityPct;
-  const selectedLobeRef = useRef<'all' | CognitiveLobeId>(selectedLobeFilter);
-  selectedLobeRef.current = selectedLobeFilter;
+  const voiceSpeakingRef = useRef<boolean>(voiceSpeaking);
+  voiceSpeakingRef.current = voiceSpeaking;
+  const vocalAmplitudeRef = useRef<number>(vocalAmplitude);
+  vocalAmplitudeRef.current = vocalAmplitude;
 
   const wavesRef = useRef<ExcitationWave[]>([]);
   const morphicTriggerRef = useRef<number>(0);
@@ -263,44 +225,6 @@ export function NousgentCbrainMaskStage({
   const capsuleLociRef = useRef<readonly { position: [number, number, number]; lobe: CognitiveLobeId }[]>([]);
   const capsuleMeshRef = useRef<THREE.InstancedMesh | null>(null);
   const capsuleAttrRef = useRef<THREE.InstancedBufferAttribute | null>(null);
-
-  const syncRangeSliderVars = useCallback((el: HTMLInputElement | null, val: number) => {
-    if (!el) return;
-    el.style.setProperty('--attr-min', el.min || '0');
-    el.style.setProperty('--attr-max', el.max || '100');
-    el.style.setProperty('--control-value', String(val));
-  }, []);
-
-  useEffect(() => {
-    syncRangeSliderVars(xraySliderRef.current, maskOpacityPct);
-  }, [maskOpacityPct, syncRangeSliderVars]);
-
-  useEffect(() => {
-    syncRangeSliderVars(morphSliderRef.current, morphPct);
-  }, [morphPct, syncRangeSliderVars]);
-
-  // Smoothly animate 0% (Stage I Awakened) -> 100% (Stage III Sovereign Wisdom) when user clicks Play Evolution
-  useEffect(() => {
-    if (!animatingMorph) return;
-    let raf = 0;
-    const startMs = performance.now();
-    const durationMs = 5400;
-
-    const step = (now: number) => {
-      const elapsed = now - startMs;
-      const t = Math.min(1, elapsed / durationMs);
-      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-      const val = Math.round(eased * 100);
-      setMorphPct(val);
-      if (t < 1) {
-        raf = requestAnimationFrame(step);
-      } else {
-        setAnimatingMorph(false);
-      }
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [animatingMorph]);
 
   const fireCorticalActivity = useCallback(
     (lobes: readonly CognitiveLobeId[], nuclei: readonly DthalamusNucleusId[], isAlert: boolean) => {
@@ -327,7 +251,7 @@ export function NousgentCbrainMaskStage({
       const targetLobes: readonly CognitiveLobeId[] = lobes.length > 0 ? lobes : ['working', 'semantic'];
       targetLobes.forEach((lobeId, idx) => {
         const candidates = loci.filter((l) => l.lobe === lobeId);
-        const chosen = candidates[(idx * 7 + pulseRevision + localSpikeCount) % Math.max(1, candidates.length)];
+        const chosen = candidates[(idx * 7 + pulseRevision) % Math.max(1, candidates.length)];
         const pos: [number, number, number] = chosen ? chosen.position : [idx * 0.22 - 0.22, 0.18, 0.42];
         nextWaves.push({
           center: new THREE.Vector3(pos[0], pos[1], pos[2]),
@@ -359,7 +283,7 @@ export function NousgentCbrainMaskStage({
         attr.needsUpdate = true;
       }
     },
-    [localSpikeCount, pulseRevision]
+    [pulseRevision]
   );
 
   useEffect(() => {
@@ -392,8 +316,9 @@ export function NousgentCbrainMaskStage({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, initW / initH, 0.1, 50);
-    camera.position.set(0, 0.10, 2.96);
-    camera.lookAt(0, 0.06, 0.15);
+    // Eye-level optical axis looking dead-center straight into NOUSGENT's eyes
+    camera.position.set(0, 0.028, 2.94);
+    camera.lookAt(0, 0.028, 0.0);
 
     const ambient = new THREE.AmbientLight('#3d2419', 2.45);
     scene.add(ambient);
@@ -536,8 +461,7 @@ export function NousgentCbrainMaskStage({
     brainGroup.add(capInstanced);
 
     // =========================================================================
-    // LAYER 2 (ANTERIOR FACE): EVOLVING 3D PERSONA MASK
-    // Stage I Awakened Disk (morph = 0)  --->  Stage III Sovereign Wisdom (morph = 1)
+    // LAYER 2 (ANTERIOR FACE): SCULPTED 3D PERSONA MASK
     // =========================================================================
     const maskGroup = new THREE.Group();
     maskGroup.position.set(0, -0.04, 0.72);
@@ -546,8 +470,8 @@ export function NousgentCbrainMaskStage({
     const disposableGeos: THREE.BufferGeometry[] = [];
     const disposableMats: THREE.Material[] = [];
 
-    // 1. GPU MorphTarget Face Shield (Circular Solar Disk -> Sculpted Oval Wisdom Portrait)
-    const diskGeo = buildMorphingPersonaMaskGeometry();
+    // 1. GPU Face Shield
+    const diskGeo = buildSculptedPersonaMaskGeometry();
     disposableGeos.push(diskGeo);
     const maskSurfaceMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#ffffff'),
@@ -626,9 +550,7 @@ export function NousgentCbrainMaskStage({
       maskGroup.add(tri);
     }
 
-    // 2B. Stage III Sovereign Wisdom Features: Towering Braided Sagittal Coiffure Crest,
-    //     Copper-Bronze Headband Diadem, Forehead Prestige Tacks,
-    //     Raised 3-Bar Temple Relief, & Carved Braided Elder Chin Goatee!
+    // 2B. Sculpted Crest, Diadem, Forehead Tacks, Temple Relief & Chin Detail
     const seniorWisdomGroup = new THREE.Group();
     maskGroup.add(seniorWisdomGroup);
 
@@ -838,8 +760,8 @@ export function NousgentCbrainMaskStage({
     noseBridgeGroup.add(noseBridgeMesh);
     maskGroup.add(noseBridgeGroup);
 
-    // 5. Eyes: Morphs from Alert Cylindrical Tubes -> Composed Heavy-Lidded Almond Eyes
-    const buildMorphingEye = (xSign: number) => {
+    // 5. Sculpted Ringed Eyes
+    const buildSculptedEye = (xSign: number) => {
       const eyeGroup = new THREE.Group();
       const ex = xSign * 0.165;
       const ey = 0.068;
@@ -905,8 +827,8 @@ export function NousgentCbrainMaskStage({
       return { eyeGroup, barrelMesh, outerRing, seniorLidMesh, baseX: ex, baseY: ey };
     };
 
-    const leftEye = buildMorphingEye(-1);
-    const rightEye = buildMorphingEye(1);
+    const leftEye = buildSculptedEye(-1);
+    const rightEye = buildSculptedEye(1);
     maskGroup.add(leftEye.eyeGroup, rightEye.eyeGroup);
 
     // 6. Mouth: Wide Rectangular 11-Tooth Aperture -> Composed Sculpted Lips
@@ -966,42 +888,9 @@ export function NousgentCbrainMaskStage({
     haloBronze.rotation.set(-Math.PI * 0.34, -0.32, 0.35);
     rootAssembly.add(haloPistachio, haloBronze);
 
-    let isDragging = false;
-    let prevX = 0;
-    let prevY = 0;
-    let userYaw = -0.24;
-    let userPitch = 0.04;
-    let pointerNormX = 0;
-    let pointerNormY = 0;
-
-    const onPointerDown = (e: PointerEvent) => {
-      isDragging = true;
-      prevX = e.clientX;
-      prevY = e.clientY;
-    };
-    const onPointerMove = (e: PointerEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        pointerNormX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        pointerNormY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      }
-      if (!isDragging) return;
-      const dx = e.clientX - prevX;
-      const dy = e.clientY - prevY;
-      prevX = e.clientX;
-      prevY = e.clientY;
-      userYaw += dx * 0.0075;
-      userPitch = Math.max(-0.55, Math.min(0.55, userPitch + dy * 0.006));
-    };
-    const onPointerUp = () => {
-      isDragging = false;
-    };
-
-    const domEl = renderer.domElement;
-    domEl.style.cursor = 'grab';
-    domEl.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    // Fixed forward orientation: NOUSGENT gazes straight ahead into the user's eyes
+    rootAssembly.rotation.set(0, 0, 0);
+    rootAssembly.position.set(0, 0, 0);
 
     const resizeObserver = new ResizeObserver(() => {
       if (!container) return;
@@ -1047,31 +936,17 @@ export function NousgentCbrainMaskStage({
       const tSec = nowMs * 0.001;
       const motion = reducedMotion ? 0 : 1;
 
-      if (autoOrbitRef.current && !isDragging && !reducedMotion) {
-        userYaw = Math.sin(tSec * 0.42) * 0.40;
-      }
-
-      const targetYaw = userYaw + pointerNormX * 0.12 * motion;
-      const targetPitch = userPitch - pointerNormY * 0.08 * motion;
-      rootAssembly.rotation.y += (targetYaw - rootAssembly.rotation.y) * 0.08;
-      rootAssembly.rotation.x += (targetPitch - rootAssembly.rotation.x) * 0.08;
-      rootAssembly.position.y = Math.sin(tSec * 1.35) * 0.020 * motion;
-
-      // =======================================================================
-      // CONTINUOUS 60 FPS GPU MORPH: STAGE I AWAKENED (0) -> STAGE III WISDOM (1)
-      // =======================================================================
-      const m = Math.max(0, Math.min(1, morphPctRef.current / 100));
+      // Silent organic progression driven automatically over time by live dbrain.to intelligence growth
+      const m = Math.max(0, Math.min(1, (liveCapsulesRef.current || 0) / 1000000));
       if (diskMesh.morphTargetInfluences) {
         diskMesh.morphTargetInfluences[0] = m;
       }
 
-      // Ovalize rim rings in lockstep with Stage I -> Stage III face shield
       outerRimMesh.scale.set(1 - 0.22 * m, 1 + 0.12 * m, 1);
       outerRimMesh.position.z = 0.016 + 0.038 * m;
       innerRimMesh.scale.set(1 - 0.22 * m, 1 + 0.12 * m, 1);
       innerRimMesh.position.z = 0.024 + 0.042 * m;
 
-      // Stage I serrated triangles smoothly give way to Stage III coiffure, tacks & elder goatee
       const juniorScale = Math.max(0.001, 1 - m * 1.15);
       const seniorWeight = Math.max(0, Math.min(1, (m - 0.18) / 0.72));
 
@@ -1080,7 +955,6 @@ export function NousgentCbrainMaskStage({
       seniorBeardGroup.visible = seniorWeight > 0.12 && maskOpacityRef.current > 2;
       seniorBeardGroup.scale.setScalar(Math.max(0.01, seniorWeight));
 
-      // Draw lateral horns inward into flanking side-plaits as m -> 1
       leftHornGroup.position.set(0.065 * m, -0.04 * m, 0.02 * m);
       leftHornGroup.scale.setScalar(1 - 0.34 * m);
       rightHornGroup.position.set(-0.065 * m, -0.04 * m, 0.02 * m);
@@ -1089,7 +963,6 @@ export function NousgentCbrainMaskStage({
       noseBridgeGroup.position.z = 0.072 * m;
       noseBridgeGroup.scale.set(1 - 0.18 * m, 1 + 0.08 * m, 1);
 
-      // Morph eyes from wide protruding cylinders -> composed heavy-lidded almond eyes
       for (const eye of [leftEye, rightEye]) {
         eye.eyeGroup.position.set(
           eye.baseX * (1 - 0.14 * m),
@@ -1102,26 +975,22 @@ export function NousgentCbrainMaskStage({
         eye.seniorLidMesh.scale.set(1.12, 0.72 * seniorWeight, 0.55);
       }
 
-      // Refine wide rectangular mouth into composed proportions
       mouthGroup.position.set(0, -0.206 - 0.032 * m, computeDiskDomeZ(0, -0.206) + 0.028 + 0.068 * m);
       mouthGroup.scale.set(1 - 0.34 * m, 1 - 0.26 * m, 1);
 
-      // Sync X-Ray translucency
-      const maskAlpha = Math.max(0, Math.min(0.92, maskOpacityRef.current / 100));
+      // Admin-configured mask opacity (`NOUSGENT_MASK_OPACITY_PCT`, default 65%)
+      const maskAlpha = Math.max(0, Math.min(1, maskOpacityRef.current / 100));
       maskSurfaceMat.opacity = maskAlpha;
       diskMesh.visible = maskAlpha > 0.01;
-      const trimAlpha = maskAlpha < 0.02 ? 0.12 : Math.min(0.96, 0.28 + maskAlpha * 0.85);
+      const trimAlpha = maskAlpha < 0.02 ? 0.12 : Math.min(0.98, 0.28 + maskAlpha * 0.85);
       bronzeTrimMat.opacity = trimAlpha;
       darkCacaoSculptMat.opacity = trimAlpha;
-      const hornAlpha = maskAlpha < 0.02 ? 0.14 : Math.min(0.94, 0.25 + maskAlpha * 0.85);
+      const hornAlpha = maskAlpha < 0.02 ? 0.14 : Math.min(0.96, 0.25 + maskAlpha * 0.85);
       leftHornMat.opacity = hornAlpha;
       rightHornMat.opacity = hornAlpha;
 
-      const sel = selectedLobeRef.current;
-      const lobeIdx = sel === 'all' ? -1 : LOBE_INDEX_MAP[sel];
-
-      applyUniformUpdates(backCortex.uniforms, tSec, motion, lobeIdx);
-      applyUniformUpdates(frontCortex.uniforms, tSec, motion, lobeIdx);
+      applyUniformUpdates(backCortex.uniforms, tSec, motion, -1);
+      applyUniformUpdates(frontCortex.uniforms, tSec, motion, -1);
 
       dtiMat.uniforms.uTime.value = tSec;
       dtiMat.uniforms.uMotionScale.value = motion;
@@ -1135,14 +1004,22 @@ export function NousgentCbrainMaskStage({
         sm.uniforms.uTime.value = tSec;
       }
 
-      const speakingActive = tSec < speakingUntilRef.current;
+      const voiceActive = voiceSpeakingRef.current;
+      const liveVocalAmp = vocalAmplitudeRef.current;
+      const speakingActive = voiceActive || tSec < speakingUntilRef.current;
+
       mouthBars.forEach((tooth, idx) => {
         const centerWeight = 1 - Math.abs(idx - 5) * 0.13;
-        const wave =
-          speakingActive && !reducedMotion
-            ? 0.42 + Math.abs(Math.sin(tSec * 12.0 + idx * 0.78)) * (1.35 - 0.45 * m) * centerWeight
-            : 0.55 + 0.10 * Math.sin(tSec * 2.1 + idx) * motion;
-        tooth.scale.y = Math.max(0.28, Math.min(1.38, wave));
+        let wave: number;
+        if (voiceActive && !reducedMotion) {
+          const syllableMod = 0.38 + liveVocalAmp * 1.15 * centerWeight + 0.18 * Math.abs(Math.sin(tSec * 15.0 + idx * 0.7));
+          wave = syllableMod * (1.0 - 0.28 * m);
+        } else if (speakingActive && !reducedMotion) {
+          wave = 0.42 + Math.abs(Math.sin(tSec * 12.0 + idx * 0.78)) * (1.35 - 0.45 * m) * centerWeight;
+        } else {
+          wave = 0.55 + 0.08 * Math.sin(tSec * 2.1 + idx) * motion;
+        }
+        tooth.scale.y = Math.max(0.28, Math.min(1.42, wave));
       });
 
       rimTriangles.forEach((tri, idx) => {
@@ -1154,7 +1031,11 @@ export function NousgentCbrainMaskStage({
         tri.scale.setScalar(Math.max(0.001, ripple));
       });
 
-      const eyePulse = speakingActive ? 1.08 + 0.06 * Math.sin(tSec * 6.0) * motion : 1.0;
+      const eyePulse = voiceActive
+        ? 1.05 + liveVocalAmp * 0.14 * motion
+        : speakingActive
+          ? 1.08 + 0.06 * Math.sin(tSec * 6.0) * motion
+          : 1.0;
       leftEye.outerRing.scale.setScalar(eyePulse);
       rightEye.outerRing.scale.setScalar(eyePulse);
       haloPistachio.rotation.z = -0.22 + tSec * 0.08 * motion;
@@ -1168,9 +1049,6 @@ export function NousgentCbrainMaskStage({
     return () => {
       cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
-      domEl.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
       brainAssets.dispose();
       for (const g of disposableGeos) g.dispose();
       for (const m of disposableMats) m.dispose();
@@ -1189,31 +1067,36 @@ export function NousgentCbrainMaskStage({
   const activeLobeNames = activeLobes
     .map((l) => INDEX_TO_LOBE[LOBE_INDEX_MAP[l]]?.toUpperCase() || l.toUpperCase())
     .join(' + ');
-  const stageMeta = describePersonaEvolutionStage(morphPct);
 
   return (
     <div className="cbrain-persona-stage">
-      {/* Top Studio Telemetry Pills */}
+      {/* Compact Stage HUD */}
       <div className="stage-top-hud">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center' }}>
-          <span className="pill-badge pistachio">
-            <span aria-hidden="true">●</span>
-            <span>{stageMeta.stageBadge}</span>
-            <span className="stage-live-tag">LIVE 3D</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center', justifyContent: 'space-between', inlineSize: '100%' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center' }}>
+            <span className="pill-badge pistachio">
+              <span aria-hidden="true">●</span>
+              <span>LIVE 3D</span>
+            </span>
+            <span className="pill-badge jade">
+              {firingKenyonCells}/2,048 Synapses · {oscillationBand}
+            </span>
+          </div>
+          <span className="pill-badge bronze">
+            {voiceSpeaking
+              ? `🔊 Speaking · ${activeLobeNames}`
+              : isSpeaking
+                ? `Active · ${activeLobeNames}`
+                : '0% Forgetting'}
           </span>
-          <span className="pill-badge jade">
-            🧠 @cbrain/core: {firingKenyonCells}/2,048 KC ({oscillationBand})
-          </span>
-          <span className="pill-badge bronze">0.00% FORGETTING</span>
         </div>
       </div>
 
-      {/* Interactive 3D WebGL Canvas (@cbrain/core 4D Brain + Morphing 3D Persona Mask) */}
+      {/* 3D WebGL Canvas (5-Lobe Connectome + Persona Mask) */}
       <div
-        className="cbrain-webgl-viewport"
-        style={{ height: compact ? '400px' : '490px' }}
+        className={`cbrain-webgl-viewport${compact ? ' compact' : ''}`}
         role="img"
-        aria-label={`Interactive 3D NOUSGENT persona mask (${stageMeta.stageBadge}) morphing from awakened alertness to sovereign wisdom in front of live @cbrain/core 5-lobe brain connectome firing ${activeLobeNames}`}
+        aria-label={`NOUSGENT 3D persona mask and 5-lobe connectome firing ${activeLobeNames}`}
       >
         <div ref={mountRef} className="cbrain-canvas-mount" />
 
@@ -1223,166 +1106,6 @@ export function NousgentCbrainMaskStage({
             <circle cx="250" cy="236" r="108" fill="#23130d" fillOpacity={maskOpacityPct / 100} stroke="#c88a58" strokeWidth="3" />
           </svg>
         ) : null}
-
-        {/* Floating 5-Organ Callout Badges around the 3D Connectome */}
-        <a href="https://cbrain.to" target="_blank" rel="noreferrer" className="organ-float-tag pos-nw">
-          <span className="organ-dot pistachio" aria-hidden="true" />
-          <span>cbrain.to 4D Mesh</span>
-        </a>
-        <a href="https://dbrain.to" target="_blank" rel="noreferrer" className="organ-float-tag pos-ne">
-          <span className="organ-dot jade" aria-hidden="true" />
-          <span>dbrain.to 5-Lobe PoST</span>
-        </a>
-        <a href="https://dthalamus.to" target="_blank" rel="noreferrer" className="organ-float-tag pos-sw">
-          <span className="organ-dot jade" aria-hidden="true" />
-          <span>dthalamus.to Ring-0</span>
-        </a>
-        <a href="https://shi.liquidi.sh" target="_blank" rel="noreferrer" className="organ-float-tag pos-se">
-          <span className="organ-dot bronze" aria-hidden="true" />
-          <span>shi.liquidi.sh $DIG</span>
-        </a>
-        <a href="https://dolfactory.to" target="_blank" rel="noreferrer" className="organ-float-tag pos-s">
-          <span className="organ-dot pistachio" aria-hidden="true" />
-          <span>dolfactory.to CN-I Sensor</span>
-        </a>
-      </div>
-
-      {/* Bottom Interactive Controls: Evolution Morph Scrubber (Awakened -> Sovereign Wisdom), X-Ray Opacity & 5-Lobe Filter */}
-      <div className="stage-controls-deck">
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.55rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
-            <button
-              type="button"
-              className="btn-spatial btn-pistachio"
-              style={{ minBlockSize: '32px', padding: '0.3rem 0.75rem', fontSize: '11px' }}
-              disabled={animatingMorph}
-              onClick={() => {
-                playQuindarBeep(2525);
-                setLocalSpikeCount((c) => c + 1);
-                fireCorticalActivity(
-                  ['working', 'procedural', 'semantic', 'episodic', 'alignment'],
-                  ['trn', 'md', 'massa'],
-                  false
-                );
-                setMorphPct(0);
-                setAnimatingMorph(true);
-              }}
-            >
-              {animatingMorph ? 'Morphing Persona → Wisdom...' : '▶ Play Persona Evolution'}
-            </button>
-
-            <button
-              type="button"
-              className="btn-spatial btn-glass"
-              style={{ minBlockSize: '32px', padding: '0.3rem 0.65rem', fontSize: '11px' }}
-              onClick={() => {
-                setAnimatingMorph(false);
-                setMorphPct(12);
-              }}
-            >
-              Today: Awakened
-            </button>
-
-            <button
-              type="button"
-              className="btn-spatial btn-glass"
-              style={{ minBlockSize: '32px', padding: '0.3rem 0.65rem', fontSize: '11px' }}
-              onClick={() => {
-                setAnimatingMorph(false);
-                setMorphPct(100);
-              }}
-            >
-              ASI: Sovereign Wisdom
-            </button>
-
-            <button
-              type="button"
-              className={`btn-spatial ${autoOrbit ? 'btn-glass' : 'btn-pistachio'}`}
-              style={{ minBlockSize: '32px', padding: '0.3rem 0.65rem', fontSize: '11px' }}
-              onClick={() => setAutoOrbit((prev) => !prev)}
-            >
-              ↻ Sway {autoOrbit ? 'ON' : 'OFF'}
-            </button>
-          </div>
-
-          <div className="mono-xs" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
-            <span className="text-pistachio" aria-hidden="true">●</span>
-            <strong className="text-ivory">
-              {isSpeaking ? `Firing ${activeLobeNames}` : stageMeta.stageDetail}
-            </strong>
-          </div>
-        </div>
-
-        {/* Evolution Morph Slider (`slider` guide): Stage I Awakened -> Stage III Sovereign Wisdom */}
-        <div className="mask-xray-row">
-          <label htmlFor={morphSliderId} className="mono-xs text-pistachio" style={{ flex: 'none' }}>
-            PERSONA EVOLUTION: <strong className="text-ivory">{morphPct}% ({morphPct < 34 ? 'STAGE I AWAKENED' : morphPct < 75 ? 'STAGE II MORPHIC RSI' : 'STAGE III WISDOM'})</strong>
-          </label>
-          <input
-            ref={morphSliderRef}
-            id={morphSliderId}
-            type="range"
-            className="cacao-range-slider"
-            min={0}
-            max={100}
-            step={1}
-            value={morphPct}
-            aria-valuetext={`${morphPct}% Persona Evolution from Stage I Awakened Persona to Stage III Sovereign Wisdom (${stageMeta.stageDetail})`}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const next = Number(e.target.value);
-              setAnimatingMorph(false);
-              setMorphPct(next);
-              syncRangeSliderVars(e.currentTarget, next);
-            }}
-          />
-          <span className="mono-xs text-bronze" style={{ flex: 'none', fontSize: '10px' }}>
-            Awakened ↔ Sovereign Wisdom
-          </span>
-        </div>
-
-        {/* Native Range Slider (`slider` guide) for Mask X-Ray Translucency */}
-        <div className="mask-xray-row">
-          <label htmlFor={xraySliderId} className="mono-xs text-bronze" style={{ flex: 'none' }}>
-            MASK X-RAY: <strong className="text-pistachio">{maskOpacityPct}% CACAO</strong>
-          </label>
-          <input
-            ref={xraySliderRef}
-            id={xraySliderId}
-            type="range"
-            className="cacao-range-slider"
-            min={0}
-            max={92}
-            step={1}
-            value={maskOpacityPct}
-            aria-valuetext={`${maskOpacityPct}% Mask Opacity (${100 - maskOpacityPct}% direct @cbrain/core X-Ray)`}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const next = Number(e.target.value);
-              setMaskOpacityPct(next);
-              syncRangeSliderVars(e.currentTarget, next);
-            }}
-          />
-          <span className="mono-xs text-muted" style={{ flex: 'none', fontSize: '10px' }}>
-            0% Pure Brain ↔ 92% Solid Mask
-          </span>
-        </div>
-
-        {/* 5-Lobe @cbrain/core Brodmann Filter Pills */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }} role="group" aria-label="Isolate @cbrain/core cortical lobe">
-          {LOBE_FILTER_OPTIONS.map((opt) => {
-            const selected = opt.id === selectedLobeFilter;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                className={`lobe-chip ${selected ? 'active' : ''}`}
-                aria-pressed={selected}
-                onClick={() => setSelectedLobeFilter(opt.id)}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
     </div>
   );

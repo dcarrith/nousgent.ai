@@ -353,8 +353,17 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     assert.equal(askRecalledLongFallbackFields.citedCapsuleId, 'CAP-BRAIN-VERIFIED');
     assert.ok(askRecalledLongFallbackFields.reply.endsWith('...'));
 
-    const askMask = engine.askNousgent({ prompt: 'Why do you wear a sculpted mask that morphs over time?' });
-    assert.equal(askMask.domain, 'PERSONA_MASK_METAMORPHOSIS');
+    const askMask = engine.askNousgent({
+      prompt: 'Why do you wear a sculpted cacao mask in front of @cbrain/core?',
+      recalledCapsules: [{ id: 'CAP-UI', title: 'Sculpted cacao mask renderOrder', summary: 'Internal UI note' }]
+    });
+    assert.equal(askMask.domain, 'PERSONA_SCULPTED_VISAGE');
+
+    const askFilteredRunbook = engine.askNousgent({
+      prompt: 'Explain shader morphAttributes pipeline',
+      recalledCapsules: [{ id: 'CAP-SHADER', title: 'Three.js morphAttributes shader', summary: 'Internal UI runbook' }]
+    });
+    assert.equal(askFilteredRunbook.answerMode, 'UNCHARTED_BLIND_SPOT_QUEST');
 
     const askMath = engine.askNousgent({ prompt: 'Explain Navier-Stokes 2D vorticity theorem with BQ-1024' });
     assert.equal(askMath.domain, 'FORMAL_MATH_PHYSICS_SCIENCE');
@@ -372,6 +381,184 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     });
     assert.equal(askLongFrontier.domain, 'UNCHARTED_BLIND_SPOT_QUEST');
     assert.ok(askLongFrontier.reply.includes('...'));
+    assert.ok(askLongFrontier.spokenSummary.includes('capsule quest'));
+
+    // Direct spoken answer extraction & Local AMD Ryzen AI Halo frontier synthesis
+    assert.equal(nousgent.extractDirectSpokenAnswer(), '');
+    assert.equal(
+      nousgent.extractDirectSpokenAnswer('Direct answer: 647 (computed exactly from 17 * 23 + 2^8). Extra trailing note.'),
+      '647.'
+    );
+    const overlongSentence = nousgent.extractDirectSpokenAnswer('A'.repeat(180));
+    assert.equal(overlongSentence.length, 160);
+    assert.ok(overlongSentence.endsWith('...'));
+
+    const askLocalHaloCustom = engine.askNousgent({
+      prompt: 'Who won the 1986 baseball World Series?',
+      localHaloAnswer: {
+        text: 'The New York Mets won the 1986 World Series in seven games over the Boston Red Sox. Ray Knight earned Series MVP honors.',
+        model: 'qwen3:32b-rocm',
+        latencyMs: 142.5
+      }
+    });
+    assert.equal(askLocalHaloCustom.answerMode, 'LOCAL_HALO_FRONTIER_SYNTHESIS');
+    assert.equal(askLocalHaloCustom.modeBadge, '⚡ LOCAL (qwen3:32b-rocm)');
+    assert.equal(
+      askLocalHaloCustom.spokenSummary,
+      'The New York Mets won the 1986 World Series in seven games over the Boston Red Sox.'
+    );
+    assert.ok(askLocalHaloCustom.organTrace[2].verdict.startsWith('LOCAL_HALO_QUEST_'));
+
+    const askLocalHaloDefaults = engine.askNousgent({
+      prompt: 'Explain Strix Halo unified memory bandwidth.',
+      localHaloAnswer: { text: 'Strix Halo provides a 256-bit LPDDR5X unified memory bus.' }
+    });
+    assert.equal(askLocalHaloDefaults.answerMode, 'LOCAL_HALO_FRONTIER_SYNTHESIS');
+    assert.equal(askLocalHaloDefaults.modeBadge, '⚡ LOCAL (halo-local)');
+
+    const askLocalHaloEmpty = engine.askNousgent({
+      prompt: 'Who won the 1986 baseball World Series?',
+      localHaloAnswer: {}
+    });
+    assert.equal(askLocalHaloEmpty.answerMode, 'UNCHARTED_BLIND_SPOT_QUEST');
+
+    // chia-dao-v1 Governance Proposals & Mode-2 Nullified Bounded RSI Voting
+    assert.ok(nousgent.DAO_SINGLETON_ID.startsWith('chia-dao-v1:0x'));
+    assert.equal(nousgent.formatCat2MojosToDig(42500n), '42.500');
+    const sampleNullifier = nousgent.computeMode2VoteNullifier('did:chia:1voter', 'NGT-ORDER-01');
+    assert.equal(sampleNullifier.length, 66);
+
+    assert.equal(engine.createDaoProposal().code, 'INVALID_PROPOSAL_TITLE');
+    assert.equal(engine.createDaoProposal({ title: 'Hi' }).code, 'INVALID_PROPOSAL_TITLE');
+
+    const customProp = engine.createDaoProposal({
+      title: 'Benchmark Qwen3-32B on Ryzen AI Halo NPU+iGPU',
+      summary: 'Verify deterministic citation distillation on local Strix Halo hardware.',
+      category: 'LOCAL_HALO_BENCHMARK',
+      proposerDid: 'did:chia:1urbanaarchitect',
+      rewardDig: '15000.500'
+    });
+    assert.equal(customProp.ok, true);
+    assert.ok(customProp.mission.missionId.startsWith('NGT-DAO-04-'));
+    assert.equal(customProp.mission.rewardDig, '15000.500');
+    assert.equal(customProp.mission.dao.category, 'LOCAL_HALO_BENCHMARK');
+
+    const fallbackProp = engine.createDaoProposal({
+      title: 'Fallback Defaults Mission',
+      category: 'UNKNOWN_CATEGORY',
+      rewardDig: 'not-a-number'
+    });
+    assert.equal(fallbackProp.ok, true);
+    assert.equal(fallbackProp.mission.rewardDig, '25000.000');
+    assert.equal(fallbackProp.mission.dao.category, 'CAPABILITY_SYNTHESIS');
+
+    const zeroRewardProp = engine.createDaoProposal({
+      title: 'Zero Reward Guard Mission',
+      rewardDig: '0.000'
+    });
+    assert.equal(zeroRewardProp.mission.rewardDig, '25000.000');
+
+    const defaultRewardProp = engine.createDaoProposal({
+      title: 'Default Reward Mission'
+    });
+    assert.equal(defaultRewardProp.mission.rewardDig, '25000.000');
+
+    // castDaoVote validation & Mode-2 replay protection
+    assert.equal(engine.castDaoVote().code, 'MISSION_NOT_FOUND');
+    assert.equal(engine.castDaoVote({ missionId: 'NGT-ORDER-02' }).code, 'INVALID_VOTER_DID');
+    assert.equal(engine.castDaoVote({ missionId: 'NGT-ORDER-02', voterDid: 'bad-did' }).code, 'INVALID_VOTER_DID');
+    assert.equal(engine.castDaoVote({ missionId: 'NGT-ORDER-02', voterDid: 'did:chia:1' }).code, 'INVALID_VOTER_DID');
+    assert.equal(
+      engine.castDaoVote({ missionId: 'NGT-ORDER-02', voterDid: 'did:chia:1validvoter01' }).code,
+      'INVALID_VOTE_SUPPORT'
+    );
+    assert.equal(
+      engine.castDaoVote({ missionId: 'NGT-ORDER-02', voterDid: 'did:chia:1validvoter01', support: 'MAYBE' }).code,
+      'INVALID_VOTE_SUPPORT'
+    );
+    assert.equal(
+      engine.castDaoVote({
+        missionId: 'NGT-ORDER-02',
+        voterDid: 'did:chia:1validvoter01',
+        support: 'FOR',
+        stakeDig: 'invalid'
+      }).code,
+      'INVALID_STAKE_DIG'
+    );
+    assert.equal(
+      engine.castDaoVote({
+        missionId: 'NGT-ORDER-02',
+        voterDid: 'did:chia:1validvoter01',
+        support: 'FOR',
+        stakeDig: '0.000'
+      }).code,
+      'INVALID_STAKE_DIG'
+    );
+
+    // High AGAINST > FOR even when FOR >= quorum target stays unapproved
+    engine.castDaoVote({
+      missionId: 'NGT-ORDER-02',
+      voterDid: 'did:chia:1heavyagainst',
+      support: 'AGAINST',
+      stakeDig: '20000.000'
+    });
+    const outvotedFor = engine.castDaoVote({
+      missionId: 'NGT-ORDER-02',
+      voterDid: 'did:chia:1heavyforvoter',
+      support: 'FOR',
+      stakeDig: '12000.000'
+    });
+    assert.equal(outvotedFor.daoApproved, false);
+
+    // Vote AGAINST & ABSTAIN first, then FOR with enlisted rig XP bonus to cross 10,000 $DIG quorum
+    const voteAgainst = engine.castDaoVote({
+      missionId: customProp.mission.missionId,
+      voterDid: 'did:chia:1skepticvoter',
+      support: 'AGAINST',
+      stakeDig: '500.000'
+    });
+    assert.equal(voteAgainst.ok, true);
+    assert.equal(voteAgainst.daoApproved, false);
+
+    const voteAbstain = engine.castDaoVote({
+      missionId: customProp.mission.missionId,
+      voterDid: 'did:chia:1neutralvoter',
+      support: 'ABSTAIN'
+    });
+    assert.equal(voteAbstain.ok, true);
+    assert.equal(voteAbstain.weightDig, '1000.000');
+
+    // Duplicate vote from same DID on same mission rejected via Mode-2 nullifier
+    const dupVote = engine.castDaoVote({
+      missionId: customProp.mission.missionId,
+      voterDid: 'did:chia:1skepticvoter',
+      support: 'FOR',
+      stakeDig: '500.000'
+    });
+    assert.equal(dupVote.code, 'DUPLICATE_VOTE_NULLIFIER');
+
+    // Vote FOR using enlisted WA rig DID ('did:chia:1warig' has 1,250 XP = 1.250 $DIG bonus)
+    const voteForApproved = engine.castDaoVote({
+      missionId: customProp.mission.missionId,
+      voterDid: 'did:chia:1warig',
+      support: 'FOR',
+      stakeDig: '12000.000'
+    });
+    assert.equal(voteForApproved.ok, true);
+    assert.equal(voteForApproved.xpBonusCatMojos, '1250');
+    assert.equal(voteForApproved.weightDig, '12001.250');
+    assert.equal(voteForApproved.daoApproved, true);
+    assert.equal(voteForApproved.mission.status, 'DAO_APPROVED_AWAITING_SIGNING');
+
+    // Voting on already CHIP0043_QUORUM_SEALED mission preserves sealed status
+    const voteOnSealed = engine.castDaoVote({
+      missionId: 'NGT-ORDER-03',
+      voterDid: 'did:chia:1warig',
+      support: 'FOR',
+      stakeDig: '15000.000'
+    });
+    assert.equal(voteOnSealed.ok, true);
+    assert.equal(voteOnSealed.mission.status, 'CHIP0043_QUORUM_SEALED');
 
     assert.ok(nousgent.createPersonaMindArena());
     const standaloneArena = nousgent.createPersonaMindArena({ podBay: engine.podBay });
@@ -380,6 +567,7 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     // Prometheus metrics exposition (both default and liveEcosystem)
     const promDefault = engine.renderPrometheusMetrics();
     assert.ok(promDefault.includes('nousgent_enlisted_nodes_total 4'));
+    assert.ok(promDefault.includes('nousgent_dao_votes_total 6'));
     const promLive = engine.renderPrometheusMetrics(liveEcoMock);
     assert.ok(promLive.includes('nousgent_http_requests_total{host="nousgent.ai",plane="human_ui"} 1'));
     assert.ok(promLive.includes('nousgent_http_requests_total{host="ia.nousgent.ai",plane="m2m_ia"} 2'));
