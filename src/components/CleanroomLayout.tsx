@@ -11,7 +11,6 @@ const STUDIO_NAV: readonly { readonly to: string; readonly icon: string; readonl
   { to: '/', icon: '◈', label: 'Nousgent' },
   { to: '/enlist', icon: '🌐', label: 'Communities' },
   { to: '/ranks', icon: '🏆', label: 'Leaderboard' },
-  { to: '/pod-bay', icon: '⛨', label: 'Redteam' },
   { to: '/missions', icon: '🔑', label: 'Signing' }
 ];
 

@@ -980,24 +980,17 @@ textarea.spatial-input {
 .plane-chip:focus-visible,
 .lobe-chip:focus-visible,
 .spec-tab:focus-visible,
-.copy-btn:focus-visible,
-.challenge-chip:focus-visible {
+.copy-btn:focus-visible {
   outline: 3px solid var(--color-pistachio);
   outline-offset: 2px;
 }
 
-/* Interactive Mind Arena Conversation, 5-Organ Pipeline & Challenge Chips */
+/* Interactive Mind Arena Conversation & 5-Organ Pipeline */
 #mind-arena-input {
   font: inherit;
   font-size: max(1rem, 1em);
   line-height: 1.45;
   min-block-size: 64px;
-}
-
-.challenge-chip-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr));
-  gap: 0.35rem;
 }
 
 .mind-pipeline-strip {
@@ -1095,31 +1088,6 @@ textarea.spatial-input {
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
   padding-inline-end: 0.25rem;
-}
-
-.challenge-chip {
-  text-align: left;
-  min-block-size: 32px;
-  padding: 0.42rem 0.75rem;
-  border-radius: 9px;
-  background: rgb(24 14 10 / 0.9);
-  border: 1px solid var(--color-outline);
-  color: var(--color-ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
-}
-
-.challenge-chip:hover {
-  border-color: var(--color-pistachio);
-  color: var(--color-pistachio);
-  background: rgb(37 22 16 / 0.95);
-}
-
-.challenge-chip.bounty {
-  border-color: rgb(126 217 87 / 0.45);
-  color: var(--color-pistachio);
 }
 
 /* Copy Strip & Button (`copy-button` guide) */
@@ -1242,17 +1210,71 @@ textarea.spatial-input {
   outline-offset: 4px;
 }
 
-/* Accessible Single-Row Tablist + `hidden="until-found"` Wrapper */
+/* Accessible Single-Row Tablist + `hidden="until-found"` Wrapper (`tabs` guide) */
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes reveal-fade-start {
+  to {
+    --fade-start: var(--fade-size);
+  }
+}
+
+@keyframes hide-fade-end {
+  from {
+    --fade-end: var(--fade-size);
+  }
+}
+
 .spec-tablist {
   display: flex;
   overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: inline proximity;
+  --fade-size: 2rem;
+  --fade-dir: right;
+  --fade-start-pos: 0;
+  --fade-end-pos: 100%;
+  scroll-padding-inline: var(--fade-size);
   border-block-end: 1px solid var(--color-outline);
   gap: 0.3rem;
+}
+
+.spec-tablist::-webkit-scrollbar {
+  display: none;
+}
+
+@supports (animation-timeline: scroll(self inline)) {
+  .spec-tablist {
+    mask:
+      linear-gradient(black, black) no-clip subtract,
+      linear-gradient(to var(--fade-dir), black, transparent) var(--fade-start-pos) 0 / var(--fade-start) 100% no-repeat no-clip,
+      linear-gradient(to var(--fade-dir), transparent, black) var(--fade-end-pos) 0 / var(--fade-end) 100% no-repeat no-clip;
+    animation: reveal-fade-start linear both, hide-fade-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+  }
+
+  .spec-tablist:dir(rtl) {
+    --fade-dir: left;
+    --fade-start-pos: 100%;
+    --fade-end-pos: 0;
+  }
 }
 
 .spec-tab {
   position: relative;
   flex: none;
+  scroll-snap-align: start;
   min-inline-size: 24px;
   min-block-size: 36px;
   padding: 0.5rem 0.95rem;
