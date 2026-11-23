@@ -81,7 +81,7 @@ const CONSOLE_TABS: readonly { readonly id: NousgentConsoleTab; readonly label: 
   { id: 'ask', label: 'Ask' },
   { id: 'teach', label: 'Teach' },
   { id: 'evolve', label: 'Evolve' },
-  { id: 'hack', label: 'Hack' }
+  { id: 'hack', label: 'Hackathon' }
 ];
 
 const PIPELINE_STAGES = [
