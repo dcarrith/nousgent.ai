@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.13.0",
+  "version": "1.13.1",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,7 +11,7 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-23T02:55:06.139Z",
+  "builtAt": "2026-11-23T03:00:11.613Z",
   "contentAddressing": {
     "manifestTreeSha256": "0x461968d99ff010228d65b5dd991875aa0af516cfc070dff65a78beacbe8ad2ea",
     "totalFiles": 23,

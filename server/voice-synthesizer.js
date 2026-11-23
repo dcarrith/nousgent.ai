@@ -20,6 +20,7 @@ const http = require('node:http');
 const https = require('node:https');
 const os = require('node:os');
 const path = require('node:path');
+const { Worker } = require('node:worker_threads');
 
 const DEFAULT_MASK_OPACITY_PCT = 65;
 const DEFAULT_VOICE_MODEL = 'kokoro-82m-q8';
@@ -218,6 +219,15 @@ function createNousgentVoiceSynthesizer(options = {}) {
   const env = options.env || process.env;
   const repoRoot = options.repoRoot || path.resolve(__dirname, '..');
   const stateDir = options.stateDir || env.NOUSGENT_STATE_DIR || '';
+  const inWorker = Boolean(options.inWorker);
+  const diskCacheDir = stateDir ? path.join(stateDir, 'tts-cache') : '';
+  if (diskCacheDir) {
+    try {
+      fs.mkdirSync(diskCacheDir, { recursive: true });
+    } catch {
+      /* read-only or ephemeral state dir */
+    }
+  }
 
   function resolveLocalTtsEndpoint() {
     const explicit = String(env.NOUSGENT_VOICE_TTS_URL || env.NOUSGENT_TTS_UPSTREAM_URL || '').trim();
@@ -300,7 +310,92 @@ function createNousgentVoiceSynthesizer(options = {}) {
   let kokoroBlendedStyle = null;
   let piperConfig = null;
   let queuePromise = Promise.resolve();
+  let bgWorker = null;
+  let nextWorkerReqId = 1;
+  const pendingWorkerReqs = new Map();
   const wavCache = new Map();
+
+  function readDiskCachedWav(cacheKey) {
+    if (!diskCacheDir) return null;
+    try {
+      const filePath = path.join(diskCacheDir, `${cacheKey}.wav`);
+      if (!fs.existsSync(filePath)) return null;
+      const buf = fs.readFileSync(filePath);
+      return buf.length > 44 ? buf : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeDiskCachedWav(cacheKey, wavBuffer) {
+    if (!diskCacheDir || !wavBuffer || wavBuffer.length <= 44) return;
+    try {
+      const tmpPath = path.join(diskCacheDir, `${cacheKey}.${process.pid}.tmp`);
+      const finalPath = path.join(diskCacheDir, `${cacheKey}.wav`);
+      fs.writeFileSync(tmpPath, wavBuffer);
+      fs.renameSync(tmpPath, finalPath);
+    } catch {
+      /* ignore disk cache write errors */
+    }
+  }
+
+  function ensureBackgroundWorker() {
+    if (bgWorker) return bgWorker;
+    const serializableEnv = {};
+    for (const [k, v] of Object.entries(env)) {
+      if (k.startsWith('NOUSGENT_') && typeof v === 'string') {
+        serializableEnv[k] = v;
+      }
+    }
+    const w = new Worker(path.join(__dirname, 'tts-worker.js'), {
+      workerData: {
+        env: serializableEnv,
+        stateDir,
+        repoRoot
+      }
+    });
+    w.unref();
+    w.on('message', (msg) => {
+      const entry = pendingWorkerReqs.get(msg && msg.id);
+      if (!entry) return;
+      pendingWorkerReqs.delete(msg.id);
+      if (msg.ok) {
+        entry.resolve(msg.result);
+      } else {
+        entry.reject(new Error(msg.error || 'TTS worker failed'));
+      }
+    });
+    w.on('error', (err) => {
+      bgWorker = null;
+      for (const [, entry] of pendingWorkerReqs) {
+        entry.reject(err);
+      }
+      pendingWorkerReqs.clear();
+    });
+    w.on('exit', () => {
+      bgWorker = null;
+      for (const [, entry] of pendingWorkerReqs) {
+        entry.reject(new Error('TTS worker exited'));
+      }
+      pendingWorkerReqs.clear();
+    });
+    bgWorker = w;
+    return w;
+  }
+
+  function callBackgroundWorker(action, text) {
+    return new Promise((resolve, reject) => {
+      try {
+        const w = ensureBackgroundWorker();
+        const id = nextWorkerReqId;
+        nextWorkerReqId += 1;
+        pendingWorkerReqs.set(id, { resolve, reject });
+        w.postMessage({ id, action, text });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 
   function initOrtRuntime() {
     if (!ortModule) {
@@ -498,6 +593,20 @@ function createNousgentVoiceSynthesizer(options = {}) {
       });
     }
 
+    const diskHit = readDiskCachedWav(cacheKey);
+    if (diskHit) {
+      if (wavCache.size >= 64) {
+        wavCache.delete(wavCache.keys().next().value);
+      }
+      wavCache.set(cacheKey, diskHit);
+      return Promise.resolve({
+        wavBuffer: diskHit,
+        voiceModel: cfg.voiceModel,
+        voiceEngine: `${cfg.voiceEngine}:disk-cached`,
+        spokenText
+      });
+    }
+
     const runTask = async () => {
       if (wavCache.has(cacheKey)) {
         return {
@@ -535,7 +644,11 @@ function createNousgentVoiceSynthesizer(options = {}) {
       if (!wavBuffer && String(env.NOUSGENT_TTS_SYNTH_MODE || '').toLowerCase() !== 'harmonic') {
         const modelPaths = resolveModelPaths(cfg.voiceModel);
         if (modelPaths) {
-          if (modelPaths.kind === 'kokoro') {
+          if (!inWorker) {
+            const workerRes = await callBackgroundWorker('synthesize', spokenText);
+            wavBuffer = Buffer.from(workerRes.wavArrayBuffer);
+            engineUsed = workerRes.voiceEngine;
+          } else if (modelPaths.kind === 'kokoro') {
             wavBuffer = await runKokoroSynthesis(spokenText, modelPaths, cfg);
             engineUsed =
               cfg.voicePersona === 'afrobeat-baritone'
@@ -558,6 +671,7 @@ function createNousgentVoiceSynthesizer(options = {}) {
         wavCache.delete(oldestKey);
       }
       wavCache.set(cacheKey, wavBuffer);
+      writeDiskCachedWav(cacheKey, wavBuffer);
 
       return {
         wavBuffer,
@@ -581,6 +695,11 @@ function createNousgentVoiceSynthesizer(options = {}) {
     if (String(env.NOUSGENT_TTS_SYNTH_MODE || '').toLowerCase() === 'harmonic') return Promise.resolve(false);
     const paths = resolveModelPaths(cfg.voiceModel);
     if (!paths) return Promise.resolve(false);
+    if (!inWorker) {
+      return callBackgroundWorker('warmup', initialSpeech)
+        .then((res) => Boolean(res && res.warmed))
+        .catch(() => false);
+    }
     return ensureVoiceSession(paths)
       .then(async () => {
         if (initialSpeech && String(initialSpeech).trim()) {
