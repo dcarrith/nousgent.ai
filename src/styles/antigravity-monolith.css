@@ -350,12 +350,12 @@ li {
   gap: 0.6rem;
   padding: 0.62rem 0.85rem;
   border-radius: 12px;
-  color: var(--color-ink-muted);
+  color: var(--color-pistachio);
   text-decoration: none;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   border: 1px solid transparent;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
 }
 
 .sidebar-nav-icon {
@@ -377,16 +377,20 @@ li {
 
 .sidebar-nav-link:hover {
   background: var(--color-surface-low);
-  color: var(--color-ink);
+  color: var(--color-pistachio);
+  filter: brightness(1.1);
+}
+
+.sidebar-nav-link:focus-visible {
+  outline: 2px solid var(--color-pistachio);
+  outline-offset: 2px;
 }
 
 .sidebar-nav-link[aria-current='page'] {
   background: var(--color-surface-container);
   color: var(--color-pistachio);
-  font-weight: 700;
-  border-color: var(--color-outline-strong);
-  border-inline-start: 3px solid var(--color-pistachio);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
+  border-color: var(--color-pistachio);
+  box-shadow: inset 3px 0 0 var(--color-pistachio), 0 6px 18px rgb(0 0 0 / 0.35);
 }
 
 .sidebar-epoch-card {
