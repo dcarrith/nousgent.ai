@@ -217,10 +217,10 @@ export function OverviewPage({
       return;
     }
     try {
-      if (window.sessionStorage.getItem('nousgent:welcome-played-v4') === '1') {
+      if (window.sessionStorage.getItem('nousgent:welcome-played-v5') === '1') {
         return;
       }
-      window.sessionStorage.setItem('nousgent:welcome-played-v4', '1');
+      window.sessionStorage.setItem('nousgent:welcome-played-v5', '1');
     } catch {
       /* sessionStorage unavailable */
     }

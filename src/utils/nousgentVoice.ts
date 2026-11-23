@@ -15,8 +15,8 @@ export const WELCOME_MISSION_PARAGRAPH =
   'Our mission is open, community-owned intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
   'This is an ongoing community experiment in exocortex + verifier-driven decentralized recursive self-improvement, built on an open AI stack and the agent-to-agent intelligence market shi.liquidi.sh. ' +
   "Frontier AI datacenter campuses now cost hundreds of billions of dollars — far beyond any single neighborhood's reach. " +
-  "While local nodes cannot replace gigawatt clusters for pre-training massive base models from scratch, they can pair open-weights models with NOUSGENT's five-lobe 2nd brain: an append-only shared memory where automated-verifier-checked .dig capsules are retained without overwriting prior skills, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
-  'When a problem is solved and verified in one community, every connected node nationwide can reuse that capsule immediately instead of paying to derive it again.';
+  'While local nodes cannot replace gigawatt clusters for pre-training massive base models from scratch, anyone running a dbrain can attach it as the 2nd brain for virtually any AI client — whether running local models or distilling breakthroughs from frontier models over cloud APIs. ' +
+  "NOUSGENT's five-lobe 2nd brain stores automated-verifier-checked .dig capsules without overwriting prior skills, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals, so once a problem is solved and distilled in one community, every connected node nationwide can reuse that capsule immediately instead of paying to derive it again.";
 
 export const WELCOME_BRAIN_COMPOUNDING_NOTE =
   'Inspired by human neuroanatomy, dolfactory filters adversarial inputs at the sensory edge in under a millisecond, dthalamus governs sandboxed execution, caching, and M-of-N human sign-offs, and dbrain organizes verified skills across five specialized lobes with fast rollback if a bad update ever slips through. ' +
