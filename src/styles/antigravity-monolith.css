@@ -350,19 +350,20 @@ li {
   gap: 0.6rem;
   padding: 0.62rem 0.85rem;
   border-radius: 12px;
-  color: var(--color-pistachio);
+  color: var(--color-ink);
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
   border: 1px solid transparent;
-  transition: background-color 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .sidebar-nav-icon {
-  color: var(--color-jade);
+  color: var(--color-pistachio);
   inline-size: 16px;
   block-size: 16px;
   flex: 0 0 16px;
+  pointer-events: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -377,8 +378,7 @@ li {
 
 .sidebar-nav-link:hover {
   background: var(--color-surface-low);
-  color: var(--color-pistachio);
-  filter: brightness(1.1);
+  color: var(--color-ink);
 }
 
 .sidebar-nav-link:focus-visible {
@@ -388,8 +388,8 @@ li {
 
 .sidebar-nav-link[aria-current='page'] {
   background: var(--color-surface-container);
-  color: var(--color-pistachio);
-  border-color: var(--color-pistachio);
+  color: var(--color-ink);
+  border-color: var(--color-outline-strong);
   box-shadow: inset 3px 0 0 var(--color-pistachio), 0 6px 18px rgb(0 0 0 / 0.35);
 }
 

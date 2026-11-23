@@ -1,4 +1,4 @@
-# NOUSGENT (`v1.12.3`) — Community-Based Bounded RSI on Chia
+# NOUSGENT (`v1.12.4`) — Community-Based Bounded RSI on Chia
 
 <p align="center">
   <img src="./public/logo-wordmark.svg" alt="NOUSGENT — Morphic Field & Bounded RSI" width="680" />
