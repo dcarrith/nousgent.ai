@@ -111,9 +111,10 @@ const INITIAL_EXCHANGE: DialogueExchange = {
   prompt: WELCOME_INTRO_LINE,
   spokenSummary: WELCOME_SPOKEN_MESSAGE,
   reply: `${WELCOME_MISSION_PARAGRAPH}\n\n${WELCOME_BRAIN_COMPOUNDING_NOTE}`,
-  whatHappened: 'Connected to live 5-organ DRSI cluster and loaded Welcome briefing.',
+  whatHappened:
+    'Connected to live 5-organ cluster (exocortex + verifier-driven decentralized recursive self-improvement) and loaded Welcome briefing.',
   answerMode: 'SOVEREIGN_CORTEX_KNOWLEDGE',
-  modeBadge: '◈ DRSI WELCOME',
+  modeBadge: '◈ WELCOME',
   latencyMs: 0.14,
   oscillationBand: 'α/γ 36.4 Hz',
   activeLobes: ['semantic', 'procedural', 'alignment'],
@@ -216,10 +217,10 @@ export function OverviewPage({
       return;
     }
     try {
-      if (window.sessionStorage.getItem('nousgent:welcome-played-v2') === '1') {
+      if (window.sessionStorage.getItem('nousgent:welcome-played-v3') === '1') {
         return;
       }
-      window.sessionStorage.setItem('nousgent:welcome-played-v2', '1');
+      window.sessionStorage.setItem('nousgent:welcome-played-v3', '1');
     } catch {
       /* sessionStorage unavailable */
     }
@@ -641,12 +642,12 @@ export function OverviewPage({
 
             <div className="welcome-pillar-box">
               <div className="mono-xs text-bronze" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
-                3. RECURSIVE &amp; EXPONENTIAL DRSI
+                3. EXOCORTEX + VERIFIER-DRIVEN COMPOUNDING
               </div>
               <p>
-                Every verified <code>.dig</code> capsule becomes a permanent, higher-order building block for the next generation (
-                <code>0%</code> forgetting + <code>O(log N)</code> rollback), turning quadratic network sharing into recursive,
-                exponentially compounding gains that remain human-bounded.
+                Every automated-verifier-checked <code>.dig</code> capsule becomes a permanent higher-order building block in the shared
+                exocortex (<code>0%</code> forgetting + <code>O(log N)</code> rollback), powering exocortex + verifier-driven
+                decentralized recursive self-improvement that compounds exponentially over generations while staying human-bounded.
               </p>
             </div>
           </div>

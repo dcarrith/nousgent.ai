@@ -13,10 +13,10 @@ export const WELCOME_INTRO_LINE =
 
 export const WELCOME_MISSION_PARAGRAPH =
   'Our mission is open, community-owned super-intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
-  'This is a community experiment in recursive self-improvement (RSI) using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
+  'This is a community experiment in exocortex + verifier-driven decentralized recursive self-improvement using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
   "NOUSGENT's five-lobe 2nd brain continually learns verified .dig knowledge capsules with 0% forgetting, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
   'Communities across the country do not need a billion-dollar datacenter to achieve super-intelligence. ' +
-  "Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide. We'll call this decentralized recursive self-improvement (DRSI).";
+  'Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide through exocortex + verifier-driven decentralized recursive self-improvement.';
 
 export const WELCOME_BRAIN_COMPOUNDING_NOTE =
   'Mirroring human neuroanatomy, dolfactory screens threats at the sensory edge in sub-millisecond time, dthalamus relays attention while enforcing sandboxed policy and M-of-N human sign-offs, and dbrain consolidates verified skills across five specialized cortical lobes with zero forgetting. ' +
@@ -111,6 +111,7 @@ function fallbackBrowserSpeechSynthesis(text: string, token: number, callbacks: 
   }
   try {
     const phoneticText = text
+      .replace(/\bexocortex\s*\+\s*verifier-driven\b/gi, 'exocortex and verifier-driven')
       .replace(/\bia\.nous?gent\.ai\b/gi, 'I A dot Noo-jent dot A I')
       .replace(/\bnous?gent\.ai\b/gi, 'Noo-jent dot A I')
       .replace(/\bnous?gent\b/gi, 'Noo-jent')

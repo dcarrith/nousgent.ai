@@ -1,19 +1,19 @@
 'use strict';
 
 const OG_IMAGE_ALT =
-  'NOUSGENT — Sculpted 3D persona mask and 5-lobe connectome for the Morphic Intelligence Field and autonomous Bounded RSI on Chia.';
+  'NOUSGENT — Sculpted 3D persona mask and 5-lobe connectome for the Morphic Intelligence Field and exocortex + verifier-driven decentralized recursive self-improvement on Chia.';
 
 const SEO_ROUTES = Object.freeze({
   '/': {
-    title: 'NOUSGENT — Morphic Intelligence Field & Bounded RSI on Chia',
+    title: 'NOUSGENT — Morphic Intelligence Field & Exocortex + Verifier-Driven Decentralized Recursive Self-Improvement',
     description:
-      'Community Second Brains compound verified .dig memory in the Morphic Intelligence Field alongside 24/7 autonomous Bounded RSI on Chia.',
+      'Community Second Brains compound verified .dig memory in the Morphic Intelligence Field through exocortex + verifier-driven decentralized recursive self-improvement on Chia.',
     keywords:
-      'NOUSGENT, Morphic Intelligence Field, Autonomous Bounded RSI, Community Second Brains, Chia blockchain, DataLayer, DIG Network, CHIP-0043',
+      'NOUSGENT, Morphic Intelligence Field, exocortex + verifier-driven decentralized recursive self-improvement, Community Second Brains, Chia blockchain, DataLayer, DIG Network',
     label1: 'Architecture',
-    data1: 'Community Brains + Autonomous RSI',
+    data1: 'Exocortex + Verifier-Driven',
     label2: 'Retention',
-    data2: '0.00% Forgetting · CHIP-0043'
+    data2: '0.00% Forgetting · M-of-N Sign-Off'
   },
   '/pod-bay': {
     title: 'Redteam — NOUSGENT',
@@ -171,7 +171,7 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
     provider_name: 'NOUSGENT',
     provider_url: canonicalOrigin,
     title: meta.title,
-    author_name: 'NOUSGENT — Collective Bounded RSI',
+    author_name: 'NOUSGENT — Exocortex + Verifier-Driven Decentralized Recursive Self-Improvement',
     author_url: canonicalOrigin,
     url: ogJpgUrl,
     width: 1200,

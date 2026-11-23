@@ -415,7 +415,7 @@ export function CleanroomLayout({
               className="monolith-progress"
               max={100}
               value={snapshot.bariScorePct}
-              aria-label="Bounded RSI Readiness"
+              aria-label="Exocortex + verifier-driven decentralized recursive self-improvement readiness"
             />
             <div className="mono-xs" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
               <span className="text-muted">{genLabel} ({snapshot.bariScorePct}%)</span>

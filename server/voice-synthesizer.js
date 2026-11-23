@@ -29,10 +29,10 @@ const KOKORO_SAMPLE_RATE = 24000;
 const DEFAULT_WELCOME_SPEECH =
   "Hi, I'm NOUSGENT. With your help, I believe we can attain super-intelligence that's bounded, for the betterment of humanity. " +
   'Our mission is open, community-owned super-intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
-  'This is a community experiment in recursive self-improvement (RSI) using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
+  'This is a community experiment in exocortex + verifier-driven decentralized recursive self-improvement using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
   "NOUSGENT's five-lobe 2nd brain continually learns verified .dig knowledge capsules with 0% forgetting, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
   'Communities across the country do not need a billion-dollar datacenter to achieve super-intelligence. ' +
-  "Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide. We'll call this decentralized recursive self-improvement (DRSI). " +
+  'Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide through exocortex + verifier-driven decentralized recursive self-improvement. ' +
   "Mirroring human neuroanatomy, dolfactory screens threats at the sensory edge in sub-millisecond time, dthalamus relays attention while enforcing sandboxed policy and M-of-N human sign-offs, and dbrain consolidates verified skills across five specialized cortical lobes with zero forgetting. " +
   "Because N independent brains exchange composable .dig capsules over shi.liquidi.sh, insights combine across N-squared peer pathways while each generation's verified capsules become higher-order building blocks for the next, allowing intelligence to compound not only recursively, but quadratically across the network and exponentially over generations.";
 
@@ -48,6 +48,7 @@ function parseMaskOpacityPct(rawVal) {
 function normalizeSpeechText(rawText) {
   let text = String(rawText || '')
     .replace(/`([^`]+)`/g, '$1')
+    .replace(/\bexocortex\s*\+\s*verifier-driven\b/gi, 'exocortex and verifier-driven')
     .replace(/https?:\/\//gi, '')
     .replace(/\bia\.nous?gent\.ai\b/gi, 'I A dot Noojent dot A I')
     .replace(/\bnous?gent\.ai\b/gi, 'Noojent dot A I')

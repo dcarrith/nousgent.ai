@@ -414,13 +414,16 @@ export function DossierAndDocsPage({ snapshot, onRefresh }: Readonly<DossierAndD
       ) : null}
 
       {/* MAIN INTERACTIVE LEADERBOARD CARD: Search + 3-Tab Switcher + Sortable Responsive Tables */}
-      <section className="glass-card" aria-label="Interactive Collective Bounded RSI Rankings">
+      <section
+        className="glass-card"
+        aria-label="Interactive Exocortex + Verifier-Driven Decentralized Recursive Self-Improvement Rankings"
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="leaderboard-toolbar">
             <div
               className="spec-tablist"
               role="tablist"
-              aria-label="Collective Bounded RSI Leaderboard Views"
+              aria-label="Exocortex + Verifier-Driven Decentralized Recursive Self-Improvement Leaderboard Views"
               {...({ focusgroup: 'tablist nomemory' } as Record<string, string>)}
             >
               {leaderboardTabs.map((tab, idx) => {
@@ -512,12 +515,12 @@ export function DossierAndDocsPage({ snapshot, onRefresh }: Readonly<DossierAndD
                           '--label-4': '"Field Share"',
                           '--label-5': '"DataLayer Gen"',
                           '--label-6': '"Listed $DIG"',
-                          '--label-7': '"RSI Score"'
+                          '--label-7': '"Impact Score"'
                         } as React.CSSProperties
                       }
                     >
                       <caption id={commTable.captionId}>
-                        Community Brain Stores &amp; Chia DataLayer Singletons — click column headers to sort
+                        Community Brain Stores advancing exocortex + verifier-driven decentralized recursive self-improvement — click column headers to sort
                       </caption>
                       <thead>
                         <tr>
@@ -596,7 +599,7 @@ export function DossierAndDocsPage({ snapshot, onRefresh }: Readonly<DossierAndD
                                 command: '--sort'
                               } as Record<string, string>)}
                             >
-                              <span>RSI Score</span>
+                              <span>Impact Score</span>
                               <SortChevron />
                             </button>
                           </th>
@@ -712,12 +715,12 @@ export function DossierAndDocsPage({ snapshot, onRefresh }: Readonly<DossierAndD
                           '--label-4': '"Verified .dig"',
                           '--label-5': '"Derivation Compute"',
                           '--label-6': '"Listed $DIG"',
-                          '--label-7': '"RSI Score"'
+                          '--label-7': '"Impact Score"'
                         } as React.CSSProperties
                       }
                     >
                       <caption id={didTable.captionId}>
-                        Verified Digital Identities (Chia DIDs), Agents &amp; Keyholders — click column headers to sort
+                        Verified Digital Identities (Chia DIDs) advancing exocortex + verifier-driven decentralized recursive self-improvement — click column headers to sort
                       </caption>
                       <thead>
                         <tr>
@@ -784,7 +787,7 @@ export function DossierAndDocsPage({ snapshot, onRefresh }: Readonly<DossierAndD
                                 command: '--sort'
                               } as Record<string, string>)}
                             >
-                              <span>RSI Score</span>
+                              <span>Impact Score</span>
                               <SortChevron />
                             </button>
                           </th>

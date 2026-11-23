@@ -8,7 +8,7 @@ export interface NousgentOpticalBayProps {
 
 export function NousgentOpticalBay({
   alertActive = false,
-  statusCaption = 'BOUNDED RSI // ACTIVE',
+  statusCaption = 'EXOCORTEX + VERIFIER-DRIVEN // ACTIVE',
   petabytesCommitted = 148.9
 }: Readonly<NousgentOpticalBayProps>) {
   return (
@@ -25,7 +25,7 @@ export function NousgentOpticalBay({
             borderBottom: '1px solid rgb(126 217 87 / 0.2)'
           }}
         >
-          <span className="text-pistachio" style={{ fontWeight: 600 }}>// NOUSGENT.RSI</span>
+          <span className="text-pistachio" style={{ fontWeight: 600 }}>// NOUSGENT.AI</span>
           <span className="text-emerald">0.14ms IPS</span>
         </div>
 
@@ -196,8 +196,8 @@ export function NousgentOpticalBay({
         <div className="mono-xs text-muted" style={{ fontSize: '10px', letterSpacing: '0.14em' }}>
           DUBAI CACAO CONNECTOME BAY
         </div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 600, letterSpacing: '0.03em' }}>
-          BOUNDED RSI FLYWHEEL
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: '15px', fontWeight: 600, letterSpacing: '0.02em' }}>
+          EXOCORTEX + VERIFIER-DRIVEN FLYWHEEL
         </div>
         <div className="mono-xs text-pistachio" style={{ fontSize: '10px' }}>
           ● CHIA PoST LOCKED: {petabytesCommitted} PB
