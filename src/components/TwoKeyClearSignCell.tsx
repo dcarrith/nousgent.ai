@@ -5,12 +5,14 @@ import { SwarmMissionItem } from '../data/mockData';
 export interface TwoKeyClearSignCellProps {
   readonly mission: SwarmMissionItem;
   readonly colClass?: string;
+  readonly embedded?: boolean;
   readonly onSigned?: () => void;
 }
 
 export function TwoKeyClearSignCell({
   mission,
   colClass = 'col-5',
+  embedded = false,
   onSigned
 }: Readonly<TwoKeyClearSignCellProps>) {
   const nativeSwitchSupported =
@@ -32,7 +34,7 @@ export function TwoKeyClearSignCell({
   async function handleExecuteClearSign(): Promise<void> {
     if (!keyAArmed || !keyBArmed) {
       playQuindarBeep(2475);
-      setStatusMessage('Enable both Key A (FIDO2) and Key B (BLS G2) before co-signing.');
+      setStatusMessage('Unlock both Key A (Passkey) and Key B (Swarm Key) before co-signing.');
       return;
     }
     playQuindarBeep(2525);
@@ -51,118 +53,118 @@ export function TwoKeyClearSignCell({
       if (data.ok) {
         setLocalQuorumSigs(data.quorumSignatures);
         setAttestationHash(data.attestationHash);
-        setStatusMessage(`✓ Signed ${data.missionId}: ${data.quorumSignatures}/${data.quorumTarget} (${data.status})`);
+        const friendlyStatus =
+          data.status === 'CHIP0043_QUORUM_SEALED' ? 'Approved & Sealed' : 'Awaiting Remaining Signers';
+        setStatusMessage(`✓ Signed ${data.missionId}: ${data.quorumSignatures}/${data.quorumTarget} (${friendlyStatus})`);
         if (onSigned) onSigned();
       } else {
-        setStatusMessage(data.error || 'CHIP-0043 interlock rejected unsigned payload.');
+        setStatusMessage(data.error || 'Safety lock rejected unsigned upgrade — both keys are required.');
       }
     } catch {
       setStatusMessage('Signing API unreachable.');
     }
   }
 
-  return (
-    <section className={`glass-card cyan ${colClass}`} aria-label="CHIP-0043 Two-Key Co-Signing">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700 }}>CHIP-0043 Quorum</h2>
-          <span className="pill-badge emerald">Two-Key</span>
+  const innerContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingTop: embedded ? '0.25rem' : 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Two-Key Human Sign-Off</h2>
+        <span className="pill-badge emerald">2-Key Safety Lock</span>
+      </div>
+
+      <p className="text-muted" style={{ margin: 0, fontSize: '12.5px' }}>
+        Verify the upgrade fingerprint for <strong>{mission.missionId}</strong> and unlock both keys (your passkey + swarm key) to approve it.
+      </p>
+
+      <div className="glass-well" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <div
+          style={{
+            width: 112,
+            height: 112,
+            padding: '0.45rem',
+            borderRadius: '10px',
+            background: 'var(--color-surface-container)',
+            border: '1px solid rgb(45 212 191 / 0.35)',
+            marginBottom: '0.45rem'
+          }}
+        >
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="#2dd4bf" aria-hidden="true">
+            <rect x="5" y="5" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
+            <rect x="11" y="11" width="13" height="13" rx="2" />
+            <rect x="70" y="5" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
+            <rect x="76" y="11" width="13" height="13" rx="2" />
+            <rect x="5" y="70" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
+            <rect x="11" y="76" width="13" height="13" rx="2" />
+            <rect x="38" y="10" width="8" height="8" />
+            <rect x="50" y="18" width="6" height="6" opacity="0.8" />
+            <rect x="36" y="36" width="28" height="28" rx="4" fill="#120a07" stroke="#7ed957" strokeWidth="2" />
+            <circle cx="50" cy="50" r="6" fill="#7ed957" />
+            <rect x="15" y="42" width="6" height="6" />
+            <rect x="72" y="40" width="8" height="8" />
+            <rect x="42" y="74" width="7" height="7" />
+            <rect x="56" y="70" width="6" height="6" />
+            <rect x="78" y="76" width="10" height="10" />
+          </svg>
         </div>
-
-        <p className="text-muted" style={{ margin: 0, fontSize: '12.5px' }}>
-          Verify the UR digest for <strong>{mission.missionId}</strong> and arm both keys to co-sign.
-        </p>
-
-        <div className="glass-well" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div
-            style={{
-              width: 112,
-              height: 112,
-              padding: '0.45rem',
-              borderRadius: '10px',
-              background: 'var(--color-surface-container)',
-              border: '1px solid rgb(45 212 191 / 0.35)',
-              marginBottom: '0.45rem'
-            }}
-          >
-            <svg viewBox="0 0 100 100" width="100%" height="100%" fill="#2dd4bf" aria-hidden="true">
-              <rect x="5" y="5" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
-              <rect x="11" y="11" width="13" height="13" rx="2" />
-              <rect x="70" y="5" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
-              <rect x="76" y="11" width="13" height="13" rx="2" />
-              <rect x="5" y="70" width="25" height="25" rx="3" fill="none" stroke="#2dd4bf" strokeWidth="4" />
-              <rect x="11" y="76" width="13" height="13" rx="2" />
-              <rect x="38" y="10" width="8" height="8" />
-              <rect x="50" y="18" width="6" height="6" opacity="0.8" />
-              <rect x="36" y="36" width="28" height="28" rx="4" fill="#120a07" stroke="#7ed957" strokeWidth="2" />
-              <circle cx="50" cy="50" r="6" fill="#7ed957" />
-              <rect x="15" y="42" width="6" height="6" />
-              <rect x="72" y="40" width="8" height="8" />
-              <rect x="42" y="74" width="7" height="7" />
-              <rect x="56" y="70" width="6" height="6" />
-              <rect x="78" y="76" width="10" height="10" />
-            </svg>
-          </div>
-          <div className="mono-xs text-cyan" style={{ wordBreak: 'break-all' }}>
-            {mission.clearSignUr}
-          </div>
+        <div className="mono-xs text-cyan" style={{ wordBreak: 'break-all' }}>
+          {mission.clearSignUr}
         </div>
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 145px), 1fr))', gap: '0.55rem' }}>
-          <label className="spatial-switch-label">
-            <div>
-              <div className="mono-xs text-pistachio" style={{ fontSize: '10px', fontWeight: 600 }}>KEY A · FIDO2</div>
-              <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>{keyAArmed ? 'Armed' : 'Locked'}</div>
-            </div>
-            <input
-              type="checkbox"
-              className={`spatial-switch-input${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
-              {...({ switch: '' } as Record<string, string>)}
-              role={nativeSwitchSupported ? undefined : 'switch'}
-              checked={keyAArmed}
-              onChange={(e) => setKeyAArmed(e.target.checked)}
-            />
-          </label>
-
-          <label className="spatial-switch-label">
-            <div>
-              <div className="mono-xs text-cyan" style={{ fontSize: '10px', fontWeight: 600 }}>KEY B · BLS G2</div>
-              <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>{keyBArmed ? 'Armed' : 'Locked'}</div>
-            </div>
-            <input
-              type="checkbox"
-              className={`spatial-switch-input cyan${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
-              {...({ switch: '' } as Record<string, string>)}
-              role={nativeSwitchSupported ? undefined : 'switch'}
-              checked={keyBArmed}
-              onChange={(e) => setKeyBArmed(e.target.checked)}
-            />
-          </label>
-        </div>
-
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-            <span style={{ fontSize: '12px' }}>Signatures</span>
-            <span className="mono-xs text-emerald" style={{ fontWeight: 700 }}>
-              {localQuorumSigs} / {mission.quorumTarget} ({quorumPct}%)
-            </span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 145px), 1fr))', gap: '0.55rem' }}>
+        <label className="spatial-switch-label">
+          <div>
+            <div className="mono-xs text-pistachio" style={{ fontSize: '10px', fontWeight: 600 }}>KEY A · PASSKEY</div>
+            <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>{keyAArmed ? 'Unlocked' : 'Locked'}</div>
           </div>
-          <progress
-            className="monolith-progress"
-            max={100}
-            value={quorumPct}
-            aria-label={`Signatures collected for ${mission.missionId}`}
+          <input
+            type="checkbox"
+            className={`spatial-switch-input${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
+            {...({ switch: '' } as Record<string, string>)}
+            role={nativeSwitchSupported ? undefined : 'switch'}
+            checked={keyAArmed}
+            onChange={(e) => setKeyAArmed(e.target.checked)}
           />
-        </div>
+        </label>
 
-        <input
-          type="text"
-          className="spatial-input"
-          value={signerCallsign}
-          onChange={(e) => setSignerCallsign(e.target.value)}
-          aria-label="Signer Callsign"
+        <label className="spatial-switch-label">
+          <div>
+            <div className="mono-xs text-cyan" style={{ fontSize: '10px', fontWeight: 600 }}>KEY B · SWARM KEY</div>
+            <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>{keyBArmed ? 'Unlocked' : 'Locked'}</div>
+          </div>
+          <input
+            type="checkbox"
+            className={`spatial-switch-input cyan${nativeSwitchSupported ? '' : ' input-switch-polyfill'}`}
+            {...({ switch: '' } as Record<string, string>)}
+            role={nativeSwitchSupported ? undefined : 'switch'}
+            checked={keyBArmed}
+            onChange={(e) => setKeyBArmed(e.target.checked)}
+          />
+        </label>
+      </div>
+
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+          <span style={{ fontSize: '12px' }}>Human Approvals</span>
+          <span className="mono-xs text-emerald" style={{ fontWeight: 700 }}>
+            {localQuorumSigs} / {mission.quorumTarget} ({quorumPct}%)
+          </span>
+        </div>
+        <progress
+          className="monolith-progress"
+          max={100}
+          value={quorumPct}
+          aria-label={`Human approvals collected for ${mission.missionId}`}
         />
       </div>
+
+      <input
+        type="text"
+        className="spatial-input"
+        value={signerCallsign}
+        onChange={(e) => setSignerCallsign(e.target.value)}
+        aria-label="Signer Callsign"
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <button
@@ -171,7 +173,7 @@ export function TwoKeyClearSignCell({
           style={{ width: '100%' }}
           onClick={() => void handleExecuteClearSign()}
         >
-          Co-Sign (FIDO2)
+          Approve &amp; Co-Sign
         </button>
 
         {statusMessage ? (
@@ -185,6 +187,16 @@ export function TwoKeyClearSignCell({
           </div>
         ) : null}
       </div>
+    </div>
+  );
+
+  if (embedded) {
+    return innerContent;
+  }
+
+  return (
+    <section className={`glass-card cyan ${colClass}`} aria-label="Two-Key Human Sign-Off">
+      {innerContent}
     </section>
   );
 }

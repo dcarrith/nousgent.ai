@@ -13,7 +13,11 @@ export interface LiveDbrainStoreSummary {
 export interface LiveRecentCapsuleItem {
   readonly id: string;
   readonly title: string;
+  readonly summary?: string;
   readonly lobe: string;
+  readonly authorName?: string;
+  readonly tags?: readonly string[];
+  readonly timestamp?: string;
   readonly storeId: string;
   readonly generation: number;
   readonly merkleRoot: string;

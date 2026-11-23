@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { MissionSnapshot } from '../hooks/useNousgentMission';
 
@@ -7,21 +7,21 @@ export interface CleanroomLayoutProps {
   readonly children: React.ReactNode;
 }
 
-type StudioNavIconId = 'nousgent' | 'communities' | 'leaderboard' | 'signing';
+type StudioNavIconId = 'welcome' | 'communities' | 'leaderboard' | 'signing';
 
 const STUDIO_NAV: readonly {
   readonly to: string;
   readonly icon: StudioNavIconId;
   readonly label: string;
 }[] = [
-  { to: '/', icon: 'nousgent', label: 'Nousgent' },
+  { to: '/', icon: 'welcome', label: 'Welcome' },
   { to: '/enlist', icon: 'communities', label: 'Communities' },
   { to: '/ranks', icon: 'leaderboard', label: 'Leaderboard' },
   { to: '/missions', icon: 'signing', label: 'Signing' }
 ];
 
 function renderNavIcon(icon: StudioNavIconId): React.ReactNode {
-  if (icon === 'nousgent') {
+  if (icon === 'welcome') {
     return (
       <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="8,1.6 14.4,8 8,14.4 1.6,8" />
@@ -59,6 +59,79 @@ function renderNavIcon(icon: StudioNavIconId): React.ReactNode {
   );
 }
 
+interface SidebarEvolutionEntry {
+  readonly key: string;
+  readonly badge: string;
+  readonly badgeTone: 'pistachio' | 'jade' | 'bronze';
+  readonly kindLabel: string;
+  readonly title: string;
+  readonly details: string;
+  readonly metaLine: string;
+  readonly internalHref?: string;
+  readonly externalHref?: string;
+}
+
+function formatGovernanceStatus(status: string): { readonly label: string; readonly tone: 'pistachio' | 'jade' | 'bronze' } {
+  if (status === 'CHIP0043_QUORUM_SEALED') return { label: 'Sealed', tone: 'pistachio' };
+  if (status === 'DAO_APPROVED_AWAITING_SIGNING') return { label: 'Sign-Off', tone: 'jade' };
+  if (status === 'DAO_VOTING_OPEN') return { label: 'Voting', tone: 'bronze' };
+  if (status === 'ACTIVE_SWARM_HARVEST') return { label: 'Active', tone: 'pistachio' };
+  return { label: 'Pending', tone: 'bronze' };
+}
+
+function buildSidebarEvolutions(snapshot: MissionSnapshot): readonly SidebarEvolutionEntry[] {
+  const entries: SidebarEvolutionEntry[] = [];
+  const seenTitles = new Set<string>();
+
+  for (const cap of snapshot.recentCapsules) {
+    const norm = cap.title.trim().toLowerCase();
+    if (!norm || seenTitles.has(norm)) continue;
+    seenTitles.add(norm);
+    const lobeLabel = cap.lobe ? cap.lobe.charAt(0).toUpperCase() + cap.lobe.slice(1) : 'Semantic';
+    const rootShort =
+      cap.merkleRoot && cap.merkleRoot.length > 14
+        ? `${cap.merkleRoot.slice(0, 8)}…${cap.merkleRoot.slice(-4)}`
+        : cap.id;
+    const detailText =
+      cap.summary && cap.summary.trim().length > 0
+        ? cap.summary
+        : `Verified ${lobeLabel.toLowerCase()} memory capsule anchored into NOUSGENT's append-only Second Brain.`;
+    entries.push({
+      key: `cap-${cap.id}`,
+      badge: cap.generation > 0 ? `Gen #${cap.generation}` : 'Minted',
+      badgeTone: 'pistachio',
+      kindLabel: `${lobeLabel} Lobe`,
+      title: cap.title,
+      details: detailText,
+      metaLine: `${cap.authorName || 'Community Node'}${cap.priceDig ? ` · ${cap.priceDig}` : ''} · ${rootShort}`,
+      externalHref: cap.capsuleUrl
+    });
+    if (entries.length >= 5) break;
+  }
+
+  let missionAdded = 0;
+  for (const m of snapshot.missions) {
+    const norm = m.title.trim().toLowerCase();
+    if (!norm || seenTitles.has(norm)) continue;
+    seenTitles.add(norm);
+    const st = formatGovernanceStatus(m.status);
+    entries.push({
+      key: `mission-${m.missionId}`,
+      badge: st.label,
+      badgeTone: st.tone,
+      kindLabel: `${m.quorumSignatures}/${m.quorumTarget} Keys`,
+      title: m.title,
+      details: m.summary || 'Community-proposed capability upgrade queued for voting and two-key human sign-off.',
+      metaLine: `${m.missionId} · ${m.dao?.votesForDig || '0.000'} For · ${m.rewardDig} $DIG`,
+      internalHref: `/missions?mission=${encodeURIComponent(m.missionId)}`
+    });
+    missionAdded += 1;
+    if (missionAdded >= 3) break;
+  }
+
+  return entries;
+}
+
 const POWERED_BY_STACK: readonly {
   readonly id: string;
   readonly name: string;
@@ -79,7 +152,7 @@ const POWERED_BY_STACK: readonly {
     id: 'dthalamus',
     name: 'dthalamus',
     layer: 'Ring-0 Gate',
-    summary: 'Sensory/motor relay, 4-layer cache governor, and CHIP-0043 interlock.',
+    summary: 'Sensory/motor relay, 4-layer cache governor, and two-key human safety lock.',
     href: 'https://dthalamus.to',
     liveKey: 'dthalamus'
   },
@@ -111,7 +184,7 @@ const POWERED_BY_STACK: readonly {
     id: 'chia-dig',
     name: 'Chia + DIG',
     layer: 'L1 Settlement',
-    summary: 'PoST finality, CHIP-0035 DataLayer roots, and chia-dao-v1 governance.',
+    summary: 'Green proof-of-space finality, on-chain memory proofs, and community DAO governance.',
     href: 'https://www.chia.net',
     liveKey: 'chia'
   }
@@ -133,9 +206,28 @@ export function CleanroomLayout({
   snapshot,
   children
 }: Readonly<CleanroomLayoutProps>) {
+  const evolutionsPanelRef = useRef<HTMLDetailsElement | null>(null);
+  const initializedFirstEvolutionRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 1025px)');
+    if (evolutionsPanelRef.current) {
+      evolutionsPanelRef.current.open = mq.matches;
+    }
+    const onChange = (ev: MediaQueryListEvent) => {
+      if (evolutionsPanelRef.current) {
+        evolutionsPanelRef.current.open = ev.matches;
+      }
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   const primaryQuorum = snapshot.missions[0]?.quorumSignatures ?? 0;
   const primaryTarget = snapshot.missions[0]?.quorumTarget ?? 3;
   const genLabel = snapshot.dbrainGeneration > 0 ? `Gen #${snapshot.dbrainGeneration}` : 'Syncing';
+  const sidebarEvolutions = buildSidebarEvolutions(snapshot);
 
   return (
     <div className="cacao-studio-shell">
@@ -211,22 +303,93 @@ export function CleanroomLayout({
 
       {/* Sidebar + Main Viewport */}
       <div className="cacao-body-frame">
-        <aside className="cacao-sidebar" aria-label="Primary Navigation">
-          <nav className="sidebar-nav-list" aria-label="Primary Studio Routes">
-            {STUDIO_NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className="sidebar-nav-link"
-              >
-                <span className="sidebar-nav-icon" aria-hidden="true">
-                  {renderNavIcon(item.icon)}
+        <aside className="cacao-sidebar" aria-label="Primary Navigation and Evolutions">
+          <div className="sidebar-top-stack">
+            <nav className="sidebar-nav-list" aria-label="Primary Studio Routes">
+              {STUDIO_NAV.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className="sidebar-nav-link"
+                >
+                  <span className="sidebar-nav-icon" aria-hidden="true">
+                    {renderNavIcon(item.icon)}
+                  </span>
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+
+            <details
+              ref={evolutionsPanelRef}
+              className="sidebar-evolutions-panel"
+              open
+            >
+              <summary className="sidebar-evolutions-heading">
+                <span>Recent Evolutions</span>
+                <span className="sidebar-evolutions-count">
+                  {snapshot.loading ? '…' : sidebarEvolutions.length}
                 </span>
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
-          </nav>
+              </summary>
+
+              <div className="sidebar-evolutions-scroll" aria-label="Nousgent Recent Evolutions">
+                {sidebarEvolutions.length > 0 ? (
+                  sidebarEvolutions.map((ev, idx) => (
+                    <details
+                      key={ev.key}
+                      className="sidebar-evolution-item"
+                      ref={(el) => {
+                        if (el && idx === 0 && !initializedFirstEvolutionRef.current) {
+                          initializedFirstEvolutionRef.current = true;
+                          el.open = true;
+                        }
+                      }}
+                    >
+                      <summary className="sidebar-evolution-summary">
+                        <span className="sidebar-evolution-summary-body">
+                          <span className="sidebar-evolution-topline">
+                            <span className={`sidebar-evolution-badge ${ev.badgeTone}`}>
+                              {ev.badge}
+                            </span>
+                            <span className="mono-xs text-muted sidebar-evolution-kind">
+                              {ev.kindLabel}
+                            </span>
+                          </span>
+                          <span className="sidebar-evolution-title">{ev.title}</span>
+                        </span>
+                      </summary>
+
+                      <div className="sidebar-evolution-details">
+                        <p className="sidebar-evolution-desc">{ev.details}</p>
+                        <div className="mono-xs text-muted sidebar-evolution-meta">
+                          {ev.metaLine}
+                        </div>
+                        {ev.internalHref ? (
+                          <Link to={ev.internalHref} className="mono-xs text-jade sidebar-evolution-link">
+                            Review in Signing →
+                          </Link>
+                        ) : ev.externalHref ? (
+                          <a
+                            href={ev.externalHref}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mono-xs text-jade sidebar-evolution-link"
+                          >
+                            Inspect .dig Capsule ↗
+                          </a>
+                        ) : null}
+                      </div>
+                    </details>
+                  ))
+                ) : (
+                  <div className="mono-xs text-muted" style={{ padding: '0.45rem 0.25rem', fontSize: '10.5px' }}>
+                    {snapshot.loading ? 'Syncing evolution history…' : 'No evolutions recorded yet.'}
+                  </div>
+                )}
+              </div>
+            </details>
+          </div>
 
           <div className="sidebar-epoch-card">
             <div className="mono-xs" style={{ display: 'flex', justifyContent: 'space-between' }}>

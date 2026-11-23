@@ -58,11 +58,11 @@ export function EnlistNodePage({ snapshot, onEnlisted }: Readonly<EnlistNodePage
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <h1 style={{ fontSize: '22px', fontWeight: 700 }}>Communities</h1>
-            <span className="pill-badge emerald">CHIP-0043</span>
+            <span className="pill-badge emerald">Sandboxed &amp; Two-Key Protected</span>
           </div>
 
           <p className="text-muted" style={{ margin: 0, fontSize: '13px' }}>
-            Connect a sandboxed node or community Second Brain to contribute verified <code>.dig</code> capsules and Chia PoST storage.
+            Connect a sandboxed local node or community Second Brain to pool verified <code>.dig</code> capsules and green Chia storage.
           </p>
 
           <div

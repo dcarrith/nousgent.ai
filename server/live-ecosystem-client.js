@@ -527,20 +527,36 @@ function createLiveEcosystemClient(env = process.env) {
       }
     }
 
-    const recentCapsules = rawCapsules.slice(0, 6).map((c) => {
+    const seenRecentTitles = new Set();
+    const recentCapsules = [];
+    for (const c of rawCapsules) {
+      if (!c) continue;
+      const title = String(c.title || c.key || 'Untitled Capsule').trim();
+      const normTitle = title.toLowerCase();
+      if (seenRecentTitles.has(normTitle)) continue;
+      seenRecentTitles.add(normTitle);
       const market = priceByCapId.get(String(c.id));
       const priceDig = market?.priceDig !== undefined ? `${Number(market.priceDig).toFixed(3)} $DIG` : null;
-      return {
+      const rawDetail = String(c.summary || market?.summary || c.content || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const summary = rawDetail.length > 220 ? `${rawDetail.slice(0, 217).trimEnd()}…` : rawDetail;
+      recentCapsules.push({
         id: String(c.id || ''),
-        title: String(c.title || c.key || 'Untitled Capsule'),
+        title,
+        summary,
         lobe: String(c.lobe || 'semantic'),
+        authorName: String(c.authorAgent?.name || market?.creatorName || 'Community Node'),
+        tags: Array.isArray(c.tags) ? c.tags.slice(0, 4).map((t) => String(t)) : [],
+        timestamp: String(c.timestamp || c.createdAt || ''),
         storeId: String(c.storeId || dbStat.primaryStoreId || ''),
         generation: Number(c.generation || primaryStore?.generation || 0),
         merkleRoot: String(c.merkleRoot || primaryStore?.merkleRoot || ''),
         priceDig,
         capsuleUrl: `https://dbrain.to/dig/${encodeURIComponent(String(c.id || ''))}.json`
-      };
-    });
+      });
+      if (recentCapsules.length >= 10) break;
+    }
 
     const dtStat = dthalamusStatusRes.data || {};
     const dolfStat = dolfactoryStatusRes.data || {};

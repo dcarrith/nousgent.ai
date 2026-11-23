@@ -25,6 +25,10 @@ const DEFAULT_MASK_OPACITY_PCT = 65;
 const DEFAULT_VOICE_MODEL = 'kokoro-82m-q8';
 const DEFAULT_VOICE_PERSONA = 'afrobeat-baritone';
 const KOKORO_SAMPLE_RATE = 24000;
+const DEFAULT_WELCOME_SPEECH =
+  'Welcome to Nousgent. Our mission is open, community-owned intelligence that serves the public rather than closed corporate silos. ' +
+  'My five-lobe Second Brain continually learns verified knowledge capsules without forgetting past skills, protected by pre-cortical threat screening and two-key human approval. ' +
+  'And yes, communities across the country really can pool their resources toward shared super-intelligence: instead of needing one billion-dollar datacenter, local nodes distill breakthroughs into compact, verified capsules, so an insight solved in one town strengthens every connected brain nationwide.';
 
 function parseMaskOpacityPct(rawVal) {
   if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
@@ -571,16 +575,24 @@ function createNousgentVoiceSynthesizer(options = {}) {
     return next;
   }
 
-  function warmupSession() {
+  function warmupSession(initialSpeech = DEFAULT_WELCOME_SPEECH) {
     const cfg = getUiRuntimeConfig();
     if (!cfg.voiceEnabled || cfg.localTtsConfigured) return Promise.resolve(false);
     if (String(env.NOUSGENT_TTS_SYNTH_MODE || '').toLowerCase() === 'harmonic') return Promise.resolve(false);
     const paths = resolveModelPaths(cfg.voiceModel);
     if (!paths) return Promise.resolve(false);
-    return ensureVoiceSession(paths).then(
-      () => true,
-      () => false
-    );
+    return ensureVoiceSession(paths)
+      .then(async () => {
+        if (initialSpeech && String(initialSpeech).trim()) {
+          try {
+            await synthesizeSpeechWav(initialSpeech);
+          } catch {
+            /* ignore warmup synthesis error */
+          }
+        }
+        return true;
+      })
+      .catch(() => false);
   }
 
   return Object.freeze({
@@ -596,6 +608,7 @@ module.exports = Object.freeze({
   DEFAULT_MASK_OPACITY_PCT,
   DEFAULT_VOICE_MODEL,
   DEFAULT_VOICE_PERSONA,
+  DEFAULT_WELCOME_SPEECH,
   parseMaskOpacityPct,
   normalizeSpeechText,
   toLagosAfrobeatIpa,

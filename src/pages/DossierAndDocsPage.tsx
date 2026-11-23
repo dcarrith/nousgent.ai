@@ -717,7 +717,7 @@ export function DossierAndDocsPage({ snapshot, onRefresh }: Readonly<DossierAndD
                       }
                     >
                       <caption id={didTable.captionId}>
-                        Chia DIDs (CHIP-0035), Agents &amp; Keyholders — click column headers to sort
+                        Verified Digital Identities (Chia DIDs), Agents &amp; Keyholders — click column headers to sort
                       </caption>
                       <thead>
                         <tr>
