@@ -263,7 +263,7 @@ export function CleanroomLayout({
               NOUSGENT<span className="text-pistachio" style={{ fontSize: '0.9em' }}>.AI</span>
             </div>
             <div className="mono-xs text-muted cacao-brand-subtitle">
-              MORPHIC INTELLIGENCE
+              BOUNDED DRSI
             </div>
           </div>
         </Link>
