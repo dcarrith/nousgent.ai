@@ -7,12 +7,57 @@ export interface CleanroomLayoutProps {
   readonly children: React.ReactNode;
 }
 
-const STUDIO_NAV: readonly { readonly to: string; readonly icon: string; readonly label: string }[] = [
-  { to: '/', icon: '◈', label: 'Nousgent' },
-  { to: '/enlist', icon: '🌐', label: 'Communities' },
-  { to: '/ranks', icon: '🏆', label: 'Leaderboard' },
-  { to: '/missions', icon: '🔑', label: 'Signing' }
+type StudioNavIconId = 'nousgent' | 'communities' | 'leaderboard' | 'signing';
+
+const STUDIO_NAV: readonly {
+  readonly to: string;
+  readonly icon: StudioNavIconId;
+  readonly label: string;
+}[] = [
+  { to: '/', icon: 'nousgent', label: 'Nousgent' },
+  { to: '/enlist', icon: 'communities', label: 'Communities' },
+  { to: '/ranks', icon: 'leaderboard', label: 'Leaderboard' },
+  { to: '/missions', icon: 'signing', label: 'Signing' }
 ];
+
+function renderNavIcon(icon: StudioNavIconId): React.ReactNode {
+  if (icon === 'nousgent') {
+    return (
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="8,1.6 14.4,8 8,14.4 1.6,8" />
+        <circle cx="8" cy="8" r="2.1" />
+      </svg>
+    );
+  }
+  if (icon === 'communities') {
+    return (
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="8" cy="8" r="6.2" />
+        <line x1="2" y1="8" x2="14" y2="8" />
+        <ellipse cx="8" cy="8" rx="3" ry="6.2" />
+      </svg>
+    );
+  }
+  if (icon === 'leaderboard') {
+    return (
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 2.5h7v3.6a3.5 3.5 0 0 1-7 0V2.5Z" />
+        <path d="M4.5 3.8H2.7a1.5 1.5 0 0 0 0 3h1.9" />
+        <path d="M11.5 3.8h1.8a1.5 1.5 0 0 1 0 3h-1.9" />
+        <line x1="8" y1="9.6" x2="8" y2="13.2" />
+        <line x1="5.2" y1="13.4" x2="10.8" y2="13.4" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="5.2" cy="8" r="2.8" />
+      <line x1="8" y1="8" x2="14.2" y2="8" />
+      <line x1="11.4" y1="8" x2="11.4" y2="10.5" />
+      <line x1="13.8" y1="8" x2="13.8" y2="10.5" />
+    </svg>
+  );
+}
 
 export function CleanroomLayout({
   snapshot,
@@ -34,26 +79,28 @@ export function CleanroomLayout({
       <header className="cacao-topbar">
         <Link to="/" className="cacao-brand-link">
           <span className="cacao-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 40 40" width="26" height="26" aria-hidden="true">
-              <path d="M 14 12 C 7 8, 7 2.5, 16.5 2.5 C 11.5 4.8, 11.5 8.5, 17 11.5 Z" fill="#23130d" stroke="#7ed957" strokeWidth="1.2" />
-              <path d="M 26 12 C 33 8, 33 2.5, 23.5 2.5 C 28.5 4.8, 28.5 8.5, 23 11.5 Z" fill="#9e633c" stroke="#c88a58" strokeWidth="1.2" />
-              <path d="M 20 11 A 12 12 0 0 0 20 35 Z" fill="#1c100b" />
-              <path d="M 20 11 A 12 12 0 0 1 20 35 Z" fill="#3b2115" />
-              <circle cx="20" cy="23" r="12" fill="none" stroke="#c88a58" strokeWidth="1.3" />
-              <circle cx="20" cy="23" r="10.2" fill="none" stroke="#7ed957" strokeWidth="1.3" strokeDasharray="2 2" />
-              <line x1="20" y1="13" x2="20" y2="26.5" stroke="#c88a58" strokeWidth="1.6" strokeLinecap="round" />
-              <circle cx="15.3" cy="22" r="2.7" fill="#120a07" stroke="#f5ebe4" strokeWidth="1.1" />
-              <circle cx="15.3" cy="22" r="1.2" fill="#7ed957" />
-              <circle cx="24.7" cy="22" r="2.7" fill="#120a07" stroke="#f5ebe4" strokeWidth="1.1" />
-              <circle cx="24.7" cy="22" r="1.2" fill="#2dd4bf" />
-              <rect x="15" y="28" width="10" height="3.6" rx="0.8" fill="#120a07" stroke="#c88a58" strokeWidth="0.9" />
+            <svg viewBox="0 0 64 64" width="28" height="28" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <circle cx="32" cy="34" r="22" fill="none" stroke="#2dd4bf" strokeOpacity="0.45" strokeWidth="1.5" strokeDasharray="3 2.5" />
+              <path d="M 21 19 C 12 15, 13 7.5, 25 7.5 C 19 10, 19 15, 26 18.5 Z" fill="#23130d" stroke="#7ed957" strokeWidth="1.6" strokeLinejoin="round" />
+              <path d="M 43 19 C 52 15, 51 7.5, 39 7.5 C 45 10, 45 15, 38 18.5 Z" fill="#9e633c" stroke="#c88a58" strokeWidth="1.6" strokeLinejoin="round" />
+              <path d="M 32 16 A 19 19 0 0 0 32 54 Z" fill="#1c100b" />
+              <path d="M 32 16 A 19 19 0 0 1 32 54 Z" fill="#3b2115" />
+              <circle cx="32" cy="35" r="19" fill="none" stroke="#c88a58" strokeWidth="1.9" />
+              <circle cx="32" cy="35" r="16.2" fill="none" stroke="#7ed957" strokeWidth="1.6" strokeDasharray="2.8 2.8" />
+              <path d="M 19.5 30 Q 25.8 24.5 32 29 Q 38.2 24.5 44.5 30" fill="none" stroke="#c88a58" strokeWidth="1.7" strokeLinecap="round" />
+              <line x1="32" y1="20.5" x2="32" y2="40" stroke="#c88a58" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx="24.5" cy="33.5" r="4.3" fill="#120a07" stroke="#f5ebe4" strokeWidth="1.5" />
+              <circle cx="24.5" cy="33.5" r="2.1" fill="#7ed957" />
+              <circle cx="39.5" cy="33.5" r="4.3" fill="#120a07" stroke="#f5ebe4" strokeWidth="1.5" />
+              <circle cx="39.5" cy="33.5" r="2.1" fill="#2dd4bf" />
+              <rect x="24.5" y="43" width="15" height="5.2" rx="1.2" fill="#120a07" stroke="#c88a58" strokeWidth="1.35" />
             </svg>
           </span>
-          <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.0625rem', fontWeight: 700, letterSpacing: '0.02em' }}>
-              NOUSGENT<span className="text-pistachio" style={{ fontSize: '0.88em' }}>.AI</span>
+          <div className="cacao-brand-wordmark">
+            <div className="cacao-brand-title">
+              NOUSGENT<span className="text-pistachio" style={{ fontSize: '0.9em' }}>.AI</span>
             </div>
-            <div className="mono-xs text-muted" style={{ fontSize: '0.5625rem', letterSpacing: '0.12em' }}>
+            <div className="mono-xs text-muted cacao-brand-subtitle">
               MORPHIC INTELLIGENCE
             </div>
           </div>
@@ -70,43 +117,20 @@ export function CleanroomLayout({
           <span className="text-jade">{snapshot.morphicFieldBrainsActive} Brains</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Link
-            to="/ranks"
-            className="mono-xs"
-            style={{
-              padding: '0.32rem 0.65rem',
-              borderRadius: '9px',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-outline)',
-              color: 'var(--color-ink)',
-              textDecoration: 'none'
-            }}
-          >
+        <div className="topbar-actions">
+          <Link to="/ranks" className="mono-xs topbar-stat-chip">
             <span className="text-muted">Royalties: </span>
             <strong className="text-pistachio">{snapshot.royaltiesStreamedDig}</strong>
           </Link>
 
-          <Link
-            to="/missions"
-            className="mono-xs"
-            style={{
-              padding: '0.32rem 0.65rem',
-              borderRadius: '9px',
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-outline)',
-              color: 'var(--color-ink)',
-              textDecoration: 'none'
-            }}
-          >
+          <Link to="/missions" className="mono-xs topbar-stat-chip">
             <span className="text-jade">Signing </span>
             <strong className="text-pistachio">{primaryQuorum}/{primaryTarget}</strong>
           </Link>
 
           <Link
             to="/enlist"
-            className="btn-spatial btn-pistachio"
-            style={{ minBlockSize: '32px', padding: '0.3rem 0.75rem', fontSize: '12px' }}
+            className="btn-spatial btn-pistachio topbar-enlist-btn"
           >
             Enlist
           </Link>
@@ -129,7 +153,9 @@ export function CleanroomLayout({
                   end={item.to === '/'}
                   className="sidebar-nav-link"
                 >
-                  <span aria-hidden="true">{item.icon}</span>
+                  <span className="sidebar-nav-icon" aria-hidden="true">
+                    {renderNavIcon(item.icon)}
+                  </span>
                   <span>{item.label}</span>
                 </NavLink>
               ))}

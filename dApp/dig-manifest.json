@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,11 +11,11 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-23T00:21:35.467Z",
+  "builtAt": "2026-11-23T00:50:34.354Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0x1e0202006ceb811997cdd292e4ab059c7471a53b1122529faa25a84ae0ef51c8",
+    "manifestTreeSha256": "0xc78710bbf977d76b3b82ff60f5f411e7bd513b0ff733d8e6d1dde4cf201bddd5",
     "totalFiles": 23,
-    "totalBytes": 3253394
+    "totalBytes": 3255578
   },
   "files": [
     {
@@ -34,14 +34,14 @@
       "sha256": "dd1f0c6432bbd3da59d49b2a227498b688a71d50e301a56144ffaa8eef5267ca"
     },
     {
-      "path": "assets/index-BsNmIcbr.css",
-      "bytes": 34734,
-      "sha256": "d012d0d7dd7d90fc4d3a047834e99b6702af83464c2fa15b3caa5460b0164445"
+      "path": "assets/index-BBhM02Vp.js",
+      "bytes": 122063,
+      "sha256": "8848379b4d2cbddb84e05d7892a32862b1d7effff8036456f6ad237477298dde"
     },
     {
-      "path": "assets/index-CX45Vm4B.js",
-      "bytes": 120715,
-      "sha256": "7b5590a04afc49daea6ef8e510b0da1f0fe31bc4c8e0ceeb7b126449da644787"
+      "path": "assets/index-DVzTnOBK.css",
+      "bytes": 36130,
+      "sha256": "dd2cb1bbd2641be878b956defe9d865cebd542331c9386616e7f86b0356e6794"
     },
     {
       "path": "assets/react-vendor-BxSl43nu.js",
@@ -80,8 +80,8 @@
     },
     {
       "path": "favicon.svg",
-      "bytes": 2269,
-      "sha256": "1e016089c1a93b64f0fa11014fbcff6f70c24703fa40e3c10fb71d7299987352"
+      "bytes": 2150,
+      "sha256": "b93d0c58ad42a4f2dcc708d0f6021d9bdaca0227e8aa61360409a7b0180f3f3a"
     },
     {
       "path": "icon-192.png",
@@ -95,13 +95,13 @@
     },
     {
       "path": "index.html",
-      "bytes": 5788,
-      "sha256": "e57a40e01607f08b04fca4e3e4d6d2a07414b1b27a9c5e420d3c830320d9e980"
+      "bytes": 5755,
+      "sha256": "69e3ab5cbbebe34f3f4b7661bb9f2eb82309d94c6b1ffe275a0be8eee385f710"
     },
     {
       "path": "logo-wordmark.svg",
-      "bytes": 4049,
-      "sha256": "aa774720a01028daf750f7bc23b3f775cf8421fe3db9a82e659f714dad195011"
+      "bytes": 3641,
+      "sha256": "cf2e0da1478896a4ef2f06e047dcbbd036a9cf915013fbf28214c7eb7219483e"
     },
     {
       "path": "og-image.jpg",
