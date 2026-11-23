@@ -184,6 +184,8 @@ export function CleanroomLayout({
             {genLabel} · {snapshot.liveCapsulesTotal.toLocaleString()} .dig
           </span>
           <span className="text-muted">·</span>
+          <span className="text-jade">{snapshot.organsReachableCount}/5 Organs</span>
+          <span className="text-muted">·</span>
           <span className="text-jade">{snapshot.morphicFieldBrainsActive} Brains</span>
         </div>
 
@@ -210,27 +212,21 @@ export function CleanroomLayout({
       {/* Sidebar + Main Viewport */}
       <div className="cacao-body-frame">
         <aside className="cacao-sidebar" aria-label="Primary Navigation">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div className="mono-xs text-jade" style={{ paddingInline: '0.4rem', fontSize: '11px', fontWeight: 600 }}>
-              {snapshot.organsReachableCount}/5 Organs · {snapshot.morphicFieldBrainsActive} Brains
-            </div>
-
-            <nav className="sidebar-nav-list" aria-label="Primary Studio Routes">
-              {STUDIO_NAV.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/'}
-                  className="sidebar-nav-link"
-                >
-                  <span className="sidebar-nav-icon" aria-hidden="true">
-                    {renderNavIcon(item.icon)}
-                  </span>
-                  <span>{item.label}</span>
-                </NavLink>
-              ))}
-            </nav>
-          </div>
+          <nav className="sidebar-nav-list" aria-label="Primary Studio Routes">
+            {STUDIO_NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className="sidebar-nav-link"
+              >
+                <span className="sidebar-nav-icon" aria-hidden="true">
+                  {renderNavIcon(item.icon)}
+                </span>
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
 
           <div className="sidebar-epoch-card">
             <div className="mono-xs" style={{ display: 'flex', justifyContent: 'space-between' }}>
