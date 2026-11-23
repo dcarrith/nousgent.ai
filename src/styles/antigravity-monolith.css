@@ -455,8 +455,60 @@ li {
   rotate: 0deg;
 }
 
-.sidebar-evolutions-count {
+.sidebar-evolutions-badges {
   margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.sidebar-stream-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.08rem 0.38rem;
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--color-outline);
+  color: var(--color-ink-muted);
+  background: rgb(18 10 7 / 0.85);
+}
+
+.sidebar-stream-live-pill.online {
+  color: var(--color-pistachio);
+  border-color: rgb(126 217 87 / 0.38);
+  background: rgb(126 217 87 / 0.12);
+}
+
+.sidebar-stream-dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 999px;
+  background: var(--color-bronze);
+}
+
+.sidebar-stream-live-pill.online > .sidebar-stream-dot {
+  background: var(--color-pistachio);
+  box-shadow: 0 0 8px rgb(126 217 87 / 0.8);
+}
+
+@keyframes evolutions-live-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar-stream-live-pill.online > .sidebar-stream-dot {
+    animation: evolutions-live-pulse 2.2s ease-in-out infinite;
+  }
+}
+
+.sidebar-evolutions-count {
   padding: 0.08rem 0.42rem;
   border-radius: 999px;
   background: rgb(126 217 87 / 0.14);

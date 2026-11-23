@@ -328,8 +328,21 @@ export function CleanroomLayout({
             >
               <summary className="sidebar-evolutions-heading">
                 <span>Recent Evolutions</span>
-                <span className="sidebar-evolutions-count">
-                  {snapshot.loading ? '…' : sidebarEvolutions.length}
+                <span className="sidebar-evolutions-badges">
+                  <span
+                    className={`sidebar-stream-live-pill ${snapshot.evolutionsStreamConnected ? 'online' : 'standby'}`}
+                    title={
+                      snapshot.evolutionsStreamConnected
+                        ? 'Real-time Streamable HTTP (NDJSON) connected'
+                        : 'Connecting real-time Streamable HTTP feed…'
+                    }
+                  >
+                    <span className="sidebar-stream-dot" aria-hidden="true" />
+                    {snapshot.evolutionsStreamConnected ? 'LIVE' : 'SYNC'}
+                  </span>
+                  <span className="sidebar-evolutions-count">
+                    {snapshot.loading ? '…' : sidebarEvolutions.length}
+                  </span>
                 </span>
               </summary>
 

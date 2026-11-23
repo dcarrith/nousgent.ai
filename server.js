@@ -21,6 +21,7 @@ const {
 const { createNousgentVoiceSynthesizer } = require('./server/voice-synthesizer.js');
 const { createLocalHaloClient } = require('./server/local-halo-client.js');
 const { createPeerStateReplicator } = require('./server/peer-state-replicator.js');
+const { createEvolutionsStreamHub } = require('./server/evolutions-stream-hub.js');
 const {
   buildOembedPayload,
   createHtmlMetadataRenderer
@@ -51,6 +52,7 @@ const peerReplicator = createPeerStateReplicator({
     return addr && typeof addr === 'object' && addr.port ? addr.port : PORT;
   }
 });
+const evolutionsHub = createEvolutionsStreamHub({ engine, liveClient });
 void voiceSynth.warmupSession();
 
 const renderHtmlWithSeo = createHtmlMetadataRenderer({
@@ -635,6 +637,7 @@ const server = http.createServer(async (req, res) => {
       }
       const parsed = rawBody ? JSON.parse(rawBody) : {};
       const merged = engine.mergeReplicaSnapshot(parsed.snapshot || {});
+      evolutionsHub.notifyEvolutionChanged('peer_sync');
       sendJson(res, 200, { ok: true, podId: peerReplicator.podId, merged }, pathname, 'm2m_ia');
       return;
     }
@@ -861,6 +864,7 @@ const server = http.createServer(async (req, res) => {
         askOut.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
       ) {
         await peerReplicator.broadcastLocalMutation();
+        evolutionsHub.notifyEvolutionChanged('quest_logged');
       }
       sendJson(res, 200, askOut, pathname, activePlane);
       return;
@@ -916,7 +920,10 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/dao/proposals' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const out = engine.createDaoProposal(body);
-      if (out.ok) await peerReplicator.broadcastLocalMutation();
+      if (out.ok) {
+        await peerReplicator.broadcastLocalMutation();
+        evolutionsHub.notifyEvolutionChanged('dao_proposal');
+      }
       sendJson(res, out.ok ? 201 : 400, out, pathname, activePlane);
       return;
     }
@@ -924,7 +931,10 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/dao/vote' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const out = engine.castDaoVote(body);
-      if (out.ok) await peerReplicator.broadcastLocalMutation();
+      if (out.ok) {
+        await peerReplicator.broadcastLocalMutation();
+        evolutionsHub.notifyEvolutionChanged('dao_vote');
+      }
       const statusCode = out.ok ? 200 : out.code === 'DUPLICATE_VOTE_NULLIFIER' ? 409 : 400;
       sendJson(res, statusCode, out, pathname, activePlane);
       return;
@@ -973,7 +983,10 @@ const server = http.createServer(async (req, res) => {
           questId: body.questId,
           proposerDid: body.proposerDid
         });
-        if (promoted.ok) await peerReplicator.broadcastLocalMutation();
+        if (promoted.ok) {
+          await peerReplicator.broadcastLocalMutation();
+          evolutionsHub.notifyEvolutionChanged('evolve_promote');
+        }
         sendJson(res, promoted.ok ? 200 : 404, promoted, pathname, activePlane);
         return;
       }
@@ -986,7 +999,10 @@ const server = http.createServer(async (req, res) => {
         rewardDig: String(body?.priceDig || '25.000'),
         proposerDid: body?.proposerDid
       });
-      if (created.ok) await peerReplicator.broadcastLocalMutation();
+      if (created.ok) {
+        await peerReplicator.broadcastLocalMutation();
+        evolutionsHub.notifyEvolutionChanged('evolve_promote');
+      }
       sendJson(res, created.ok ? 201 : 400, created, pathname, activePlane);
       return;
     }
@@ -1037,7 +1053,10 @@ const server = http.createServer(async (req, res) => {
           rewardDig: autoPriceDig,
           proposerDid: evalOut.authorDid
         });
-        if (proposal.ok) await peerReplicator.broadcastLocalMutation();
+        if (proposal.ok) {
+          await peerReplicator.broadcastLocalMutation();
+          evolutionsHub.notifyEvolutionChanged('teach_alignment_proposal');
+        }
         sendJson(
           res,
           202,
@@ -1059,6 +1078,7 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 503, { ok: false, error: minted.error }, pathname, activePlane);
         return;
       }
+      evolutionsHub.notifyEvolutionChanged('teach_minted', { forceUpstreamRefresh: true });
       sendJson(
         res,
         201,
@@ -1078,7 +1098,10 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/missions/clear-sign' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const out = engine.submitClearSignVote(body);
-      if (out.ok) await peerReplicator.broadcastLocalMutation();
+      if (out.ok) {
+        await peerReplicator.broadcastLocalMutation();
+        evolutionsHub.notifyEvolutionChanged('two_key_sign');
+      }
       sendJson(res, out.ok ? 200 : 400, out, pathname, activePlane);
       return;
     }
@@ -1154,6 +1177,18 @@ const server = http.createServer(async (req, res) => {
       recentAlertDeliveries.unshift({ receivedAt: new Date().toISOString(), payload: body });
       if (recentAlertDeliveries.length > 32) recentAlertDeliveries.pop();
       sendJson(res, 200, { ok: true, recorded: recentAlertDeliveries.length }, pathname, activePlane);
+      return;
+    }
+
+    if (pathname === '/api/nousgent/evolutions/stream' && req.method === 'GET') {
+      const rawFrames = Number(parsedUrl.searchParams.get('frames') || 0);
+      const maxFrames = Number.isFinite(rawFrames) && rawFrames > 0 ? Math.min(32, Math.floor(rawFrames)) : 0;
+      await evolutionsHub.handleStreamRequest(req, res, {
+        setSecurityHeaders,
+        pathname,
+        activePlane,
+        maxFrames
+      });
       return;
     }
 
@@ -1238,6 +1273,9 @@ const server = http.createServer(async (req, res) => {
 });
 
 boundServerRef = server;
+server.on('close', () => {
+  evolutionsHub.closeAll();
+});
 
 if (require.main === module) {
   server.listen(PORT, '0.0.0.0', () => {
@@ -1248,4 +1286,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, engine, peerReplicator };
+module.exports = { server, engine, peerReplicator, evolutionsHub };

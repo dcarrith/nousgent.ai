@@ -193,6 +193,8 @@ export interface MissionSnapshot {
   readonly missions: readonly SwarmMissionItem[];
   readonly blindSpotQuests: readonly BlindSpotQuestItem[];
   readonly autonomousCandidateQueue: readonly AutonomousCandidateCapsuleItem[];
+  readonly evolutionsStreamConnected: boolean;
+  readonly evolutionsStreamSeq: number;
 }
 
 function readInitialMaskOpacityPct(): number {
@@ -284,7 +286,9 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
   },
   missions: [],
   blindSpotQuests: [],
-  autonomousCandidateQueue: []
+  autonomousCandidateQueue: [],
+  evolutionsStreamConnected: false,
+  evolutionsStreamSeq: 0
 };
 
 export function playQuindarBeep(frequencyHz = 2525): void {
@@ -352,7 +356,7 @@ export function useNousgentMission() {
       const dolf = eco.dolfactory || {};
       const liq = eco.liquidish || {};
 
-      setSnapshot({
+      setSnapshot((prev) => ({
         loading: false,
         liveConnected: Number(eco.organsReachableCount || 0) > 0,
         fetchedAt: String(eco.fetchedAt || ''),
@@ -436,8 +440,10 @@ export function useNousgentMission() {
         blindSpotQuests: Array.isArray(d.blindSpotQuests) ? d.blindSpotQuests : [],
         autonomousCandidateQueue: Array.isArray(liq.autonomousCandidateQueue)
           ? liq.autonomousCandidateQueue
-          : []
-      });
+          : [],
+        evolutionsStreamConnected: prev.evolutionsStreamConnected,
+        evolutionsStreamSeq: prev.evolutionsStreamSeq
+      }));
     } catch {
       if (seq === requestSeqRef.current) {
         setSnapshot((prev) => ({ ...prev, loading: false }));
@@ -457,6 +463,121 @@ export function useNousgentMission() {
       inFlightAbortRef.current?.abort();
     };
   }, [refreshStatus]);
+
+  // Persistent Real-Time Streamable HTTP(S) (`application/x-ndjson`) Evolutions Feed
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof fetch !== 'function') return;
+
+    let unmounted = false;
+    let streamAbort: AbortController | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryDelayMs = 1200;
+
+    const applyNdjsonLine = (line: string) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      try {
+        const frame = JSON.parse(trimmed);
+        if (!frame || typeof frame !== 'object') return;
+        if (frame.type === 'evolutions') {
+          setSnapshot((prev) => ({
+            ...prev,
+            loading: false,
+            evolutionsStreamConnected: true,
+            evolutionsStreamSeq: Number(frame.seq || prev.evolutionsStreamSeq + 1),
+            dbrainGeneration:
+              Number(frame.dbrainGeneration) > 0 ? Number(frame.dbrainGeneration) : prev.dbrainGeneration,
+            liveCapsulesTotal:
+              Number.isFinite(Number(frame.liveCapsulesTotal)) && Number(frame.liveCapsulesTotal) > 0
+                ? Number(frame.liveCapsulesTotal)
+                : prev.liveCapsulesTotal,
+            verifiedDataLayerRoot: frame.verifiedDataLayerRoot
+              ? String(frame.verifiedDataLayerRoot)
+              : prev.verifiedDataLayerRoot,
+            recentCapsules: Array.isArray(frame.recentCapsules) ? frame.recentCapsules : prev.recentCapsules,
+            missions: Array.isArray(frame.missions) ? frame.missions : prev.missions
+          }));
+        } else if (frame.type === 'heartbeat') {
+          setSnapshot((prev) => ({
+            ...prev,
+            evolutionsStreamConnected: true,
+            evolutionsStreamSeq: Number(frame.seq || prev.evolutionsStreamSeq + 1)
+          }));
+        }
+      } catch {
+        /* ignore malformed NDJSON line */
+      }
+    };
+
+    const connectStream = async () => {
+      if (unmounted) return;
+      const controller = new AbortController();
+      streamAbort = controller;
+
+      try {
+        const res = await fetch('/api/nousgent/evolutions/stream', {
+          method: 'GET',
+          headers: { Accept: 'application/x-ndjson' },
+          cache: 'no-store',
+          signal: controller.signal
+        });
+
+        if (!res.ok || !res.body) {
+          throw new Error(`Stream HTTP ${res.status}`);
+        }
+
+        retryDelayMs = 1200;
+        setSnapshot((prev) =>
+          prev.evolutionsStreamConnected ? prev : { ...prev, evolutionsStreamConnected: true }
+        );
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (!unmounted) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
+            let newlineIdx = buffer.indexOf('\n');
+            while (newlineIdx !== -1) {
+              const rawLine = buffer.slice(0, newlineIdx);
+              buffer = buffer.slice(newlineIdx + 1);
+              applyNdjsonLine(rawLine);
+              newlineIdx = buffer.indexOf('\n');
+            }
+          }
+        }
+
+        buffer += decoder.decode();
+        if (buffer.trim()) {
+          applyNdjsonLine(buffer);
+        }
+      } catch {
+        /* stream disconnected or aborted */
+      }
+
+      if (unmounted) return;
+      setSnapshot((prev) =>
+        prev.evolutionsStreamConnected ? { ...prev, evolutionsStreamConnected: false } : prev
+      );
+      const jitter = Math.floor(Math.random() * 400);
+      const delay = Math.min(10_000, retryDelayMs) + jitter;
+      retryDelayMs = Math.min(10_000, Math.round(retryDelayMs * 1.8));
+      reconnectTimer = setTimeout(() => {
+        void connectStream();
+      }, delay);
+    };
+
+    void connectStream();
+
+    return () => {
+      unmounted = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      streamAbort?.abort();
+    };
+  }, []);
 
   return {
     snapshot,

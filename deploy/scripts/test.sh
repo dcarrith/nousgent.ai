@@ -669,6 +669,58 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
         JSON.parse(authPeerPost.text).merged.ok === true
     );
 
+    const streamEvolutionsPromise = new Promise((resolve, reject) => {
+      const sReq = http.request(
+        {
+          hostname: '127.0.0.1',
+          port,
+          path: '/api/nousgent/evolutions/stream?frames=2',
+          method: 'GET',
+          headers: { Host: 'nousgent.ai', Accept: 'application/x-ndjson' }
+        },
+        (sRes) => {
+          let buf = '';
+          let triggeredMutation = false;
+          sRes.on('data', (chunk) => {
+            buf += chunk.toString('utf8');
+            if (!triggeredMutation && buf.includes('\n')) {
+              triggeredMutation = true;
+              request(port, '/api/nousgent/dao/proposals', {
+                method: 'POST',
+                host: 'nousgent.ai',
+                body: {
+                  title: 'Streamed Realtime Sidebar Evolution Test',
+                  category: 'CAPABILITY_SYNTHESIS',
+                  proposerDid: 'did:chia:1txcitizenkeyholder',
+                  rewardDig: '500.000'
+                }
+              }).catch(reject);
+            }
+          });
+          sRes.on('end', () => resolve({ status: sRes.statusCode, headers: sRes.headers, text: buf }));
+        }
+      );
+      sReq.on('error', reject);
+      sReq.end();
+    });
+    const evoStreamOut = await streamEvolutionsPromise;
+    const evoLines = evoStreamOut.text
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    check(
+      'Real-time Streamable HTTP /api/nousgent/evolutions/stream pushes initial + live mutation NDJSON frames',
+      evoStreamOut.status === 200 &&
+        String(evoStreamOut.headers['content-type'] || '').includes('application/x-ndjson') &&
+        evoStreamOut.headers['x-accel-buffering'] === 'no' &&
+        evoLines.length === 2 &&
+        evoLines[0].seq === 1 &&
+        evoLines[0].reason === 'initial' &&
+        evoLines[1].seq === 2 &&
+        evoLines[1].reason === 'dao_proposal' &&
+        evoLines[1].missions.some((m) => m.title === 'Streamed Realtime Sidebar Evolution Test')
+    );
+
     console.log(`\n✓ ALL ${passed} DUAL-HOST E2E CHECKS PASSED!`);
   } finally {
     engine.close();
