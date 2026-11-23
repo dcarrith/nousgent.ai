@@ -238,6 +238,7 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
   process.env.SHI_LIQUIDISH_UPSTREAM_URL = upBase;
   process.env.NOUSGENT_HALO_BASE_URL = `${upBase}/v1`;
   process.env.NOUSGENT_LLM_MODEL = 'qwen3:32b-halo';
+  process.env.NOUSGENT_SIGNING_SECRET = 'e2e-peer-sync-secret-32-bytes-minimum-key';
 
   const { server, engine } = require('./server.js');
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -626,6 +627,47 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
 
     const traversal = await request(port, '/..%2fpackage.json');
     check('Path traversal blocked with HTTP 403', traversal.status === 403);
+
+    const unauthPeerSync = await request(port, '/api/internal/peer-sync', { host: 'ia.nousgent.ai' });
+    const cryptoMod = require('node:crypto');
+    const peerTs = String(Date.now());
+    const emptySha = cryptoMod.createHash('sha256').update('', 'utf8').digest('hex');
+    const getMac = cryptoMod
+      .createHmac('sha256', process.env.NOUSGENT_SIGNING_SECRET)
+      .update(`GET:${peerTs}:${emptySha}`, 'utf8')
+      .digest('hex');
+    const authPeerGet = await request(port, '/api/internal/peer-sync', {
+      host: 'ia.nousgent.ai',
+      headers: {
+        'X-Nousgent-Peer-Timestamp': peerTs,
+        'X-Nousgent-Peer-Signature': getMac
+      }
+    });
+    const authPeerGetJson = JSON.parse(authPeerGet.text);
+    const postPayloadObj = { podId: 'nousgent-web-peer-test', snapshot: authPeerGetJson.snapshot };
+    const postRaw = JSON.stringify(postPayloadObj);
+    const postSha = cryptoMod.createHash('sha256').update(postRaw, 'utf8').digest('hex');
+    const postMac = cryptoMod
+      .createHmac('sha256', process.env.NOUSGENT_SIGNING_SECRET)
+      .update(`POST:${peerTs}:${postSha}`, 'utf8')
+      .digest('hex');
+    const authPeerPost = await request(port, '/api/internal/peer-sync', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: postPayloadObj,
+      headers: {
+        'X-Nousgent-Peer-Timestamp': peerTs,
+        'X-Nousgent-Peer-Signature': postMac
+      }
+    });
+    check(
+      'StatefulSet CRDT peer-sync blocks unsigned calls (401) & reconciles HMAC-signed snapshots (200)',
+      unauthPeerSync.status === 401 &&
+        authPeerGet.status === 200 &&
+        Array.isArray(authPeerGetJson.snapshot.missions) &&
+        authPeerPost.status === 200 &&
+        JSON.parse(authPeerPost.text).merged.ok === true
+    );
 
     console.log(`\n✓ ALL ${passed} DUAL-HOST E2E CHECKS PASSED!`);
   } finally {

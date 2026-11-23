@@ -20,6 +20,7 @@ const {
 } = require('./server/live-ecosystem-client.js');
 const { createNousgentVoiceSynthesizer } = require('./server/voice-synthesizer.js');
 const { createLocalHaloClient } = require('./server/local-halo-client.js');
+const { createPeerStateReplicator } = require('./server/peer-state-replicator.js');
 const {
   buildOembedPayload,
   createHtmlMetadataRenderer
@@ -37,10 +38,19 @@ const DAPP_DIR = path.join(__dirname, 'dApp');
 
 fs.mkdirSync(STATE_DIR, { recursive: true });
 
+let boundServerRef = null;
 const engine = nousgent.createNousgentEngine({ stateDir: STATE_DIR });
 const liveClient = createLiveEcosystemClient(process.env);
 const voiceSynth = createNousgentVoiceSynthesizer({ env: process.env, stateDir: STATE_DIR, repoRoot: __dirname });
 const haloClient = createLocalHaloClient(process.env);
+const peerReplicator = createPeerStateReplicator({
+  engine,
+  env: process.env,
+  getLocalPort: () => {
+    const addr = boundServerRef && boundServerRef.address && boundServerRef.address();
+    return addr && typeof addr === 'object' && addr.port ? addr.port : PORT;
+  }
+});
 void voiceSynth.warmupSession();
 
 const renderHtmlWithSeo = createHtmlMetadataRenderer({
@@ -214,7 +224,7 @@ function sendJson(res, statusCode, payload, pathname = '/', plane = 'human_ui') 
   res.end(body);
 }
 
-function readJsonBody(req, maxBytes = 262144) {
+function readRawBody(req, maxBytes = 2097152) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let total = 0;
@@ -227,16 +237,19 @@ function readJsonBody(req, maxBytes = 262144) {
       }
       chunks.push(chunk);
     });
-    req.on('end', () => {
-      if (chunks.length === 0) return resolve({});
-      try {
-        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
-      } catch {
-        reject(Object.assign(new Error('Invalid JSON payload'), { statusCode: 400 }));
-      }
-    });
+    req.on('end', () => resolve(chunks.length === 0 ? '' : Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
+}
+
+async function readJsonBody(req, maxBytes = 262144) {
+  const raw = await readRawBody(req, maxBytes);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw Object.assign(new Error('Invalid JSON payload'), { statusCode: 400 });
+  }
 }
 
 async function runAskWithLiveOrgans(body = {}) {
@@ -517,14 +530,30 @@ async function handleMcpRpc(body) {
       data = engine.getMissionStatus(liveEco);
     } else if (name === 'nousgent_pod_bay_challenge') data = engine.runPodBayChallenge(args);
     else if (name === 'nousgent_simulate_bisect') data = engine.simulateBisect(args);
-    else if (name === 'nousgent_enlist_rig') data = engine.enlistRig(args);
-    else if (name === 'nousgent_list_missions') data = { missions: engine.listMissions() };
-    else if (name === 'nousgent_submit_clear_sign') data = engine.submitClearSignVote(args);
-    else if (name === 'nousgent_get_plane_telemetry') data = engine.meshStore.getPlaneTelemetry();
-    else if (name === 'nousgent_ask_persona') data = await runAskWithLiveOrgans(args);
-    else if (name === 'nousgent_local_agent_infer') data = (await runGuardedLocalAgentInference(args)).payload;
-    else if (name === 'nousgent_create_dao_proposal') data = engine.createDaoProposal(args);
-    else if (name === 'nousgent_cast_dao_vote') data = engine.castDaoVote(args);
+    else if (name === 'nousgent_enlist_rig') {
+      data = engine.enlistRig(args);
+      await peerReplicator.broadcastLocalMutation();
+    } else if (name === 'nousgent_list_missions') data = { missions: engine.listMissions() };
+    else if (name === 'nousgent_submit_clear_sign') {
+      data = engine.submitClearSignVote(args);
+      if (data.ok) await peerReplicator.broadcastLocalMutation();
+    } else if (name === 'nousgent_get_plane_telemetry') data = engine.meshStore.getPlaneTelemetry();
+    else if (name === 'nousgent_ask_persona') {
+      data = await runAskWithLiveOrgans(args);
+      if (
+        data.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' ||
+        data.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
+      ) {
+        await peerReplicator.broadcastLocalMutation();
+      }
+    } else if (name === 'nousgent_local_agent_infer') data = (await runGuardedLocalAgentInference(args)).payload;
+    else if (name === 'nousgent_create_dao_proposal') {
+      data = engine.createDaoProposal(args);
+      if (data.ok) await peerReplicator.broadcastLocalMutation();
+    } else if (name === 'nousgent_cast_dao_vote') {
+      data = engine.castDaoVote(args);
+      if (data.ok) await peerReplicator.broadcastLocalMutation();
+    }
     else {
       return {
         jsonrpc: '2.0',
@@ -587,6 +616,28 @@ const server = http.createServer(async (req, res) => {
 
     const parsedUrl = new URL(rawUrl, CANONICAL_ORIGIN);
     const pathname = parsedUrl.pathname;
+
+    if (pathname === '/api/internal/peer-sync' && (req.method === 'GET' || req.method === 'POST')) {
+      const rawBody = req.method === 'POST' ? await readRawBody(req) : '';
+      if (!peerReplicator.verifyPeerRequest(req, rawBody)) {
+        sendJson(res, 401, { ok: false, error: 'Unauthorized peer sync request' }, pathname, 'm2m_ia');
+        return;
+      }
+      if (req.method === 'GET') {
+        sendJson(
+          res,
+          200,
+          { ok: true, podId: peerReplicator.podId, snapshot: engine.exportReplicaSnapshot() },
+          pathname,
+          'm2m_ia'
+        );
+        return;
+      }
+      const parsed = rawBody ? JSON.parse(rawBody) : {};
+      const merged = engine.mergeReplicaSnapshot(parsed.snapshot || {});
+      sendJson(res, 200, { ok: true, podId: peerReplicator.podId, merged }, pathname, 'm2m_ia');
+      return;
+    }
 
     const planeInfo = engine.recordPlaneHit(req.headers.host || 'nousgent.ai', req.headers['x-nousgent-plane'] || '');
     if (planeInfo.isRedirectWww && !pathname.startsWith('/.well-known/acme-challenge/')) {
@@ -804,7 +855,14 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/nousgent/ask' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      sendJson(res, 200, await runAskWithLiveOrgans(body), pathname, activePlane);
+      const askOut = await runAskWithLiveOrgans(body);
+      if (
+        askOut.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' ||
+        askOut.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
+      ) {
+        await peerReplicator.broadcastLocalMutation();
+      }
+      sendJson(res, 200, askOut, pathname, activePlane);
       return;
     }
 
@@ -827,7 +885,9 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/nousgent/nodes/enlist' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      sendJson(res, 201, engine.enlistRig(body), pathname, activePlane);
+      const enlisted = engine.enlistRig(body);
+      await peerReplicator.broadcastLocalMutation();
+      sendJson(res, 201, enlisted, pathname, activePlane);
       return;
     }
 
@@ -856,6 +916,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/dao/proposals' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const out = engine.createDaoProposal(body);
+      if (out.ok) await peerReplicator.broadcastLocalMutation();
       sendJson(res, out.ok ? 201 : 400, out, pathname, activePlane);
       return;
     }
@@ -863,6 +924,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/dao/vote' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const out = engine.castDaoVote(body);
+      if (out.ok) await peerReplicator.broadcastLocalMutation();
       const statusCode = out.ok ? 200 : out.code === 'DUPLICATE_VOTE_NULLIFIER' ? 409 : 400;
       sendJson(res, statusCode, out, pathname, activePlane);
       return;
@@ -911,6 +973,7 @@ const server = http.createServer(async (req, res) => {
           questId: body.questId,
           proposerDid: body.proposerDid
         });
+        if (promoted.ok) await peerReplicator.broadcastLocalMutation();
         sendJson(res, promoted.ok ? 200 : 404, promoted, pathname, activePlane);
         return;
       }
@@ -923,6 +986,7 @@ const server = http.createServer(async (req, res) => {
         rewardDig: String(body?.priceDig || '25.000'),
         proposerDid: body?.proposerDid
       });
+      if (created.ok) await peerReplicator.broadcastLocalMutation();
       sendJson(res, created.ok ? 201 : 400, created, pathname, activePlane);
       return;
     }
@@ -973,6 +1037,7 @@ const server = http.createServer(async (req, res) => {
           rewardDig: autoPriceDig,
           proposerDid: evalOut.authorDid
         });
+        if (proposal.ok) await peerReplicator.broadcastLocalMutation();
         sendJson(
           res,
           202,
@@ -1013,6 +1078,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/missions/clear-sign' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const out = engine.submitClearSignVote(body);
+      if (out.ok) await peerReplicator.broadcastLocalMutation();
       sendJson(res, out.ok ? 200 : 400, out, pathname, activePlane);
       return;
     }
@@ -1171,12 +1237,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+boundServerRef = server;
+
 if (require.main === module) {
   server.listen(PORT, '0.0.0.0', () => {
+    peerReplicator.startBackgroundSync();
     console.log(
       `[NOUSGENT v${APP_VERSION}] Orbital Cleanroom listening on :${PORT} (Human: ${CANONICAL_ORIGIN} | M2M: ${M2M_ORIGIN})`
     );
   });
 }
 
-module.exports = { server, engine };
+module.exports = { server, engine, peerReplicator };

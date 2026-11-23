@@ -689,6 +689,40 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     assert.ok(promLive.includes('nousgent_upstream_organs_reachable 5'));
     assert.ok(promLive.includes('nousgent_redteam_deflections_total 4'));
 
+    // Multi-pod StatefulSet CRDT snapshot export & idempotent reconciliation (eliminates pod-0/pod-1 flapping)
+    const peerEngine = nousgent.createNousgentEngine();
+    const emptyMerge = peerEngine.mergeReplicaSnapshot();
+    assert.equal(emptyMerge.ok, true);
+    assert.equal(emptyMerge.missionsCount, 3);
+
+    // Seed an unpromoted quest on peerEngine first, then merge promoted + unpromoted quests from engine
+    peerEngine.meshStore.recordBlindSpotQuest({
+      questId: '0xPEERONLY01',
+      prompt: 'Peer-originated blind spot quest',
+      lobe: 'procedural'
+    });
+    const pod1Snapshot = engine.exportReplicaSnapshot();
+    assert.ok(pod1Snapshot.proposals.length >= 4);
+    assert.ok(pod1Snapshot.votes.length === 6);
+    assert.ok(pod1Snapshot.attestations.length === 4);
+
+    const peerMerged = peerEngine.mergeReplicaSnapshot(pod1Snapshot);
+    assert.equal(peerMerged.votesCount, 6);
+    assert.equal(peerMerged.rigsCount, 4);
+
+    // Promote 0xPEERONLY01 on peerEngine and merge back into engine so both CASE branches on dao_mission_id fire
+    const peerPromoted = peerEngine.promoteQuestToDao({ questId: '0xPEERONLY01' });
+    assert.equal(peerPromoted.ok, true);
+    engine.mergeReplicaSnapshot(peerEngine.exportReplicaSnapshot());
+    peerEngine.mergeReplicaSnapshot(engine.exportReplicaSnapshot());
+
+    assert.deepEqual(engine.listMissions(), peerEngine.listMissions());
+    assert.equal(
+      engine.getMissionStatus().leaderboard.totalActiveNodes,
+      peerEngine.getMissionStatus().leaderboard.totalActiveNodes
+    );
+    peerEngine.close();
+
     engine.close();
 
     // Re-open existing SQLite WAL to verify durable survival & migration already-applied branch

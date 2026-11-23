@@ -1,4 +1,5 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { TwoKeyClearSignCell } from '../components/TwoKeyClearSignCell';
 import { MissionSnapshot, playQuindarBeep } from '../hooks/useNousgentMission';
 
@@ -26,8 +27,18 @@ function formatMissionStatusLabel(status: string): string {
 
 export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuorumPageProps>) {
   const formUid = useId();
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const location = useLocation();
+  const [selectedMissionId, setSelectedMissionId] = useState<string>(() =>
+    new URLSearchParams(location.search).get('mission') || ''
+  );
   const [rightTab, setRightTab] = useState<SigningPanelTab>('dao_vote');
+
+  useEffect(() => {
+    const requested = new URLSearchParams(location.search).get('mission');
+    if (requested) {
+      setSelectedMissionId(requested);
+    }
+  }, [location.search]);
 
   // DAO Vote form state
   const [support, setSupport] = useState<VoteSupportChoice>('FOR');
@@ -56,7 +67,8 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
   const voterDidRef = useRef<HTMLInputElement | null>(null);
   const propTitleRef = useRef<HTMLInputElement | null>(null);
 
-  const activeMission = snapshot.missions[selectedIndex] || snapshot.missions[0];
+  const activeMission =
+    snapshot.missions.find((m) => m.missionId === selectedMissionId) || snapshot.missions[0];
 
   if (!activeMission) {
     return (
@@ -83,6 +95,8 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
       return;
     }
 
+    const targetMissionId = activeMission.missionId;
+    setSelectedMissionId(targetMissionId);
     setVoting(true);
     setVoteFeedback(null);
     playQuindarBeep(2525);
@@ -92,7 +106,7 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          missionId: activeMission.missionId,
+          missionId: targetMissionId,
           voterDid: voterDid.trim(),
           support,
           stakeDig: stakeDig.trim()
@@ -154,6 +168,7 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
         setPropTitle('');
         setPropTitleTouched(false);
         setPropSummary('');
+        setSelectedMissionId(data.mission.missionId);
         setProposeFeedback(`✓ Created ${data.mission.missionId}`);
         onRefresh();
       } else {
@@ -305,8 +320,8 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
             </form>
           </details>
 
-          {snapshot.missions.map((m, idx) => {
-            const active = idx === selectedIndex;
+          {snapshot.missions.map((m) => {
+            const active = m.missionId === activeMission.missionId;
             const mDao = m.dao;
             return (
               <div
@@ -347,7 +362,7 @@ export function MissionsQuorumPage({ snapshot, onRefresh }: Readonly<MissionsQuo
                     type="button"
                     className={`btn-spatial ${active ? 'btn-pistachio' : 'btn-glass'}`}
                     onClick={() => {
-                      setSelectedIndex(idx);
+                      setSelectedMissionId(m.missionId);
                       setVoteFeedback(null);
                     }}
                   >

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { playQuindarBeep } from '../hooks/useNousgentMission';
 import { SwarmMissionItem } from '../data/mockData';
 
@@ -22,6 +22,10 @@ export function TwoKeyClearSignCell({
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [attestationHash, setAttestationHash] = useState<string>('');
   const [localQuorumSigs, setLocalQuorumSigs] = useState<number>(mission.quorumSignatures);
+
+  useEffect(() => {
+    setLocalQuorumSigs(mission.quorumSignatures);
+  }, [mission.missionId, mission.quorumSignatures]);
 
   const quorumPct = Math.min(100, Number(((localQuorumSigs / mission.quorumTarget) * 100).toFixed(1)));
 

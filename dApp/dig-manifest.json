@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.11.1",
+  "version": "1.11.2",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,11 +11,11 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-22T20:08:53.907Z",
+  "builtAt": "2026-11-23T00:09:16.651Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0x5785f19c5634c4ded66d880b12a9a455f8ce6e790c40fea9974894a42c93572f",
+    "manifestTreeSha256": "0x89b8a64e3798f4c35696e0da43d9fc8ce341e3f442b60b93c2e3dee5712db705",
     "totalFiles": 23,
-    "totalBytes": 3252470
+    "totalBytes": 3253400
   },
   "files": [
     {
@@ -34,19 +34,19 @@
       "sha256": "dd1f0c6432bbd3da59d49b2a227498b688a71d50e301a56144ffaa8eef5267ca"
     },
     {
+      "path": "assets/index-BGbdDpwp.js",
+      "bytes": 120721,
+      "sha256": "4a6b304b174bfaad6884798b85d7635a3cd0326a77d93b9f0d958a76b7f8ed7c"
+    },
+    {
       "path": "assets/index-BsNmIcbr.css",
       "bytes": 34734,
       "sha256": "d012d0d7dd7d90fc4d3a047834e99b6702af83464c2fa15b3caa5460b0164445"
     },
     {
-      "path": "assets/index-JGIFQP7c.js",
-      "bytes": 119799,
-      "sha256": "d467faa653272ccb08eb3718f5e800845c3c99d7f3a5dbd73cf0aa985d00ebc0"
-    },
-    {
-      "path": "assets/react-vendor-DbuZmYU1.js",
-      "bytes": 262167,
-      "sha256": "637b824166ea7e014d435f2b7f15f133b46df565c1bdfc8cdbab53c5fb16f91b"
+      "path": "assets/react-vendor-BxSl43nu.js",
+      "bytes": 262175,
+      "sha256": "3fdb2b52e5a0fd9a78ef9e76b29aabb8f9d54f5ed26f7741cbd100cabe6b5505"
     },
     {
       "path": "assets/three-vendor-DMI8IjtB.js",
@@ -96,7 +96,7 @@
     {
       "path": "index.html",
       "bytes": 5788,
-      "sha256": "934aa19304ff75a980ff49c5791e4bd38968d03cfed03f8e11c6808337a9a012"
+      "sha256": "0f382ec5338028ed66a3fbf5bba8d08b02c3d41b4e8f7b3a196500a5b3d42419"
     },
     {
       "path": "logo-wordmark.svg",

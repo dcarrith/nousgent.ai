@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FALLBACK_ORGANS, OrganBusItem, StateHubItem, SwarmMissionItem } from '../data/mockData';
 
 export interface LiveDbrainStoreSummary {
@@ -312,16 +312,36 @@ export function useNousgentMission() {
     }
     return 'human_ui';
   });
+  const inFlightAbortRef = useRef<AbortController | null>(null);
+  const requestSeqRef = useRef<number>(0);
 
-  const refreshStatus = useCallback(async (forceRefresh = false) => {
+  const refreshStatus = useCallback(async (forceRefresh = false, options?: { readonly background?: boolean }) => {
+    const isBackground = Boolean(options?.background);
+    inFlightAbortRef.current?.abort();
+    const controller = new AbortController();
+    inFlightAbortRef.current = controller;
+    requestSeqRef.current += 1;
+    const seq = requestSeqRef.current;
+
+    const signal =
+      typeof AbortSignal !== 'undefined' && 'any' in AbortSignal && 'timeout' in AbortSignal
+        ? AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)])
+        : controller.signal;
+
     try {
       const url = forceRefresh ? '/api/nousgent/status?refresh=1' : '/api/nousgent/status';
-      const res = await fetch(url);
+      const fetchInit: RequestInit & { priority?: 'low' | 'high' | 'auto' } = {
+        signal,
+        ...(isBackground ? { priority: 'low' } : {})
+      };
+      const res = await fetch(url, fetchInit);
+      if (seq !== requestSeqRef.current) return;
       if (!res.ok) {
         setSnapshot((prev) => ({ ...prev, loading: false }));
         return;
       }
       const d = await res.json();
+      if (seq !== requestSeqRef.current) return;
       const eco = d.liveEcosystem || {};
       const db = eco.dbrain || {};
       const dt = eco.dthalamus || {};
@@ -415,7 +435,9 @@ export function useNousgentMission() {
           : []
       });
     } catch {
-      setSnapshot((prev) => ({ ...prev, loading: false }));
+      if (seq === requestSeqRef.current) {
+        setSnapshot((prev) => ({ ...prev, loading: false }));
+      }
     }
   }, []);
 
@@ -423,10 +445,13 @@ export function useNousgentMission() {
     void refreshStatus();
     const timer = setInterval(() => {
       if (typeof document === 'undefined' || document.visibilityState === 'visible') {
-        void refreshStatus();
+        void refreshStatus(false, { background: true });
       }
     }, 15000);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      inFlightAbortRef.current?.abort();
+    };
   }, [refreshStatus]);
 
   return {

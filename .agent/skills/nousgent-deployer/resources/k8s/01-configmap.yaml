@@ -5,14 +5,15 @@ metadata:
   namespace: dbrain
   labels:
     app.kubernetes.io/name: nousgent
-    app.kubernetes.io/version: "1.11.1"
+    app.kubernetes.io/version: "1.11.2"
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  APP_VERSION: "1.11.1"
+  APP_VERSION: "1.11.2"
   CANONICAL_ORIGIN: "https://nousgent.ai"
   M2M_ORIGIN: "https://ia.nousgent.ai"
   NOUSGENT_STATE_DIR: "/var/lib/nousgent"
+  NOUSGENT_PEER_HEADLESS_DNS: "nousgent-web-headless.dbrain.svc.cluster.local"
   NOUSGENT_MASK_OPACITY_PCT: "65"
   NOUSGENT_VOICE_ENABLED: "true"
   NOUSGENT_VOICE_MODEL: "en_US-joe-medium"

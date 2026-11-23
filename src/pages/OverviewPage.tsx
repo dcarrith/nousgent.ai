@@ -180,6 +180,7 @@ export function OverviewPage({
   const [evolveFocusLobe, setEvolveFocusLobe] = useState<CognitiveLobeId>('procedural');
   const [promotingKey, setPromotingKey] = useState<string>('');
   const [evolveNotice, setEvolveNotice] = useState<string>('');
+  const [evolveMissionId, setEvolveMissionId] = useState<string>('');
 
   // Tab 4: TEACH state
   const [teachTitle, setTeachTitle] = useState<string>('');
@@ -412,12 +413,15 @@ export function OverviewPage({
       });
       const data = await res.json();
       if (data.ok && data.mission) {
+        setEvolveMissionId(data.mission.missionId);
         setEvolveNotice(`✓ Queued in DAO Signing as ${data.mission.missionId}`);
         onRefresh();
       } else {
+        setEvolveMissionId('');
         setEvolveNotice(data.error || 'Could not queue proposal.');
       }
     } catch {
+      setEvolveMissionId('');
       setEvolveNotice('DAO API unreachable.');
     } finally {
       setPromotingKey('');
@@ -1034,7 +1038,13 @@ export function OverviewPage({
 
                   {evolveNotice ? (
                     <div role="status" className="mono-xs text-pistachio" style={{ fontSize: '11px' }}>
-                      {evolveNotice} · <Link to="/missions" className="text-jade">Open Signing</Link>
+                      {evolveNotice} ·{' '}
+                      <Link
+                        to={evolveMissionId ? `/missions?mission=${encodeURIComponent(evolveMissionId)}` : '/missions'}
+                        className="text-jade"
+                      >
+                        Open Signing
+                      </Link>
                     </div>
                   ) : null}
 
@@ -1060,7 +1070,11 @@ export function OverviewPage({
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                               <span className="mono-xs text-bronze" style={{ fontSize: '10px' }}>{q.questId}</span>
                               {q.daoMissionId ? (
-                                <Link to="/missions" className="mono-xs text-jade" style={{ fontSize: '10.5px' }}>
+                                <Link
+                                  to={`/missions?mission=${encodeURIComponent(q.daoMissionId)}`}
+                                  className="mono-xs text-jade"
+                                  style={{ fontSize: '10.5px' }}
+                                >
                                   ✓ {q.daoMissionId}
                                 </Link>
                               ) : (
