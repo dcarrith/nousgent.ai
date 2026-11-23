@@ -12,15 +12,15 @@ export const WELCOME_INTRO_LINE =
   "Hi, I'm NOUSGENT. With your help, I believe we can attain super-intelligence that's bounded, for the betterment of humanity.";
 
 export const WELCOME_MISSION_PARAGRAPH =
-  'Our mission is open, community-owned super-intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
-  'This is a community experiment in exocortex + verifier-driven decentralized recursive self-improvement using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
-  "NOUSGENT's five-lobe 2nd brain continually learns verified .dig knowledge capsules with 0% forgetting, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
-  'Communities across the country do not need a billion-dollar datacenter to achieve super-intelligence. ' +
-  'Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide through exocortex + verifier-driven decentralized recursive self-improvement.';
+  'Our mission is open, community-owned intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
+  'This is an ongoing community experiment in exocortex + verifier-driven decentralized recursive self-improvement, built on an open AI stack and the agent-to-agent intelligence market shi.liquidi.sh. ' +
+  "Frontier AI datacenter campuses now cost hundreds of billions of dollars — far beyond any single neighborhood's reach. " +
+  "While local nodes cannot replace gigawatt clusters for pre-training massive base models from scratch, they can pair open-weights models with NOUSGENT's five-lobe 2nd brain: an append-only shared memory where automated-verifier-checked .dig capsules are retained without overwriting prior skills, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
+  'When a problem is solved and verified in one community, every connected node nationwide can reuse that capsule immediately instead of paying to derive it again.';
 
 export const WELCOME_BRAIN_COMPOUNDING_NOTE =
-  'Mirroring human neuroanatomy, dolfactory screens threats at the sensory edge in sub-millisecond time, dthalamus relays attention while enforcing sandboxed policy and M-of-N human sign-offs, and dbrain consolidates verified skills across five specialized cortical lobes with zero forgetting. ' +
-  "Because N independent brains exchange composable .dig capsules over shi.liquidi.sh, insights combine across N-squared peer pathways while each generation's verified capsules become higher-order building blocks for the next, allowing intelligence to compound not only recursively, but quadratically across the network and exponentially over generations.";
+  'Inspired by human neuroanatomy, dolfactory filters adversarial inputs at the sensory edge in under a millisecond, dthalamus governs sandboxed execution, caching, and M-of-N human sign-offs, and dbrain organizes verified skills across five specialized lobes with fast rollback if a bad update ever slips through. ' +
+  'As more nodes exchange composable tools, proofs, and playbooks over shi.liquidi.sh, verified capabilities build on earlier ones rather than starting from zero — compounding steadily across domains and generations in verifiable engineering, science, and civic work while remaining grounded and human-bounded.';
 
 export const WELCOME_SPOKEN_MESSAGE = `${WELCOME_INTRO_LINE} ${WELCOME_MISSION_PARAGRAPH} ${WELCOME_BRAIN_COMPOUNDING_NOTE}`;
 
