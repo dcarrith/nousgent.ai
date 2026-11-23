@@ -574,87 +574,8 @@ export function OverviewPage({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-      {initialTab === 'ask' ? (
-        <section className="welcome-mission-card" aria-labelledby="welcome-mission-heading">
-          <div className="welcome-mission-header">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minInlineSize: 0 }}>
-              <h1 id="welcome-mission-heading" className="welcome-mission-title">
-                Hi, I&apos;m <span className="text-pistachio">NOUSGENT</span>.
-              </h1>
-              <p className="welcome-mission-lead">
-                With your help, I believe we can attain super-intelligence that&apos;s bounded, for the betterment of humanity.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {welcomeAutoplayDeferred && !voiceSpeaking ? (
-                <span className="mono-xs text-jade" style={{ fontSize: '0.66rem' }}>
-                  Click anywhere or press Play Welcome to hear audio
-                </span>
-              ) : null}
-              <button
-                type="button"
-                data-voice-cancel={voiceSpeaking ? 'true' : undefined}
-                className={`btn-spatial ${voiceSpeaking ? 'btn-glass' : 'btn-pistachio'}`}
-                style={{ minBlockSize: '2rem', padding: '0.28rem 0.78rem', fontSize: '0.72rem' }}
-                onClick={() => {
-                  if (voiceSpeaking) {
-                    setWelcomeAutoplayDeferred(false);
-                    stopNousgentVoice();
-                    setVoiceSpeaking(false);
-                    setVocalAmplitude(0);
-                  } else {
-                    setWelcomeAutoplayDeferred(false);
-                    unlockNousgentVoiceContext();
-                    triggerVerbalSpeech(WELCOME_SPOKEN_MESSAGE);
-                  }
-                }}
-              >
-                {voiceSpeaking ? '⏹ Stop Welcome' : '🔊 Play Welcome'}
-              </button>
-            </div>
-          </div>
-
-          <p className="welcome-mission-prose">{WELCOME_MISSION_PARAGRAPH}</p>
-
-          <div className="welcome-pillars-grid">
-            <div className="welcome-pillar-box">
-              <div className="mono-xs text-pistachio" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
-                1. NEUROANATOMY · DOLFACTORY → DTHALAMUS → DBRAIN
-              </div>
-              <p>
-                Modeled on the human brain, <code>dolfactory</code> screens threats at the sensory edge in sub-millisecond time,{' '}
-                <code>dthalamus</code> relays attention while enforcing sandboxed policy and <code>M-of-N</code> human approvals, and{' '}
-                <code>dbrain</code> consolidates skills across five cortical lobes with <code>0%</code> forgetting.
-              </p>
-            </div>
-
-            <div className="welcome-pillar-box">
-              <div className="mono-xs text-jade" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
-                2. QUADRATIC NETWORK COMPOUNDING (N²)
-              </div>
-              <p>
-                As <code>N</code> independent community brains trade verified <code>.dig</code> capsules across{' '}
-                <code>shi.liquidi.sh</code>, local breakthroughs recombine across <code>N(N - 1) / 2</code> peer pathways — unlocking
-                massively distributed, low-latency capability without a centralized datacenter.
-              </p>
-            </div>
-
-            <div className="welcome-pillar-box">
-              <div className="mono-xs text-bronze" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
-                3. EXOCORTEX + VERIFIER-DRIVEN COMPOUNDING
-              </div>
-              <p>
-                Every automated-verifier-checked <code>.dig</code> capsule becomes a permanent higher-order building block in the shared
-                exocortex (<code>0%</code> forgetting + <code>O(log N)</code> rollback), powering exocortex + verifier-driven
-                decentralized recursive self-improvement that compounds exponentially over generations while staying human-bounded.
-              </p>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {/* TOP SPLIT: 3D Brain + Mask Stage | 4-Tab Console (ASK | HACK | EVOLVE | TEACH) */}
+      <h1 className="visually-hidden">NOUSGENT Welcome &amp; Console</h1>
+      {/* TOP SPLIT: 3D Brain + Mask Stage | 4-Tab Console (ASK | TEACH | EVOLVE | HACK) */}
       <div className="bento-grid" style={{ alignItems: 'start' }}>
         <div className="col-7" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <NousgentCbrainMaskStage
@@ -880,11 +801,18 @@ export function OverviewPage({
                         T+{exchange.latencyMs}ms
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        {welcomeAutoplayDeferred && !voiceSpeaking && exchange.id === 1 ? (
+                          <span className="mono-xs text-jade" style={{ fontSize: '10px' }}>
+                            Tap to unmute
+                          </span>
+                        ) : null}
                         <button
                           type="button"
+                          data-voice-cancel={voiceSpeaking ? 'true' : undefined}
                           className={`btn-spatial ${voiceSpeaking ? 'btn-pistachio' : 'btn-glass'}`}
                           style={{ minBlockSize: '25px', padding: '0.16rem 0.55rem', fontSize: '10.5px' }}
                           onClick={() => {
+                            setWelcomeAutoplayDeferred(false);
                             if (voiceSpeaking) {
                               stopNousgentVoice();
                               setVoiceSpeaking(false);
