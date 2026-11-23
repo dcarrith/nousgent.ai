@@ -257,7 +257,7 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
 
   maskOpacityPct: readInitialMaskOpacityPct(),
   voiceEnabled: true,
-  voiceModel: 'en_US-joe-medium',
+  voiceModel: 'kokoro-82m-q8',
   localHaloConfigured: false,
   localHaloModel: 'qwen3:32b',
 
@@ -403,7 +403,7 @@ export function useNousgentMission() {
             ? Math.max(0, Math.min(100, Math.round(Number(d.uiConfig.maskOpacityPct))))
             : readInitialMaskOpacityPct(),
         voiceEnabled: d.uiConfig?.voiceEnabled !== undefined ? Boolean(d.uiConfig.voiceEnabled) : true,
-        voiceModel: String(d.uiConfig?.voiceModel || 'en_US-joe-medium'),
+        voiceModel: String(d.uiConfig?.voiceModel || 'kokoro-82m-q8'),
         localHaloConfigured: Boolean(d.halo?.anyConfigured),
         localHaloModel: String(d.halo?.personaQa?.model || 'qwen3:32b'),
 

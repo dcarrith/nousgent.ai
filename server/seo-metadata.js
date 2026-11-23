@@ -153,7 +153,7 @@ function buildSchemaJsonLd({ origin, appVersion, pathname, meta }) {
   return JSON.stringify(graph).replace(/<\//g, '<\\/');
 }
 
-function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.11.2', targetUrl = '' } = {}) {
+function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersion = '1.12.0', targetUrl = '' } = {}) {
   let resolvedPath = '/';
   if (targetUrl) {
     try {
@@ -186,7 +186,7 @@ function buildOembedPayload({ canonicalOrigin = 'https://nousgent.ai', appVersio
 function createHtmlMetadataRenderer({
   canonicalOrigin = 'https://nousgent.ai',
   m2mOrigin = 'https://ia.nousgent.ai',
-  appVersion = '1.11.2',
+  appVersion = '1.12.0',
   getMaskOpacityPct = () => 65
 } = {}) {
   return function renderHtmlWithSeo(htmlTemplate, rawPathname = '/', plane = 'human_ui') {

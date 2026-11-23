@@ -1,4 +1,4 @@
-# NOUSGENT (`v1.11.2`) — Community-Based Bounded RSI on Chia
+# NOUSGENT (`v1.12.0`) — Community-Based Bounded RSI on Chia
 
 <p align="center">
   <img src="./public/logo-wordmark.svg" alt="NOUSGENT — Morphic Field & Bounded RSI" width="680" />
@@ -51,7 +51,7 @@ curl -s http://localhost:3000/api/nousgent/halo/status | jq
 
 ### 2. Configuring Voice Synthesis (`POST /api/nousgent/tts`) to Use a Local Endpoint
 
-By default, NOUSGENT pre-warms its built-in WASM VITS ONNX voice engine (`en_US-joe-medium` shaped with West African Lagos Afrobeat-baritone prosody and DSP) and speaks **only `spokenSummary`** (the direct answer sentence, without capsule IDs, hashes, or trailing metadata).
+By default, NOUSGENT pre-warms its built-in 24 kHz `Kokoro-82M-v1.0-ONNX` (`Apache-2.0`, StyleTTS2 + ISTFTNet) voice engine (`kokoro-82m-q8`, blending 256-D non-rhotic baritone style embeddings `bm_george + bm_daniel + am_onyx` with Lagos West African vowel phonology and formant-preserving warmth mastering) and speaks **only `spokenSummary`** (the direct answer sentence, without capsule IDs, hashes, or trailing metadata).
 
 To offload TTS to a local neural voice server on your Ryzen AI Halo (such as `Kokoro-FastAPI`, `speaches`, `openedai-speech`, or a local `piper` HTTP daemon), set:
 
@@ -66,7 +66,7 @@ export NOUSGENT_VOICE_TTS_API_KEY="" # optional; falls back to NOUSGENT_HALO_API
 # Option B: Native Piper HTTP server (POST { text, voice, length_scale } -> audio/wav)
 export NOUSGENT_VOICE_TTS_URL="http://halo.local:5000"
 export NOUSGENT_VOICE_TTS_PROTOCOL="piper-http"
-export NOUSGENT_VOICE_TTS_VOICE="en_US-joe-medium"
+export NOUSGENT_VOICE_TTS_VOICE="bm_george"
 ```
 
 If the local TTS server is temporarily unreachable, NOUSGENT falls back seamlessly to its built-in ONNX voice synthesizer without failing the request.

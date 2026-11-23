@@ -4,11 +4,13 @@
  * ============================================================================
  * NOUSGENT Neural Voice Synthesizer & Runtime UI Config (`server/voice-synthesizer.js`)
  * - Admin-configurable Mask Opacity (`NOUSGENT_MASK_OPACITY_PCT`, default 65%)
- * - Sovereign Neural VITS ONNX Voice Model (`NOUSGENT_VOICE_MODEL`, default `en_US-joe-medium`)
- * - West African / Lagos Afrobeat-Baritone Phonology & Analog Warmth DSP (`NOUSGENT_VOICE_PERSONA=afrobeat-baritone`)
- *   inspired by iconic Lagos non-rhotic Yoruba-English prosody, deep chest register, and rhythmic cadence
- * - Optional OpenAI-compatible upstream TTS override (`NOUSGENT_TTS_UPSTREAM_URL`)
- * - Deterministic harmonic WAV fallback when running offline/unit CI without `.onnx` weights
+ * - Built-in 24 kHz `Kokoro-82M-v1.0-ONNX` (`Apache-2.0`, StyleTTS2 + ISTFTNet) neural voice
+ *   with 256-D latent style blending (`bm_george` + `bm_daniel` + `am_onyx`) and Lagos
+ *   non-rhotic West African phonology (`NOUSGENT_VOICE_PERSONA=afrobeat-baritone`)
+ *   — zero pitch-resampling formant distortion!
+ * - Backward-compatible with custom Piper `.onnx` + `.onnx.json` VITS checkpoints
+ *   and optional OpenAI-compatible local TTS endpoints (`NOUSGENT_VOICE_TTS_URL`)
+ * - Deterministic 24 kHz harmonic WAV fallback when running unit CI without `.onnx` weights
  * ============================================================================
  */
 
@@ -16,11 +18,13 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const http = require('node:http');
 const https = require('node:https');
+const os = require('node:os');
 const path = require('node:path');
 
 const DEFAULT_MASK_OPACITY_PCT = 65;
-const DEFAULT_VOICE_MODEL = 'en_US-joe-medium';
+const DEFAULT_VOICE_MODEL = 'kokoro-82m-q8';
 const DEFAULT_VOICE_PERSONA = 'afrobeat-baritone';
+const KOKORO_SAMPLE_RATE = 24000;
 
 function parseMaskOpacityPct(rawVal) {
   if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
@@ -70,87 +74,55 @@ function normalizeSpeechText(rawText) {
 }
 
 /**
- * Applies Lagos Yoruba-English non-rhotic syllable-timed IPA phonology:
- * - Pure monophthongal West African vowels (`eː`, `oː`, `ɔ`, `a`)
- * - Full syllable-timed `-ʃɔn` / `-ʒɔn` / `-mɛnt` / `-dʒɛnt` endings
- * - Dental fricative stopping (`ð -> d`, `θ -> t`, `"the" -> dɛ/di`, `"to" -> tu`)
- * - Word-final `-er/-or/-ar` schwa opening (`-ə -> -a`, `-aʊə -> -aʊwa`)
- * - Strictly non-rhotic coda while preserving prevocalic `ɹ` across stress marks
+ * Applies clean Lagos / West African non-rhotic English IPA phonology compatible
+ * with Kokoro-82M's 115-symbol vocabulary (preserving every IPA codepoint with 0 drops):
+ * - Pure monophthongal vowels (`əʊ/oʊ -> oː`, `eɪ -> eː`)
+ * - Dental fricative stopping (`ð -> d`, `θ -> t`, `"the" -> dɛ/di`)
+ * - Syllable-timed `-ʃɔn` / `-ʒɔn` / `-mɛnt` endings
+ * - Affricate ligatures (`dʒ -> ʤ`, `tʃ -> ʧ`) expected by StyleTTS2
  */
 function toLagosAfrobeatIpa(rawIpa) {
   return rawIpa
+    .replace(/kəkˈoːɹoʊ/g, 'kˈoʊkəɹoʊ')
+    .replace(/dʒ/g, 'ʤ')
+    .replace(/tʃ/g, 'ʧ')
     .replace(/(^|\s)ðə(?=\s|$)/g, '$1dɛ')
     .replace(/(^|\s)ðiː?(?=\s|$)/g, '$1di')
     .replace(/(^|\s)ðɪ(?=\s|$)/g, '$1di')
     .replace(/(^|\s)tə(?=\s|$)/g, '$1tu')
-    .replace(/(^|\s)tʊ(?=\s|$)/g, '$1tu')
-    .replace(/aɪɐm/g, 'aɪ ˈam')
-    .replace(/aɪəm/g, 'aɪ ˈam')
     .replace(/ʃən(?=\s|$|z)/g, 'ʃɔn')
     .replace(/ʒən(?=\s|$|z)/g, 'ʒɔn')
     .replace(/mənt(?=\s|$|s)/g, 'mɛnt')
-    .replace(/dʒənt(?=\s|$|s)/g, 'dʒɛnt')
-    .replace(/(^|\s)tə(?=ɡ|d|m)/g, '$1tu')
-    .replace(/aʊə(?=\s|$|z)/g, 'aʊwa')
     .replace(/əʊ/g, 'oː')
     .replace(/oʊ/g, 'oː')
     .replace(/eɪ/g, 'eː')
     .replace(/ð/g, 'd')
     .replace(/θ/g, 't')
-    .replace(/ɾ/g, 't')
-    .replace(/ɜː/g, 'ɔː')
     .replace(/ʌ/g, 'ɔ')
-    .replace(/ɒ/g, 'ɔ')
-    .replace(/æ/g, 'a')
-    .replace(/ə(?=\s|$)/g, 'a')
     .replace(/ɐ/g, 'a')
-    .replace(/ᵻ/g, 'i')
-    .replace(/ɹ(?![ˈˌː]?[aeiouɛɔɑɒɪʊəɐæɜ])/g, '');
+    .replace(/r/g, 'ɹ');
 }
 
 /**
- * Shapes raw VITS float samples into a deep, warm, smoky baritone register:
- * 1. Cubic Hermite vocal-tract & F0 lowering (`pitchRatio = 0.91`)
- * 2. Warm chest-resonance shelf (~175 Hz) + crisp articulation presence (~1.8 kHz)
- * 3. Subtle asymmetric analog tube saturation for soulful baritone rasp
+ * Formant-preserving studio warmth shelf (~165 Hz) + clean soft limiter at 24 kHz.
+ * Unlike time-domain resampling, this never shifts vocal-tract formants or slurs consonants.
  */
-function applyAfrobeatBaritoneDsp(floatSamples, pitchRatio = 0.91, sampleRate = 22050) {
-  const outLen = Math.floor(floatSamples.length / pitchRatio);
-  const pitched = new Float32Array(outLen);
-  for (let i = 0; i < outLen; i += 1) {
-    const pos = i * pitchRatio;
-    const idx = Math.floor(pos);
-    const frac = pos - idx;
-    const y0 = floatSamples[Math.max(0, idx - 1)] || 0;
-    const y1 = floatSamples[Math.min(floatSamples.length - 1, idx)] || 0;
-    const y2 = floatSamples[Math.min(floatSamples.length - 1, idx + 1)] || 0;
-    const y3 = floatSamples[Math.min(floatSamples.length - 1, idx + 2)] || 0;
-    const c0 = y1;
-    const c1 = 0.5 * (y2 - y0);
-    const c2 = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3;
-    const c3 = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
-    pitched[i] = ((c3 * frac + c2) * frac + c1) * frac + c0;
-  }
-
+function applyStudioWarmthMastering(floatSamples, sampleRate = KOKORO_SAMPLE_RATE) {
+  const len = floatSamples.length;
   const dt = 1.0 / sampleRate;
-  const alphaLow = dt / (1.0 / (2 * Math.PI * 175) + dt);
-  const alphaPresence = dt / (1.0 / (2 * Math.PI * 1800) + dt);
+  const alphaLow = dt / (1.0 / (2 * Math.PI * 165) + dt);
   let lowState = 0;
-  let presLow = 0;
-  const out = new Float32Array(outLen);
-  for (let i = 0; i < outLen; i += 1) {
-    const x = pitched[i];
+  const out = new Float32Array(len);
+  for (let i = 0; i < len; i += 1) {
+    const x = floatSamples[i];
     lowState += alphaLow * (x - lowState);
-    presLow += alphaPresence * (x - presLow);
-    const highBand = x - presLow;
-    const eq = x + 0.28 * lowState + 0.22 * highBand;
-    const driven = eq * 1.24 + 0.035 * eq * eq;
-    out[i] = Math.tanh(driven) * 0.88;
+    const warm = x + 0.18 * lowState;
+    out[i] = Math.tanh(warm * 1.12) * 0.9;
   }
   return out;
 }
 
-function encodePcm16MonoWav(floatSamples, sampleRate = 22050) {
+function encodePcm16MonoWav(floatSamples, sampleRate = KOKORO_SAMPLE_RATE) {
   const pcm16 = new Int16Array(floatSamples.length);
   for (let i = 0; i < floatSamples.length; i += 1) {
     const clamped = Math.max(-1, Math.min(1, floatSamples[i]));
@@ -174,7 +146,7 @@ function encodePcm16MonoWav(floatSamples, sampleRate = 22050) {
   return wav;
 }
 
-function synthesizeHarmonicFallbackWav(text, sampleRate = 22050) {
+function synthesizeHarmonicFallbackWav(text, sampleRate = KOKORO_SAMPLE_RATE) {
   const words = text.split(/\s+/).filter(Boolean).slice(0, 32);
   const totalSec = Math.max(0.45, Math.min(4.2, words.length * 0.15));
   const totalSamples = Math.floor(totalSec * sampleRate);
@@ -231,6 +203,13 @@ function postUpstreamTts(upstreamUrl, payload, { apiKey = '', timeoutMs = 8000 }
   });
 }
 
+function readFloat32VoiceBin(binPath) {
+  const buf = fs.readFileSync(binPath);
+  const aligned = new Uint8Array(buf.byteLength);
+  aligned.set(buf);
+  return new Float32Array(aligned.buffer, 0, Math.floor(aligned.byteLength / 4));
+}
+
 function createNousgentVoiceSynthesizer(options = {}) {
   const env = options.env || process.env;
   const repoRoot = options.repoRoot || path.resolve(__dirname, '..');
@@ -251,15 +230,18 @@ function createNousgentVoiceSynthesizer(options = {}) {
     const voiceEnabled = String(env.NOUSGENT_VOICE_ENABLED ?? 'true').trim().toLowerCase() !== 'false';
     const voiceModel = String(env.NOUSGENT_VOICE_MODEL || DEFAULT_VOICE_MODEL).trim() || DEFAULT_VOICE_MODEL;
     const voicePersona = String(env.NOUSGENT_VOICE_PERSONA || DEFAULT_VOICE_PERSONA).trim() || DEFAULT_VOICE_PERSONA;
-    const rawScale = Number(env.NOUSGENT_VOICE_LENGTH_SCALE ?? 0.96);
-    const voiceLengthScale = Number.isFinite(rawScale) ? Math.max(0.55, Math.min(1.6, rawScale)) : 0.96;
+    const rawScale = Number(env.NOUSGENT_VOICE_LENGTH_SCALE ?? 0.98);
+    const voiceLengthScale = Number.isFinite(rawScale) ? Math.max(0.55, Math.min(1.6, rawScale)) : 0.98;
     const upstreamTtsUrl = resolveLocalTtsEndpoint();
     const ttsModel = String(env.NOUSGENT_VOICE_TTS_MODEL || voiceModel).trim() || voiceModel;
-    const ttsVoice = String(env.NOUSGENT_VOICE_TTS_VOICE || voiceModel).trim() || voiceModel;
+    const ttsVoice = String(env.NOUSGENT_VOICE_TTS_VOICE || 'bm_george').trim() || 'bm_george';
     const ttsProtocol =
       String(env.NOUSGENT_VOICE_TTS_PROTOCOL || 'openai').trim().toLowerCase() === 'piper-http'
         ? 'piper-http'
         : 'openai';
+    const defaultEngine = voiceModel.startsWith('kokoro')
+      ? 'kokoro-82m-afrobeat-baritone'
+      : 'piper-vits-afrobeat-baritone';
     return Object.freeze({
       maskOpacityPct,
       voiceEnabled,
@@ -270,7 +252,7 @@ function createNousgentVoiceSynthesizer(options = {}) {
       ttsVoice,
       ttsProtocol,
       localTtsConfigured: Boolean(upstreamTtsUrl),
-      voiceEngine: upstreamTtsUrl ? `local-tts-${ttsProtocol}` : 'piper-vits-afrobeat-baritone'
+      voiceEngine: upstreamTtsUrl ? `local-tts-${ttsProtocol}` : defaultEngine
     });
   }
 
@@ -284,9 +266,23 @@ function createNousgentVoiceSynthesizer(options = {}) {
 
     for (const dir of candidateDirs) {
       const onnxPath = path.join(dir, `${voiceModel}.onnx`);
-      const jsonPath = path.join(dir, `${voiceModel}.onnx.json`);
-      if (fs.existsSync(onnxPath) && fs.existsSync(jsonPath)) {
-        return { onnxPath, jsonPath };
+      const kokoroTokenizerPath = path.join(dir, 'kokoro-tokenizer.json');
+      if (voiceModel.startsWith('kokoro') && fs.existsSync(onnxPath) && fs.existsSync(kokoroTokenizerPath)) {
+        return {
+          kind: 'kokoro',
+          dir,
+          onnxPath,
+          tokenizerPath: kokoroTokenizerPath
+        };
+      }
+      const piperJsonPath = path.join(dir, `${voiceModel}.onnx.json`);
+      if (fs.existsSync(onnxPath) && fs.existsSync(piperJsonPath)) {
+        return {
+          kind: 'piper',
+          dir,
+          onnxPath,
+          jsonPath: piperJsonPath
+        };
       }
     }
     return null;
@@ -296,89 +292,140 @@ function createNousgentVoiceSynthesizer(options = {}) {
   let ortModule = null;
   let phonemizeFn = null;
   let ortSession = null;
-  let modelConfig = null;
+  let kokoroVocab = null;
+  let kokoroBlendedStyle = null;
+  let piperConfig = null;
   let queuePromise = Promise.resolve();
   const wavCache = new Map();
 
-  async function ensurePiperSession(paths) {
-    const key = `${paths.onnxPath}`;
-    if (ortSession && modelConfig && loadedModelKey === key) {
-      return { ort: ortModule, phonemize: phonemizeFn, session: ortSession, cfg: modelConfig };
-    }
+  function initOrtRuntime() {
     if (!ortModule) {
       ortModule = require('onnxruntime-web');
-      ortModule.env.wasm.numThreads = 1;
+      const avail = typeof os.availableParallelism === 'function' ? os.availableParallelism() : 4;
+      ortModule.env.wasm.numThreads = Math.min(4, Math.max(1, avail));
+      ortModule.env.wasm.simd = true;
       ortModule.env.wasm.wasmPaths = path.dirname(require.resolve('onnxruntime-web')) + path.sep;
     }
+    return ortModule;
+  }
+
+  async function ensureVoiceSession(paths) {
+    const key = `${paths.kind}:${paths.onnxPath}`;
+    if (ortSession && loadedModelKey === key) {
+      return { ort: ortModule, phonemize: phonemizeFn, session: ortSession };
+    }
+    const ort = initOrtRuntime();
     if (!phonemizeFn) {
       const mod = await import('phonemizer');
       phonemizeFn = mod.phonemize;
     }
-    modelConfig = JSON.parse(fs.readFileSync(paths.jsonPath, 'utf8'));
-    ortSession = await ortModule.InferenceSession.create(fs.readFileSync(paths.onnxPath), {
+    if (paths.kind === 'kokoro') {
+      const tokJson = JSON.parse(fs.readFileSync(paths.tokenizerPath, 'utf8'));
+      kokoroVocab = (tokJson && tokJson.model && tokJson.model.vocab) || {};
+      const georgePath = path.join(paths.dir, 'bm_george.bin');
+      const danielPath = path.join(paths.dir, 'bm_daniel.bin');
+      const onyxPath = path.join(paths.dir, 'am_onyx.bin');
+
+      if (fs.existsSync(georgePath) && fs.existsSync(danielPath) && fs.existsSync(onyxPath)) {
+        const george = readFloat32VoiceBin(georgePath);
+        const daniel = readFloat32VoiceBin(danielPath);
+        const onyx = readFloat32VoiceBin(onyxPath);
+        const len = Math.min(george.length, daniel.length, onyx.length);
+        kokoroBlendedStyle = new Float32Array(len);
+        for (let i = 0; i < len; i += 1) {
+          kokoroBlendedStyle[i] = 0.52 * george[i] + 0.23 * daniel[i] + 0.25 * onyx[i];
+        }
+      } else if (fs.existsSync(georgePath)) {
+        kokoroBlendedStyle = readFloat32VoiceBin(georgePath);
+      }
+    } else {
+      piperConfig = JSON.parse(fs.readFileSync(paths.jsonPath, 'utf8'));
+    }
+
+    ortSession = await ort.InferenceSession.create(fs.readFileSync(paths.onnxPath), {
       executionProviders: ['wasm']
     });
     loadedModelKey = key;
-    return { ort: ortModule, phonemize: phonemizeFn, session: ortSession, cfg: modelConfig };
+    return { ort, phonemize: phonemizeFn, session: ortSession };
   }
 
-  async function runPiperVitsSynthesis(spokenText, paths, runtimeCfg) {
-    const { ort, phonemize, session, cfg } = await ensurePiperSession(paths);
-    const idMap = cfg.phoneme_id_map || {};
-    const isAfrobeatBaritone = runtimeCfg.voicePersona === 'afrobeat-baritone';
-    const voiceLang = isAfrobeatBaritone ? 'en-gb-x-rp' : (cfg.espeak && cfg.espeak.voice) || 'en-us';
-    const sampleRate = (cfg.audio && cfg.audio.sample_rate) || 22050;
+  async function phonemizeKokoroClause(clauseText, phonemize, isAfrobeatBaritone) {
+    const punctRegex = /(\s*[;:,.!?—…"()“”]+\s*)+/g;
+    const segments = [];
+    let cursor = 0;
+    for (const match of clauseText.matchAll(punctRegex)) {
+      const hit = match[0];
+      if (cursor < match.index) {
+        segments.push({ isPunct: false, text: clauseText.slice(cursor, match.index) });
+      }
+      if (hit.length > 0) {
+        segments.push({ isPunct: true, text: hit });
+      }
+      cursor = match.index + hit.length;
+    }
+    if (cursor < clauseText.length) {
+      segments.push({ isPunct: false, text: clauseText.slice(cursor) });
+    }
 
-    const sentences = spokenText.match(/[^.!?;]+[.!?;]?/g) || [spokenText];
-    const audioChunks = [];
-
-    const inf = cfg.inference || {};
-    const noiseScale = isAfrobeatBaritone ? 0.68 : Number.isFinite(inf.noise_scale) ? inf.noise_scale : 0.667;
-    const lengthScale = Number.isFinite(runtimeCfg.voiceLengthScale)
-      ? runtimeCfg.voiceLengthScale
-      : inf.length_scale || 1.0;
-    const noiseW = isAfrobeatBaritone ? 0.82 : Number.isFinite(inf.noise_w) ? inf.noise_w : 0.8;
-
-    for (const sent of sentences) {
-      const subClauses = sent.match(/[^,:.!?;]+[,:.!?;]?/g) || [sent];
-      const ids = [1, 0];
-      for (const rawClause of subClauses) {
-        const punctMatch = rawClause.match(/([,:.!?;])\s*$/);
-        const punct = punctMatch ? punctMatch[1] : '';
-        const words = rawClause.replace(/[,:.!?;]\s*$/, '').trim();
-        if (!words) continue;
-
-        const ipaLines = await phonemize(words, voiceLang);
-        const baseIpa = Array.isArray(ipaLines) ? ipaLines.join(' ') : String(ipaLines || '');
-        const shapedIpa = (isAfrobeatBaritone ? toLagosAfrobeatIpa(baseIpa) : baseIpa).normalize('NFD');
-        for (const ch of Array.from(shapedIpa)) {
-          const mapped = idMap[ch];
-          if (mapped) {
-            for (const m of mapped) ids.push(m, 0);
-          }
-        }
-        if (punct && idMap[punct]) {
-          for (const m of idMap[punct]) ids.push(m, 0);
-          if (idMap[' ']) {
-            for (const m of idMap[' ']) ids.push(m, 0);
-          }
+    const parts = [];
+    for (const seg of segments) {
+      if (seg.isPunct) {
+        parts.push(seg.text.trim() ? ` ${seg.text.trim()} ` : ' ');
+      } else {
+        const words = seg.text.trim();
+        if (words) {
+          const lines = await phonemize(words, 'en-gb');
+          parts.push(Array.isArray(lines) ? lines.join(' ') : String(lines || ''));
         }
       }
-      ids.push(2);
+    }
+    const rawIpa = parts.join(' ').replace(/\s+/g, ' ').trim();
+    return isAfrobeatBaritone ? toLagosAfrobeatIpa(rawIpa) : rawIpa.replace(/r/g, 'ɹ');
+  }
+
+  async function runKokoroSynthesis(spokenText, paths, runtimeCfg) {
+    const { ort, phonemize, session } = await ensureVoiceSession(paths);
+    if (!kokoroBlendedStyle || !kokoroVocab) {
+      throw new Error('Kokoro style embedding or tokenizer missing');
+    }
+    const isAfrobeatBaritone = runtimeCfg.voicePersona === 'afrobeat-baritone';
+    const speed = Number((1 / runtimeCfg.voiceLengthScale).toFixed(2));
+    const sentences = spokenText.match(/[^.!?]+[.!?]?/g) || [spokenText];
+    const audioChunks = [];
+
+    for (const rawSent of sentences) {
+      const trimmed = rawSent.trim();
+      if (!trimmed) continue;
+      const ipa = await phonemizeKokoroClause(trimmed, phonemize, isAfrobeatBaritone);
+      const tokenIds = [0];
+      for (const ch of Array.from(ipa)) {
+        const id = kokoroVocab[ch];
+        if (id !== undefined) {
+          tokenIds.push(id);
+        }
+      }
+      if (tokenIds.length <= 1) continue;
+      if (tokenIds.length > 510) {
+        tokenIds.length = 510;
+      }
+      tokenIds.push(0);
+
+      const styleIdx = Math.min(Math.max(tokenIds.length - 2, 0), 509) * 256;
+      const styleVec = kokoroBlendedStyle.slice(styleIdx, styleIdx + 256);
 
       const feeds = {
-        input: new ort.Tensor('int64', BigInt64Array.from(ids.map(BigInt)), [1, ids.length]),
-        input_lengths: new ort.Tensor('int64', BigInt64Array.from([BigInt(ids.length)]), [1]),
-        scales: new ort.Tensor('float32', Float32Array.from([noiseScale, lengthScale, noiseW]), [3])
+        input_ids: new ort.Tensor('int64', BigInt64Array.from(tokenIds.map(BigInt)), [1, tokenIds.length]),
+        style: new ort.Tensor('float32', styleVec, [1, 256]),
+        speed: new ort.Tensor('float32', Float32Array.from([speed]), [1])
       };
       const results = await session.run(feeds);
-      const outName = session.outputNames[0] || 'output';
+      const outName = session.outputNames[0] || 'waveform';
       const rawPcm = results[outName].data;
-      const processedChunk = isAfrobeatBaritone
-        ? applyAfrobeatBaritoneDsp(rawPcm, 0.91, sampleRate)
+      const mastered = isAfrobeatBaritone
+        ? applyStudioWarmthMastering(rawPcm, KOKORO_SAMPLE_RATE)
         : rawPcm;
-      audioChunks.push(processedChunk);
-      audioChunks.push(new Float32Array(Math.floor(sampleRate * (isAfrobeatBaritone ? 0.22 : 0.12))));
+      audioChunks.push(mastered);
+      audioChunks.push(new Float32Array(Math.floor(KOKORO_SAMPLE_RATE * 0.14)));
     }
 
     const totalSamples = audioChunks.reduce((sum, arr) => sum + arr.length, 0);
@@ -388,7 +435,41 @@ function createNousgentVoiceSynthesizer(options = {}) {
       mergedPcm.set(chunk, offset);
       offset += chunk.length;
     }
-    return encodePcm16MonoWav(mergedPcm, sampleRate);
+    return encodePcm16MonoWav(mergedPcm, KOKORO_SAMPLE_RATE);
+  }
+
+  async function runPiperVitsSynthesis(spokenText, paths, runtimeCfg) {
+    const { ort, phonemize, session } = await ensureVoiceSession(paths);
+    const cfg = piperConfig || {};
+    const idMap = cfg.phoneme_id_map || {};
+    const voiceLang = (cfg.espeak && cfg.espeak.voice) || 'en-gb';
+    const sampleRate = (cfg.audio && cfg.audio.sample_rate) || 22050;
+    const inf = cfg.inference || {};
+    const noiseScale = Number.isFinite(inf.noise_scale) ? inf.noise_scale : 0.667;
+    const lengthScale = Number.isFinite(runtimeCfg.voiceLengthScale)
+      ? runtimeCfg.voiceLengthScale
+      : inf.length_scale || 1.0;
+    const noiseW = Number.isFinite(inf.noise_w) ? inf.noise_w : 0.8;
+
+    const ipaLines = await phonemize(spokenText, voiceLang);
+    const baseIpa = Array.isArray(ipaLines) ? ipaLines.join(' ') : String(ipaLines || '');
+    const ids = [1, 0];
+    for (const ch of Array.from(baseIpa.normalize('NFD'))) {
+      const mapped = idMap[ch];
+      if (mapped) {
+        for (const m of mapped) ids.push(m, 0);
+      }
+    }
+    ids.push(2);
+
+    const feeds = {
+      input: new ort.Tensor('int64', BigInt64Array.from(ids.map(BigInt)), [1, ids.length]),
+      input_lengths: new ort.Tensor('int64', BigInt64Array.from([BigInt(ids.length)]), [1]),
+      scales: new ort.Tensor('float32', Float32Array.from([noiseScale, lengthScale, noiseW]), [3])
+    };
+    const results = await session.run(feeds);
+    const outName = session.outputNames[0] || 'output';
+    return encodePcm16MonoWav(applyStudioWarmthMastering(results[outName].data, sampleRate), sampleRate);
   }
 
   function synthesizeSpeechWav(rawText) {
@@ -450,9 +531,16 @@ function createNousgentVoiceSynthesizer(options = {}) {
       if (!wavBuffer && String(env.NOUSGENT_TTS_SYNTH_MODE || '').toLowerCase() !== 'harmonic') {
         const modelPaths = resolveModelPaths(cfg.voiceModel);
         if (modelPaths) {
-          wavBuffer = await runPiperVitsSynthesis(spokenText, modelPaths, cfg);
-          engineUsed =
-            cfg.voicePersona === 'afrobeat-baritone' ? 'piper-vits-afrobeat-baritone' : 'piper-vits-onnx-wasm';
+          if (modelPaths.kind === 'kokoro') {
+            wavBuffer = await runKokoroSynthesis(spokenText, modelPaths, cfg);
+            engineUsed =
+              cfg.voicePersona === 'afrobeat-baritone'
+                ? 'kokoro-82m-afrobeat-baritone'
+                : 'kokoro-82m-onnx-wasm';
+          } else {
+            wavBuffer = await runPiperVitsSynthesis(spokenText, modelPaths, cfg);
+            engineUsed = 'piper-vits-onnx-wasm';
+          }
         }
       }
 
@@ -489,7 +577,7 @@ function createNousgentVoiceSynthesizer(options = {}) {
     if (String(env.NOUSGENT_TTS_SYNTH_MODE || '').toLowerCase() === 'harmonic') return Promise.resolve(false);
     const paths = resolveModelPaths(cfg.voiceModel);
     if (!paths) return Promise.resolve(false);
-    return ensurePiperSession(paths).then(
+    return ensureVoiceSession(paths).then(
       () => true,
       () => false
     );

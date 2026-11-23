@@ -171,7 +171,7 @@ function createLocalHaloClient(env = process.env) {
       voiceTts: Object.freeze({
         configured: Boolean(voiceTtsUrl),
         endpoint: sanitizeUrlForDisplay(voiceTtsUrl),
-        model: String(env.NOUSGENT_VOICE_TTS_MODEL || env.NOUSGENT_VOICE_MODEL || 'en_US-joe-medium').trim()
+        model: String(env.NOUSGENT_VOICE_TTS_MODEL || env.NOUSGENT_VOICE_MODEL || 'kokoro-82m-q8').trim()
       })
     });
   }

@@ -15,7 +15,7 @@ RUN mkdir -p /out && \
       -o "/out/dbrain_core_rs.linux-${ARCH}.node"
 
 FROM node:22-alpine AS voice-builder
-ARG VOICE_MODEL=en_US-joe-medium
+ARG VOICE_MODEL=kokoro-82m-q8
 WORKDIR /voice-deps
 RUN npm init -y >/dev/null && \
     npm install --omit=dev --no-audit --no-fund onnxruntime-web@1.31.1 phonemizer@1.2.1 && \
@@ -27,14 +27,20 @@ RUN npm init -y >/dev/null && \
           node_modules/onnxruntime-web/dist/ort.webgl.* \
           node_modules/onnxruntime-web/dist/ort.webgpu.* && \
     mkdir -p /voices && \
-    wget -q -O "/voices/${VOICE_MODEL}.onnx.json" \
-      "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/joe/medium/${VOICE_MODEL}.onnx.json" && \
     wget -q -O "/voices/${VOICE_MODEL}.onnx" \
-      "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/joe/medium/${VOICE_MODEL}.onnx"
+      "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model_quantized.onnx" && \
+    wget -q -O "/voices/kokoro-tokenizer.json" \
+      "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/tokenizer.json" && \
+    wget -q -O "/voices/bm_george.bin" \
+      "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/bm_george.bin" && \
+    wget -q -O "/voices/bm_daniel.bin" \
+      "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/bm_daniel.bin" && \
+    wget -q -O "/voices/am_onyx.bin" \
+      "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/am_onyx.bin"
 
 FROM node:22-alpine AS production
 
-ARG APP_VERSION=1.11.2
+ARG APP_VERSION=1.12.0
 LABEL org.opencontainers.image.title="nousgent-web" \
       org.opencontainers.image.description="nousgent.ai & ia.nousgent.ai — NOUSGENT Flagship Gamified Mission Control & M2M Swarm Plane for Bounded ASI on the Chia Blockchain" \
       org.opencontainers.image.version="${APP_VERSION}" \
@@ -71,7 +77,7 @@ ENV M2M_ORIGIN=https://ia.nousgent.ai
 ENV NOUSGENT_STATE_DIR=/var/lib/nousgent
 ENV NOUSGENT_MASK_OPACITY_PCT=65
 ENV NOUSGENT_VOICE_ENABLED=true
-ENV NOUSGENT_VOICE_MODEL=en_US-joe-medium
+ENV NOUSGENT_VOICE_MODEL=kokoro-82m-q8
 ENV NOUSGENT_VOICE_PERSONA=afrobeat-baritone
 ENV NOUSGENT_VOICE_MODEL_DIR=/opt/nousgent-voices
 ENV APP_VERSION=${APP_VERSION}

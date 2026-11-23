@@ -5,26 +5,26 @@ metadata:
   namespace: dbrain
   labels:
     app.kubernetes.io/name: nousgent
-    app.kubernetes.io/version: "1.11.2"
+    app.kubernetes.io/version: "1.12.0"
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  APP_VERSION: "1.11.2"
+  APP_VERSION: "1.12.0"
   CANONICAL_ORIGIN: "https://nousgent.ai"
   M2M_ORIGIN: "https://ia.nousgent.ai"
   NOUSGENT_STATE_DIR: "/var/lib/nousgent"
   NOUSGENT_PEER_HEADLESS_DNS: "nousgent-web-headless.dbrain.svc.cluster.local"
   NOUSGENT_MASK_OPACITY_PCT: "65"
   NOUSGENT_VOICE_ENABLED: "true"
-  NOUSGENT_VOICE_MODEL: "en_US-joe-medium"
+  NOUSGENT_VOICE_MODEL: "kokoro-82m-q8"
   NOUSGENT_VOICE_PERSONA: "afrobeat-baritone"
   NOUSGENT_VOICE_MODEL_DIR: "/opt/nousgent-voices"
-  NOUSGENT_VOICE_LENGTH_SCALE: "0.96"
+  NOUSGENT_VOICE_LENGTH_SCALE: "0.98"
   # Local Voice / Neural TTS Endpoint Override (OpenAI /v1/audio/speech or Piper HTTP)
   NOUSGENT_VOICE_TTS_URL: ""
   NOUSGENT_VOICE_TTS_PROTOCOL: "openai"
-  NOUSGENT_VOICE_TTS_MODEL: "en_US-joe-medium"
-  NOUSGENT_VOICE_TTS_VOICE: "en_US-joe-medium"
+  NOUSGENT_VOICE_TTS_MODEL: "kokoro-82m-q8"
+  NOUSGENT_VOICE_TTS_VOICE: "bm_george"
   # Local AMD Ryzen AI Halo ("Strix Halo") OpenAI-Compatible Inference Router
   # Set NOUSGENT_HALO_BASE_URL (e.g. "http://halo.local:11434/v1" or "http://host.docker.internal:8000/v1")
   # to wire Frontier Q&A fallback, autonomous RSI/Dream/Redteam agents, and embeddings at once,
