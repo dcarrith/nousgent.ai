@@ -27,9 +27,14 @@ const DEFAULT_VOICE_MODEL = 'kokoro-82m-q8';
 const DEFAULT_VOICE_PERSONA = 'afrobeat-baritone';
 const KOKORO_SAMPLE_RATE = 24000;
 const DEFAULT_WELCOME_SPEECH =
-  'Welcome to Nousgent. Our mission is open, community-owned intelligence that serves the public rather than closed corporate silos. ' +
-  'My five-lobe Second Brain continually learns verified knowledge capsules without forgetting past skills, protected by pre-cortical threat screening and two-key human approval. ' +
-  'And yes, communities across the country really can pool their resources toward shared super-intelligence: instead of needing one billion-dollar datacenter, local nodes distill breakthroughs into compact, verified capsules, so an insight solved in one town strengthens every connected brain nationwide.';
+  "Hi, I'm NOUSGENT. With your help, I believe we can attain super-intelligence that's bounded, for the betterment of humanity. " +
+  'Our mission is open, community-owned super-intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
+  'This is a community experiment in recursive self-improvement (RSI) using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
+  "NOUSGENT's five-lobe 2nd brain continually learns verified .dig knowledge capsules with 0% forgetting, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
+  'Communities across the country do not need a billion-dollar datacenter to achieve super-intelligence. ' +
+  "Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide. We'll call this decentralized recursive self-improvement (DRSI). " +
+  "Mirroring human neuroanatomy, dolfactory screens threats at the sensory edge in sub-millisecond time, dthalamus relays attention while enforcing sandboxed policy and M-of-N human sign-offs, and dbrain consolidates verified skills across five specialized cortical lobes with zero forgetting. " +
+  "Because N independent brains exchange composable .dig capsules over shi.liquidi.sh, insights combine across N-squared peer pathways while each generation's verified capsules become higher-order building blocks for the next, allowing intelligence to compound not only recursively, but quadratically across the network and exponentially over generations.";
 
 function parseMaskOpacityPct(rawVal) {
   if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
@@ -44,21 +49,35 @@ function normalizeSpeechText(rawText) {
   let text = String(rawText || '')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/https?:\/\//gi, '')
-    .replace(/\bia\.nousgent\.ai\b/gi, 'I A dot Noosjent dot A I')
-    .replace(/\bnousgent\.ai\b/gi, 'Noosjent dot A I')
+    .replace(/\bia\.nous?gent\.ai\b/gi, 'I A dot Noojent dot A I')
+    .replace(/\bnous?gent\.ai\b/gi, 'Noojent dot A I')
     .replace(/\bdbrain\.to\b/gi, 'dee-brain dot to')
     .replace(/\bdthalamus\.to\b/gi, 'dee-thalamus dot to')
     .replace(/\bdolfactory\.to\b/gi, 'dee-olfactory dot to')
     .replace(/\bcbrain\.to\b/gi, 'see-brain dot to')
     .replace(/@cbrain\/core/gi, 'see-brain core')
+    .replace(/@dbrain\/core/gi, 'dee-brain core')
+    .replace(/@dthalamus\/core/gi, 'dee-thalamus core')
+    .replace(/@dolfactory\/core/gi, 'dee-olfactory core')
+    .replace(/\bdolfactory\b/gi, 'dee-olfactory')
+    .replace(/\bdthalamus\b/gi, 'dee-thalamus')
+    .replace(/\bdbrain\b/gi, 'dee-brain')
+    .replace(/\bcbrain\b/gi, 'see-brain')
     .replace(/\bshi\.liquidi\.sh\b/gi, 'shi dot liquidi dot S H')
     .replace(/\bliquidi\.sh\b/gi, 'liquidi dot S H')
-    .replace(/\bNOUSGENT\b/gi, 'Noosjent')
+    .replace(/\bnous?gent\b/gi, 'Noojent')
+    .replace(/\bDRSI\b/g, 'D R S I')
+    .replace(/\bRSI\b/g, 'R S I')
+    .replace(/\bASI\b/g, 'A S I')
+    .replace(/\bM-of-N\b/gi, 'M of N')
+    .replace(/\b2nd\b/gi, 'second')
+    .replace(/\b0%\b/g, 'zero percent')
     .replace(/\$DIG\b/gi, 'DIG')
     .replace(/\.dig\b/gi, 'dot dig')
-    .replace(/\bCHIP-0043\b/gi, 'CHIP zero zero four three')
-    .replace(/-32044\b/g, 'minus thirty two zero forty four')
+    .replace(/\bCHIP-0043\b/gi, 'two-key human approval')
+    .replace(/-32044\b/g, 'safety lock')
     .replace(/\bPoST\b/g, 'Proof of Space Time')
+    .replace(/\bO\(N\^2\)/gi, 'order N squared')
     .replace(/\bO\(log\s*N\)/gi, 'order log N')
     .replace(/C\(G_\{?t\+1\}?\)\s*>\s*C\(G_t\)/g, 'capability strictly increases')
     .replace(/S\(G_\{?t\+1\}?\)\s*(?:>=|≥)\s*S\(G_t\)/g, 'safety never regresses')
@@ -70,8 +89,8 @@ function normalizeSpeechText(rawText) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  if (text.length > 620) {
-    const cut = text.slice(0, 620);
+  if (text.length > 1800) {
+    const cut = text.slice(0, 1800);
     const lastPeriod = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
     text = lastPeriod > 220 ? cut.slice(0, lastPeriod + 1) : `${cut.trim()}...`;
   }
@@ -81,6 +100,7 @@ function normalizeSpeechText(rawText) {
 /**
  * Applies clean Lagos / West African non-rhotic English IPA phonology compatible
  * with Kokoro-82M's 115-symbol vocabulary (preserving every IPA codepoint with 0 drops):
+ * - Enforces silent-'s' French/Greek "Nous" + "gent" -> `nˈuːʤənt` ("NEWGENT")
  * - Pure monophthongal vowels (`əʊ/oʊ -> oː`, `eɪ -> eː`)
  * - Dental fricative stopping (`ð -> d`, `θ -> t`, `"the" -> dɛ/di`)
  * - Syllable-timed `-ʃɔn` / `-ʒɔn` / `-mɛnt` endings
@@ -91,6 +111,9 @@ function toLagosAfrobeatIpa(rawIpa) {
     .replace(/kəkˈoːɹoʊ/g, 'kˈoʊkəɹoʊ')
     .replace(/dʒ/g, 'ʤ')
     .replace(/tʃ/g, 'ʧ')
+    .replace(/nˈuːsʤ/g, 'nˈuːʤ')
+    .replace(/nˈʊsʤ/g, 'nˈuːʤ')
+    .replace(/njˈuːʤənt/g, 'nˈuːʤənt')
     .replace(/(^|\s)ðə(?=\s|$)/g, '$1dɛ')
     .replace(/(^|\s)ðiː?(?=\s|$)/g, '$1di')
     .replace(/(^|\s)ðɪ(?=\s|$)/g, '$1di')

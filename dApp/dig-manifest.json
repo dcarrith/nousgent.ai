@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,11 +11,11 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-23T03:16:11.271Z",
+  "builtAt": "2026-11-23T04:08:39.382Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0x319a0fe5cb21668f1bc1b6628023ae8695a820ad40834fe63118d2a58964456c",
+    "manifestTreeSha256": "0x6b06a9c073d566056ba528628fbef193811a995f86c2400120c386991815a1cd",
     "totalFiles": 23,
-    "totalBytes": 3279539
+    "totalBytes": 3281480
   },
   "files": [
     {
@@ -34,14 +34,14 @@
       "sha256": "dd1f0c6432bbd3da59d49b2a227498b688a71d50e301a56144ffaa8eef5267ca"
     },
     {
-      "path": "assets/index-CsA4aW1_.js",
-      "bytes": 136880,
-      "sha256": "53f2b85ef3d567fc5f5c7ec771ccd2bc039bfa441b179eb3a33dc18419c487e9"
+      "path": "assets/index-B5VQy7cZ.js",
+      "bytes": 138277,
+      "sha256": "9fbe119f3a7511f9f907964e7a8a351789e9ae591b701f4a57ed6be68f4401b8"
     },
     {
-      "path": "assets/index-CtnAtw7b.css",
-      "bytes": 45274,
-      "sha256": "0a7a13429273b11e9f5c8eaf7cc8702ff5ca92e3ac5000fac273c8c4791ba37b"
+      "path": "assets/index-LpN3ppyz.css",
+      "bytes": 45818,
+      "sha256": "43e8a3ec02e36fe02307195c3c2ec040af3e3c80a992facb0768099d64340fb3"
     },
     {
       "path": "assets/react-vendor-BxSl43nu.js",
@@ -96,7 +96,7 @@
     {
       "path": "index.html",
       "bytes": 5755,
-      "sha256": "6ae56745a7ec4ed43dcff012bb31d79572dca3cc1ad20a7408906d4f3490ba98"
+      "sha256": "9949758b0552987a6539eeaff9a2da6274e3f3d57610c2261ee36d93d682bc8d"
     },
     {
       "path": "logo-wordmark.svg",

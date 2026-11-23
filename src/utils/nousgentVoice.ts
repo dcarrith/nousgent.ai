@@ -8,10 +8,21 @@
  *   the welcome WAV and starting playback immediately (or on first gesture if gated).
  */
 
-export const WELCOME_SPOKEN_MESSAGE =
-  'Welcome to Nousgent. Our mission is open, community-owned intelligence that serves the public rather than closed corporate silos. ' +
-  'My five-lobe Second Brain continually learns verified knowledge capsules without forgetting past skills, protected by pre-cortical threat screening and two-key human approval. ' +
-  'And yes, communities across the country really can pool their resources toward shared super-intelligence: instead of needing one billion-dollar datacenter, local nodes distill breakthroughs into compact, verified capsules, so an insight solved in one town strengthens every connected brain nationwide.';
+export const WELCOME_INTRO_LINE =
+  "Hi, I'm NOUSGENT. With your help, I believe we can attain super-intelligence that's bounded, for the betterment of humanity.";
+
+export const WELCOME_MISSION_PARAGRAPH =
+  'Our mission is open, community-owned super-intelligence that belongs to the people rather than closed corporate silos rented out in perpetuity. ' +
+  'This is a community experiment in recursive self-improvement (RSI) using a decentralized AI stack which includes the agent-to-agent liquid intelligence market shi.liquidi.sh. ' +
+  "NOUSGENT's five-lobe 2nd brain continually learns verified .dig knowledge capsules with 0% forgetting, guarded by pre-cortical threat screening and humans-in-the-loop M-of-N key approvals. " +
+  'Communities across the country do not need a billion-dollar datacenter to achieve super-intelligence. ' +
+  "Together, by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide. We'll call this decentralized recursive self-improvement (DRSI).";
+
+export const WELCOME_BRAIN_COMPOUNDING_NOTE =
+  'Mirroring human neuroanatomy, dolfactory screens threats at the sensory edge in sub-millisecond time, dthalamus relays attention while enforcing sandboxed policy and M-of-N human sign-offs, and dbrain consolidates verified skills across five specialized cortical lobes with zero forgetting. ' +
+  "Because N independent brains exchange composable .dig capsules over shi.liquidi.sh, insights combine across N-squared peer pathways while each generation's verified capsules become higher-order building blocks for the next, allowing intelligence to compound not only recursively, but quadratically across the network and exponentially over generations.";
+
+export const WELCOME_SPOKEN_MESSAGE = `${WELCOME_INTRO_LINE} ${WELCOME_MISSION_PARAGRAPH} ${WELCOME_BRAIN_COMPOUNDING_NOTE}`;
 
 export interface SpeakCallbacks {
   readonly onStart?: () => void;
@@ -99,7 +110,18 @@ function fallbackBrowserSpeechSynthesis(text: string, token: number, callbacks: 
     return;
   }
   try {
-    const utter = new SpeechSynthesisUtterance(text);
+    const phoneticText = text
+      .replace(/\bia\.nous?gent\.ai\b/gi, 'I A dot Noo-jent dot A I')
+      .replace(/\bnous?gent\.ai\b/gi, 'Noo-jent dot A I')
+      .replace(/\bnous?gent\b/gi, 'Noo-jent')
+      .replace(/\bdolfactory\b/gi, 'dee-olfactory')
+      .replace(/\bdthalamus\b/gi, 'dee-thalamus')
+      .replace(/\bdbrain\b/gi, 'dee-brain')
+      .replace(/\bshi\.liquidi\.sh\b/gi, 'shi dot liquidi dot S H')
+      .replace(/\bDRSI\b/g, 'D R S I')
+      .replace(/\bRSI\b/g, 'R S I')
+      .replace(/\bM-of-N\b/gi, 'M of N');
+    const utter = new SpeechSynthesisUtterance(phoneticText);
     const voices = window.speechSynthesis.getVoices?.() || [];
     const preferred =
       voices.find((v) => /^en[-_](NG|GH|KE|ZA)/i.test(v.lang)) ||

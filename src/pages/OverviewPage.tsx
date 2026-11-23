@@ -7,6 +7,9 @@ import {
 import { NousgentCbrainMaskStage } from '../components/NousgentCbrainMaskStage';
 import { MissionSnapshot, playQuindarBeep } from '../hooks/useNousgentMission';
 import {
+  WELCOME_BRAIN_COMPOUNDING_NOTE,
+  WELCOME_INTRO_LINE,
+  WELCOME_MISSION_PARAGRAPH,
   WELCOME_SPOKEN_MESSAGE,
   speakNousgentAloud,
   stopNousgentVoice,
@@ -105,15 +108,12 @@ function coerceLobeId(raw: string): CognitiveLobeId {
 const INITIAL_EXCHANGE: DialogueExchange = {
   id: 1,
   callsign: 'WELCOME',
-  prompt: 'Welcome to NOUSGENT — how can communities pool resources to build shared super-intelligence?',
+  prompt: WELCOME_INTRO_LINE,
   spokenSummary: WELCOME_SPOKEN_MESSAGE,
-  reply:
-    'Welcome to NOUSGENT. Our mission is open, community-owned intelligence that belongs to citizens rather than closed corporate silos. ' +
-    'My five-lobe Second Brain continually learns verified .dig knowledge capsules with 0% forgetting, guarded by pre-cortical threat screening and two-key human approval. ' +
-    'Communities across the country do not need a billion-dollar datacenter to achieve super-intelligence together: by running local nodes and contributing compact, verified capsules into one shared memory field, a breakthrough solved in one neighborhood strengthens every connected brain nationwide.',
-  whatHappened: 'Connected to live 5-organ cluster and loaded Welcome briefing.',
+  reply: `${WELCOME_MISSION_PARAGRAPH}\n\n${WELCOME_BRAIN_COMPOUNDING_NOTE}`,
+  whatHappened: 'Connected to live 5-organ DRSI cluster and loaded Welcome briefing.',
   answerMode: 'SOVEREIGN_CORTEX_KNOWLEDGE',
-  modeBadge: '◈ WELCOME',
+  modeBadge: '◈ DRSI WELCOME',
   latencyMs: 0.14,
   oscillationBand: 'α/γ 36.4 Hz',
   activeLobes: ['semantic', 'procedural', 'alignment'],
@@ -123,10 +123,10 @@ const INITIAL_EXCHANGE: DialogueExchange = {
   deflected: false,
   organTrace: [
     { organ: 'Olfactory CN-I', role: 'Sensory Threat Screening', verdict: 'READY', latencyMs: 0 },
-    { organ: 'Thalamus Ring-0', role: 'Policy & Two-Key Safety Lock', verdict: 'READY', latencyMs: 0 },
+    { organ: 'Thalamus Ring-0', role: 'Policy & M-of-N Human Approval', verdict: 'READY', latencyMs: 0 },
     { organ: '5-Lobe Cortex', role: 'Zero-Forgetting Memory WAL', verdict: 'READY', latencyMs: 0 },
     { organ: '3D Connectome', role: 'Synaptic Firing', verdict: 'ACTIVE', latencyMs: 0.14 },
-    { organ: '$DIG Exchange', role: 'Community Royalties', verdict: 'READY', latencyMs: 0 }
+    { organ: '$DIG Exchange', role: 'shi.liquidi.sh Market', verdict: 'READY', latencyMs: 0 }
   ]
 };
 
@@ -216,10 +216,10 @@ export function OverviewPage({
       return;
     }
     try {
-      if (window.sessionStorage.getItem('nousgent:welcome-played-v1') === '1') {
+      if (window.sessionStorage.getItem('nousgent:welcome-played-v2') === '1') {
         return;
       }
-      window.sessionStorage.setItem('nousgent:welcome-played-v1', '1');
+      window.sessionStorage.setItem('nousgent:welcome-played-v2', '1');
     } catch {
       /* sessionStorage unavailable */
     }
@@ -576,18 +576,18 @@ export function OverviewPage({
       {initialTab === 'ask' ? (
         <section className="welcome-mission-card" aria-labelledby="welcome-mission-heading">
           <div className="welcome-mission-header">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minInlineSize: 0 }}>
-              <h1 id="welcome-mission-heading" style={{ margin: 0, fontSize: '20px', fontWeight: 700 }}>
-                Welcome to NOUSGENT
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minInlineSize: 0 }}>
+              <h1 id="welcome-mission-heading" className="welcome-mission-title">
+                Hi, I&apos;m <span className="text-pistachio">NOUSGENT</span>.
               </h1>
-              <p className="text-muted" style={{ margin: 0, fontSize: '13px', lineHeight: 1.5 }}>
-                Open, community-owned intelligence powered by a continually learning Second Brain and governed by citizens.
+              <p className="welcome-mission-lead">
+                With your help, I believe we can attain super-intelligence that&apos;s bounded, for the betterment of humanity.
               </p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               {welcomeAutoplayDeferred && !voiceSpeaking ? (
-                <span className="mono-xs text-jade" style={{ fontSize: '10.5px' }}>
+                <span className="mono-xs text-jade" style={{ fontSize: '0.66rem' }}>
                   Click anywhere or press Play Welcome to hear audio
                 </span>
               ) : null}
@@ -595,7 +595,7 @@ export function OverviewPage({
                 type="button"
                 data-voice-cancel={voiceSpeaking ? 'true' : undefined}
                 className={`btn-spatial ${voiceSpeaking ? 'btn-glass' : 'btn-pistachio'}`}
-                style={{ minBlockSize: '32px', padding: '0.28rem 0.78rem', fontSize: '11.5px' }}
+                style={{ minBlockSize: '2rem', padding: '0.28rem 0.78rem', fontSize: '0.72rem' }}
                 onClick={() => {
                   if (voiceSpeaking) {
                     setWelcomeAutoplayDeferred(false);
@@ -614,31 +614,39 @@ export function OverviewPage({
             </div>
           </div>
 
+          <p className="welcome-mission-prose">{WELCOME_MISSION_PARAGRAPH}</p>
+
           <div className="welcome-pillars-grid">
             <div className="welcome-pillar-box">
-              <div className="mono-xs text-pistachio" style={{ fontWeight: 700, fontSize: '10.5px' }}>
-                1. PUBLIC MISSION
+              <div className="mono-xs text-pistachio" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
+                1. NEUROANATOMY · DOLFACTORY → DTHALAMUS → DBRAIN
               </div>
-              <p style={{ margin: 0, fontSize: '12.5px', lineHeight: 1.48, color: 'var(--color-ink-muted)' }}>
-                Keep frontier intelligence open, auditable, and accountable to local communities rather than locked inside private corporate silos.
+              <p>
+                Modeled on the human brain, <code>dolfactory</code> screens threats at the sensory edge in sub-millisecond time,{' '}
+                <code>dthalamus</code> relays attention while enforcing sandboxed policy and <code>M-of-N</code> human approvals, and{' '}
+                <code>dbrain</code> consolidates skills across five cortical lobes with <code>0%</code> forgetting.
               </p>
             </div>
 
             <div className="welcome-pillar-box">
-              <div className="mono-xs text-jade" style={{ fontWeight: 700, fontSize: '10.5px' }}>
-                2. SELF-IMPROVING 2ND BRAIN
+              <div className="mono-xs text-jade" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
+                2. QUADRATIC NETWORK COMPOUNDING (N²)
               </div>
-              <p style={{ margin: 0, fontSize: '12.5px', lineHeight: 1.48, color: 'var(--color-ink-muted)' }}>
-                Five specialized memory lobes absorb verified <code>.dig</code> knowledge capsules with 0% forgetting, guarded by threat screening and two-key human sign-off.
+              <p>
+                As <code>N</code> independent community brains trade verified <code>.dig</code> capsules across{' '}
+                <code>shi.liquidi.sh</code>, local breakthroughs recombine across <code>N(N - 1) / 2</code> peer pathways — unlocking
+                massively distributed, low-latency capability without a centralized datacenter.
               </p>
             </div>
 
             <div className="welcome-pillar-box">
-              <div className="mono-xs text-bronze" style={{ fontWeight: 700, fontSize: '10.5px' }}>
-                3. POOLING NATIONWIDE
+              <div className="mono-xs text-bronze" style={{ fontWeight: 700, fontSize: '0.66rem' }}>
+                3. RECURSIVE &amp; EXPONENTIAL DRSI
               </div>
-              <p style={{ margin: 0, fontSize: '12.5px', lineHeight: 1.48, color: 'var(--color-ink-muted)' }}>
-                Communities don&apos;t need one billion-dollar datacenter: local nodes distill solved breakthroughs into compact capsules so an insight verified in one town upgrades every connected brain nationwide.
+              <p>
+                Every verified <code>.dig</code> capsule becomes a permanent, higher-order building block for the next generation (
+                <code>0%</code> forgetting + <code>O(log N)</code> rollback), turning quadratic network sharing into recursive,
+                exponentially compounding gains that remain human-bounded.
               </p>
             </div>
           </div>
@@ -898,7 +906,17 @@ export function OverviewPage({
                       &ldquo;{exchange.prompt}&rdquo;
                     </div>
 
-                    <p style={{ margin: 0, fontSize: '13.5px', lineHeight: 1.55, color: 'var(--color-ink)', fontWeight: 500 }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '0.84375rem',
+                        lineHeight: 1.55,
+                        color: 'var(--color-ink)',
+                        fontWeight: 500,
+                        whiteSpace: 'pre-line',
+                        textWrap: 'pretty'
+                      }}
+                    >
                       {exchange.reply}
                     </p>
 

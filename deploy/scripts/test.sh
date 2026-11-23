@@ -605,14 +605,21 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
       host: 'nousgent.ai',
       body: { text: 'I am NOUSGENT speaking aloud with verified neural clarity.' }
     });
+    const { normalizeSpeechText, toLagosAfrobeatIpa, DEFAULT_WELCOME_SPEECH } = require('./server/voice-synthesizer.js');
+    const normCheck = normalizeSpeechText("Hi, I'm NOUSGENT. Nougent's DRSI uses M-of-N approvals.");
     check(
-      'POST /api/nousgent/tts synthesizes 22.05 kHz RIFF WAVE audio & rejects empty input (400)',
+      'POST /api/nousgent/tts synthesizes 24 kHz RIFF WAVE audio, pronounces NOUSGENT as Noojent (/nˈuːʤənt/), & rejects empty input (400)',
       ttsEmpty.status === 400 &&
         ttsWav.status === 200 &&
         ttsWav.headers['content-type'] === 'audio/wav' &&
         ttsWav.buf.length > 4000 &&
         ttsWav.buf.subarray(0, 4).toString('ascii') === 'RIFF' &&
-        ttsWav.buf.subarray(8, 12).toString('ascii') === 'WAVE'
+        ttsWav.buf.subarray(8, 12).toString('ascii') === 'WAVE' &&
+        normCheck.includes("Hi, I'm Noojent.") &&
+        normCheck.includes("Noojent's D R S I uses M of N") &&
+        !normCheck.includes('Noosjent') &&
+        toLagosAfrobeatIpa('nˈuːsʤənt') === 'nˈuːʤənt' &&
+        DEFAULT_WELCOME_SPEECH.startsWith("Hi, I'm NOUSGENT.")
     );
 
     const mcpCall = await request(port, '/api/mcp', {
