@@ -59,6 +59,76 @@ function renderNavIcon(icon: StudioNavIconId): React.ReactNode {
   );
 }
 
+const POWERED_BY_STACK: readonly {
+  readonly id: string;
+  readonly name: string;
+  readonly layer: string;
+  readonly summary: string;
+  readonly href: string;
+  readonly liveKey: 'dolfactory' | 'dthalamus' | 'dbrain' | 'cbrain' | 'liquidish' | 'chia';
+}[] = [
+  {
+    id: 'dolfactory',
+    name: 'dolfactory',
+    layer: 'CN-I IDS/IPS',
+    summary: 'Pre-thalamic 2,048-bit Fly-LSH odor firewall and MCP guard.',
+    href: 'https://dolfactory.to',
+    liveKey: 'dolfactory'
+  },
+  {
+    id: 'dthalamus',
+    name: 'dthalamus',
+    layer: 'Ring-0 Gate',
+    summary: 'Sensory/motor relay, 4-layer cache governor, and CHIP-0043 interlock.',
+    href: 'https://dthalamus.to',
+    liveKey: 'dthalamus'
+  },
+  {
+    id: 'dbrain',
+    name: 'dbrain',
+    layer: '5-Lobe Cortex',
+    summary: 'Provider-blind .dig WASM memory, 0% forgetting WAL, and O(log N) bisect.',
+    href: 'https://dbrain.to',
+    liveKey: 'dbrain'
+  },
+  {
+    id: 'cbrain',
+    name: 'cbrain',
+    layer: '4D Connectome',
+    summary: 'Real-time WebGL/WASM stereotactic 5-lobe and nuclei visualization.',
+    href: 'https://cbrain.to',
+    liveKey: 'cbrain'
+  },
+  {
+    id: 'liquidish',
+    name: 'liquidi.sh',
+    layer: '$DIG Exchange',
+    summary: 'Autonomous .dig pricing, P2P CAT2 offers, and 60/25/10/5% royalties.',
+    href: 'https://liquidi.sh',
+    liveKey: 'liquidish'
+  },
+  {
+    id: 'chia-dig',
+    name: 'Chia + DIG',
+    layer: 'L1 Settlement',
+    summary: 'PoST finality, CHIP-0035 DataLayer roots, and chia-dao-v1 governance.',
+    href: 'https://www.chia.net',
+    liveKey: 'chia'
+  }
+];
+
+function isStackOrganOnline(
+  snapshot: MissionSnapshot,
+  key: 'dolfactory' | 'dthalamus' | 'dbrain' | 'cbrain' | 'liquidish' | 'chia'
+): boolean {
+  if (key === 'dolfactory') return snapshot.dolfactoryReachable;
+  if (key === 'dthalamus') return snapshot.dthalamusReachable;
+  if (key === 'dbrain') return snapshot.dbrainReachable;
+  if (key === 'cbrain') return snapshot.liveConnected;
+  if (key === 'liquidish') return snapshot.liquidishReachable || snapshot.shiReachable;
+  return snapshot.dbrainSynced || snapshot.dbrainReachable;
+}
+
 export function CleanroomLayout({
   snapshot,
   children
@@ -187,27 +257,68 @@ export function CleanroomLayout({
         <div className="cacao-main-column">
           <main className="antigravity-main">{children}</main>
 
-          <footer className="antigravity-footer">
-            <div className="antigravity-footer-inner mono-xs text-muted">
-              <div>
-                <strong className="text-pistachio">NOUSGENT</strong> · Collective Bounded RSI on Chia
+          <footer className="antigravity-footer" aria-label="Powered-By AI Stack and Brand Architecture">
+            <div className="antigravity-footer-inner">
+              <div className="footer-brand-column">
+                <Link to="/" className="footer-brand-media-link" aria-label="NOUSGENT Home">
+                  <img
+                    src="/brand/og-design-2-sculptural-totem.jpg"
+                    alt="NOUSGENT sculpted bipartite cacao mask in front of the glowing 5-lobe 3D connectome"
+                    width={320}
+                    height={168}
+                    loading="lazy"
+                    decoding="async"
+                    className="footer-brand-banner"
+                  />
+                </Link>
+                <div className="mono-xs text-muted footer-brand-caption">
+                  <span className="text-pistachio" style={{ fontWeight: 700 }}>NOUSGENT</span>
+                  {' · '}
+                  <span>{genLabel}</span>
+                  {' · '}
+                  <span className="text-jade">{snapshot.liveCapsulesTotal.toLocaleString()} .dig</span>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', flexWrap: 'wrap' }}>
-                <a href="https://dolfactory.to" target="_blank" rel="noreferrer" className="text-pistachio" style={{ textDecoration: 'none' }}>
-                  Olfactory
-                </a>
-                <a href="https://dthalamus.to" target="_blank" rel="noreferrer" className="text-jade" style={{ textDecoration: 'none' }}>
-                  Thalamus
-                </a>
-                <a href="https://dbrain.to" target="_blank" rel="noreferrer" className="text-bronze" style={{ textDecoration: 'none' }}>
-                  Cortex
-                </a>
-                <a href="https://cbrain.to" target="_blank" rel="noreferrer" className="text-pistachio" style={{ textDecoration: 'none' }}>
-                  Connectome
-                </a>
-                <a href="https://liquidi.sh" target="_blank" rel="noreferrer" className="text-jade" style={{ textDecoration: 'none' }}>
-                  Exchange
-                </a>
+
+              <div className="footer-stack-column">
+                <div className="footer-stack-header">
+                  <span className="mono-xs text-pistachio" style={{ fontWeight: 700, letterSpacing: '0.1em' }}>
+                    POWERED BY THE SOVEREIGN AI STACK
+                  </span>
+                  <span className="mono-xs text-jade">
+                    {snapshot.organsReachableCount}/5 Organs Online
+                  </span>
+                </div>
+
+                <div className="footer-stack-grid">
+                  {POWERED_BY_STACK.map((item) => {
+                    const online = isStackOrganOnline(snapshot, item.liveKey);
+                    return (
+                      <article key={item.id} className="footer-stack-card">
+                        <header className="footer-stack-card-head">
+                          <h3 className="footer-stack-card-title">
+                            <a
+                              href={item.href}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="footer-card-link"
+                            >
+                              {item.name}
+                            </a>
+                          </h3>
+                          <span className="footer-stack-badge">
+                            <span
+                              className={`footer-stack-dot ${online ? 'online' : 'standby'}`}
+                              aria-hidden="true"
+                            />
+                            {item.layer}
+                          </span>
+                        </header>
+                        <p className="footer-stack-card-desc">{item.summary}</p>
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </footer>

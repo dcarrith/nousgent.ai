@@ -1439,23 +1439,183 @@ textarea.spatial-input {
   justify-content: space-between;
 }
 
-/* Studio Footer */
+/* Studio Footer — Powered-By Sovereign AI Stack & Brand Plaque */
 .antigravity-footer {
   position: relative;
   z-index: 10;
-  background: rgb(18 10 7 / 0.95);
+  background: linear-gradient(180deg, rgb(22 13 9 / 0.96) 0%, rgb(14 8 6 / 0.99) 100%);
   border-block-start: 1px solid var(--color-outline);
-  padding: 1.25rem 1.5rem;
+  padding: 1.65rem 1.5rem 1.85rem;
 }
 
 .antigravity-footer-inner {
   max-inline-size: 1440px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .antigravity-footer-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.2rem;
+  }
+}
+
+.footer-brand-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-inline-size: 340px;
+}
+
+.footer-brand-media-link {
+  display: block;
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.footer-brand-banner {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid var(--color-outline-strong);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.5);
+  transition: border-color 0.2s ease;
+}
+
+.footer-brand-media-link:hover > .footer-brand-banner,
+.footer-brand-media-link:focus-visible > .footer-brand-banner {
+  border-color: var(--color-pistachio);
+}
+
+.footer-brand-caption {
+  font-size: 10.5px;
+  padding-inline: 0.15rem;
+}
+
+.footer-stack-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-inline-size: 0;
+}
+
+.footer-stack-header {
   display: flex;
   flex-wrap: wrap;
+  align-items: safe center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.footer-stack-grid {
+  display: grid;
+  inline-size: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr));
+  grid-auto-rows: auto 1fr;
+  gap: 0.65rem;
+}
+
+.footer-stack-card {
+  grid-row: span 2;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-rows: subgrid;
+  row-gap: 0.32rem;
+  padding: 0.72rem 0.85rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.footer-stack-card:has(a.footer-card-link) {
+  position: relative;
+}
+
+.footer-stack-card a.footer-card-link {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.footer-stack-card a.footer-card-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.footer-stack-card a.footer-card-link:focus-visible {
+  outline: none;
+}
+
+.footer-stack-card:has(a.footer-card-link:focus-visible) {
+  outline: 2px solid var(--color-pistachio);
+  outline-offset: 2px;
+  border-color: var(--color-pistachio);
+}
+
+.footer-stack-card:has(a.footer-card-link:hover) {
+  border-color: var(--color-outline-strong);
+  background: var(--color-surface-low);
+}
+
+.footer-stack-card:has(a.footer-card-link:hover) a.footer-card-link {
+  color: var(--color-pistachio);
+}
+
+.footer-stack-card-head {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.footer-stack-card-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.footer-stack-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--color-jade);
+  white-space: nowrap;
+}
+
+.footer-stack-dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 9999px;
+  flex: none;
+}
+
+.footer-stack-dot.online {
+  background: var(--color-jade);
+  box-shadow: 0 0 6px var(--color-jade);
+}
+
+.footer-stack-dot.standby {
+  background: var(--color-bronze);
+}
+
+.footer-stack-card-desc {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.42;
+  color: var(--color-ink-muted);
 }
 
 @media (forced-colors: active) {
