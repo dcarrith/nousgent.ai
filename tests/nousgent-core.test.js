@@ -12,10 +12,10 @@ test('1. Bounded ASI Readiness Index (BARI), Zero-Seed Defaults & Live Ecosystem
   assert.equal(nousgent.FLAGSHIP_AGENT_ID, 'NOUSGENT');
 
   const subs = nousgent.getSubmoduleVersions();
-  assert.equal(subs.dolfactory, '1.1.1');
-  assert.equal(subs.dthalamus, '1.3.1');
-  assert.equal(subs.dbrain, '3.17.1');
-  assert.equal(subs.cbrain, '3.16.0');
+  assert.equal(subs.dolfactory, '1.2.0');
+  assert.equal(subs.dthalamus, '1.6.0');
+  assert.equal(subs.dbrain, '3.19.0');
+  assert.equal(subs.cbrain, '3.18.0');
 
   // Default BARI starts with zero synthetic/fake counts
   const baseBari = nousgent.computeBoundedAsiReadinessIndex();
@@ -733,6 +733,70 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
 
     const memEngine = nousgent.createNousgentEngine();
     assert.equal(memEngine.listMissions().length, 3);
+
+    // GUARD + SIM v1.15.0: Soft-HURT rejection, [iff] auto-scoping, off-leaf Rejection Ledger, CRDT sync & FROZEN_SERVE pointer
+    assert.equal(memEngine.recordRejectedEdit(null).ok, false);
+    const defaultPtr = memEngine.getFrozenServePointer(0);
+    assert.equal(defaultPtr.pinnedGeneration, 1);
+    const zeroAdvPtr = memEngine.advanceFrozenServePointer({ generation: 0 });
+    assert.equal(zeroAdvPtr.pinnedGeneration, 1);
+    const advancedPtr = memEngine.advanceFrozenServePointer({ generation: 7, merkleRoot: '0xabc' });
+    assert.equal(advancedPtr.pinnedGeneration, 7);
+    assert.equal(advancedPtr.merkleRoot, '0xabc');
+    const keepRootPtr = memEngine.advanceFrozenServePointer({ generation: 8, merkleRoot: '' });
+    assert.equal(keepRootPtr.merkleRoot, '0xabc');
+    const fallbackRootPtr = memEngine.advanceFrozenServePointer();
+    assert.equal(fallbackRootPtr.pinnedGeneration, 8);
+    const emptyRootEngine = nousgent.createNousgentEngine();
+    emptyRootEngine.advanceFrozenServePointer({ generation: 2, merkleRoot: '' });
+    assert.equal(emptyRootEngine.getFrozenServePointer(2, '0xlive').merkleRoot, '0xlive');
+    emptyRootEngine.close();
+
+    const softHurtBlocked = memEngine.evaluateTeachSubmission({
+      title: 'Overly Broad Retry Rule',
+      content: 'Retry every failing database transaction indefinitely across all services.',
+      lobe: 'procedural',
+      tags: ['organ:thalamus'],
+      simLineage: { rationale: 'Attempted DB retry fix', sourceModelFamily: 'claude', scopeKind: 'domain_invariant' },
+      replayTasks: [
+        { checkId: 'db-1', beforeScorePct: 50, afterScorePct: 90, runtime: 'node' },
+        { checkId: 'ring0-timeout', beforeScorePct: 100, afterScorePct: 40, runtime: 'node' }
+      ]
+    });
+    assert.equal(softHurtBlocked.ok, false);
+    assert.equal(softHurtBlocked.code, 'SOFT_HURT_REJECTED');
+    assert.equal(memEngine.listRejectedEdits(0).length, 1);
+    assert.equal(memEngine.listRejectedEdits().length, 1);
+
+    const autoScopedOk = memEngine.evaluateTeachSubmission({
+      title: 'Scoped Pytest Async Retry',
+      content: 'Wrap pytest async fixture teardown in bounded 2s timeout.',
+      lobe: 'procedural',
+      simLineage: { rationale: 'Fix flaky pytest async loop', sourceModelFamily: 'qwen', scopeKind: 'model_quirk' },
+      replayTasks: [
+        { checkId: 'py-fix', beforeScorePct: 40, afterScorePct: 95, runtime: 'python' },
+        { checkId: 'rs-reg', beforeScorePct: 100, afterScorePct: 50, runtime: 'rust' }
+      ]
+    });
+    assert.equal(autoScopedOk.ok, true);
+    assert.equal(autoScopedOk.softHurt.autoScopedIff, true);
+    assert.equal(autoScopedOk.simLineage.sourceModelFamily, 'qwen');
+
+    const bareDentateOk = memEngine.evaluateTeachSubmission({
+      title: 'Bare Dentate Check',
+      content: 'Ensure minimal signed integer encoding in CLVM puzzles.'
+    });
+    assert.equal(bareDentateOk.ok, true);
+
+    const syncTarget = nousgent.createNousgentEngine();
+    const snapWithRej = memEngine.exportReplicaSnapshot();
+    const mergedRej = syncTarget.mergeReplicaSnapshot({
+      ...snapWithRej,
+      rejectedEdits: [...snapWithRej.rejectedEdits, { rejectionId: 'BAD' }]
+    });
+    assert.equal(mergedRej.rejectedEditsCount, 1);
+    syncTarget.close();
+
     memEngine.close();
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });

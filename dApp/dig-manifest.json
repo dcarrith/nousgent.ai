@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.14.7",
+  "version": "1.15.0",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,17 +11,17 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-23T21:17:19.128Z",
+  "builtAt": "2026-11-24T02:18:39.234Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0xb8a42c0e2e3d69c2fb21a871d0c9dbe8bb73fb9c0f0564eef9685e2d09d63f4f",
+    "manifestTreeSha256": "0x08e8709bb7bd80a7e0de830d0cb16c9708064ddbe5adcad085135973cd7b70b3",
     "totalFiles": 23,
-    "totalBytes": 3278088
+    "totalBytes": 3304509
   },
   "files": [
     {
       "path": "api/dbrain-core-docs.json",
-      "bytes": 859781,
-      "sha256": "a4cfab50367173ebfa7fbd8d308b0a0f494ec22f15e4b3c036d0e5427e4fa298"
+      "bytes": 881380,
+      "sha256": "cb91b35030d35ef768c139b4e082bc4ff72e79c23cec8f44d3acded142aaed16"
     },
     {
       "path": "apple-touch-icon.png",
@@ -29,19 +29,19 @@
       "sha256": "ff5bc6c261999264bdc32d1ebb1d40a551b0f585c6c86ac5da0ae23a359c7332"
     },
     {
-      "path": "assets/cbrain-4d-CxfL__2P.js",
-      "bytes": 42901,
-      "sha256": "dd1f0c6432bbd3da59d49b2a227498b688a71d50e301a56144ffaa8eef5267ca"
-    },
-    {
-      "path": "assets/index-CVLUc1jL.js",
-      "bytes": 136027,
-      "sha256": "3f373261fe09fecc949441b401d172312f72be633e1f20608112f0de5994adbc"
+      "path": "assets/cbrain-4d-4V_lWxKo.js",
+      "bytes": 42949,
+      "sha256": "38599fb84ada9c89da634b71551b0ec454388afe5d0678e5b9ccda59c1635202"
     },
     {
       "path": "assets/index-CYMXw76M.css",
       "bytes": 44504,
       "sha256": "499c18215d7cf2b442f24cff83479772ee045318f988dc3cd6f8ae55d271e844"
+    },
+    {
+      "path": "assets/index-d0NYnZwU.js",
+      "bytes": 140801,
+      "sha256": "9fa67e1cb5d319941e1d2a60057354e55344454457699a1976f4d030b1e7037f"
     },
     {
       "path": "assets/react-vendor-BxSl43nu.js",
@@ -96,7 +96,7 @@
     {
       "path": "index.html",
       "bytes": 5927,
-      "sha256": "dc58f06d5288724b243a8b2e2c472d7227f1f768c8943f4a6807de1f297555fd"
+      "sha256": "33a4ed8b7993de084a19ef777f7057e8454de140e2ab67c7720662a917bd1bb5"
     },
     {
       "path": "logo-wordmark.svg",

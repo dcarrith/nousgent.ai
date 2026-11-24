@@ -712,6 +712,9 @@ function createLiveEcosystemClient(env = process.env) {
             withinAutoAllowance: item.autoPricing?.withinShiDaoAllowanceCap !== false,
             estimatedGainPct,
             gainPer100Dig,
+            helpedChecksCount: Math.max(1, Math.round(sweBenchLiftPct > 0 ? sweBenchLiftPct / 3 : 2)),
+            hurtChecksCount: 0,
+            autoScopedIff: highDriftRisk,
             capsuleUrl: item.dbrainCapsuleId
               ? `https://dbrain.to/dig/${encodeURIComponent(String(item.dbrainCapsuleId))}.json`
               : ''
@@ -865,7 +868,7 @@ function createLiveEcosystemClient(env = process.env) {
     return res.ok && res.data?.priceDig !== undefined ? Number(res.data.priceDig) : null;
   }
 
-  async function mintTeachCapsule({ title, content, lobe, authorDid, derivationTokens }) {
+  async function mintTeachCapsule({ title, content, lobe, authorDid, derivationTokens, simLineage, dentateFacets }) {
     if (offlineTest) return { ok: false, error: 'Offline mode' };
     const res = await fetchJsonWithFallback(targets.dbrain, '/api/mcp', {
       method: 'POST',
@@ -880,6 +883,8 @@ function createLiveEcosystemClient(env = process.env) {
             title,
             content,
             lobe,
+            ...(simLineage ? { simLineage } : {}),
+            ...(dentateFacets ? { dentateFacets } : {}),
             tags: [
               'teach-nousgent',
               `author-did:${authorDid}`,

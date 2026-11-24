@@ -54,7 +54,22 @@ export interface AutonomousCandidateCapsuleItem {
   readonly withinAutoAllowance: boolean;
   readonly estimatedGainPct: number;
   readonly gainPer100Dig: number;
+  readonly helpedChecksCount?: number;
+  readonly hurtChecksCount?: number;
+  readonly autoScopedIff?: boolean;
   readonly capsuleUrl: string;
+}
+
+export interface RejectedEditItem {
+  readonly rejectionId: string;
+  readonly problemClusterId: string;
+  readonly diffHashHex: string;
+  readonly title: string;
+  readonly hurtCheckIds: readonly string[];
+  readonly netGainPct: number;
+  readonly reason: string;
+  readonly authorDid: string;
+  readonly createdAtIso: string;
 }
 
 export interface CommunityLeaderboardEntry {
@@ -193,6 +208,8 @@ export interface MissionSnapshot {
   readonly missions: readonly SwarmMissionItem[];
   readonly blindSpotQuests: readonly BlindSpotQuestItem[];
   readonly autonomousCandidateQueue: readonly AutonomousCandidateCapsuleItem[];
+  readonly rejectedEdits: readonly RejectedEditItem[];
+  readonly frozenServeGeneration: number;
   readonly evolutionsStreamConnected: boolean;
   readonly evolutionsStreamSeq: number;
 }
@@ -287,6 +304,8 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
   missions: [],
   blindSpotQuests: [],
   autonomousCandidateQueue: [],
+  rejectedEdits: [],
+  frozenServeGeneration: 1,
   evolutionsStreamConnected: false,
   evolutionsStreamSeq: 0
 };
@@ -441,6 +460,8 @@ export function useNousgentMission() {
         autonomousCandidateQueue: Array.isArray(liq.autonomousCandidateQueue)
           ? liq.autonomousCandidateQueue
           : [],
+        rejectedEdits: Array.isArray(d.rejectedEdits) ? d.rejectedEdits : [],
+        frozenServeGeneration: Number(d.frozenServe?.pinnedGeneration || db.primaryGeneration || 1),
         evolutionsStreamConnected: prev.evolutionsStreamConnected,
         evolutionsStreamSeq: prev.evolutionsStreamSeq
       }));

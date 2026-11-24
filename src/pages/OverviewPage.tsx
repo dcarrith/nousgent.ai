@@ -17,7 +17,7 @@ import {
 } from '../utils/nousgentVoice';
 
 export type NousgentConsoleTab = 'ask' | 'hack' | 'evolve' | 'teach';
-type EvolveFeedMode = 'quests' | 'auto_queue';
+type EvolveFeedMode = 'quests' | 'auto_queue' | 'blocked_edits';
 
 export interface OverviewPageProps {
   readonly snapshot: MissionSnapshot;
@@ -74,6 +74,9 @@ interface TeachFeedbackState {
   readonly lobe?: string;
   readonly capsuleId?: string;
   readonly missionId?: string;
+  readonly helpedCount?: number;
+  readonly hurtCount?: number;
+  readonly autoScopedIff?: boolean;
   readonly message: string;
 }
 
@@ -191,6 +194,9 @@ export function OverviewPage({
   const [teachLobe, setTeachLobe] = useState<CognitiveLobeId>('procedural');
   const [teachDid, setTeachDid] = useState<string>('did:chia:1citizenteacher');
   const [teachContent, setTeachContent] = useState<string>('');
+  const [teachRationale, setTeachRationale] = useState<string>('');
+  const [teachModelFamily, setTeachModelFamily] = useState<string>('agnostic');
+  const [teachScopeKind, setTeachScopeKind] = useState<string>('domain_invariant');
   const [teachBusy, setTeachBusy] = useState<boolean>(false);
   const [teachFeedback, setTeachFeedback] = useState<TeachFeedbackState | null>(null);
 
@@ -483,6 +489,14 @@ export function OverviewPage({
 
     try {
       const endpoint = mode === 'preview' ? '/api/nousgent/teach/preview' : '/api/nousgent/teach/submit';
+      const simLineage =
+        teachRationale.trim() || teachModelFamily !== 'agnostic' || teachScopeKind !== 'domain_invariant'
+          ? {
+              rationale: teachRationale.trim(),
+              sourceModelFamily: teachModelFamily,
+              scopeKind: teachScopeKind
+            }
+          : undefined;
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -490,7 +504,8 @@ export function OverviewPage({
           title: cleanTitle,
           lobe: teachLobe,
           authorDid: teachDid.trim(),
-          content: cleanContent
+          content: cleanContent,
+          ...(simLineage ? { simLineage } : {})
         })
       });
       const data = await res.json();
@@ -498,8 +513,14 @@ export function OverviewPage({
         setTeachFeedback({
           ok: false,
           mode: 'preview',
+          helpedCount: data.softHurt?.helpedCount,
+          hurtCount: data.softHurt?.hurtCount,
+          autoScopedIff: data.softHurt?.autoScopedIff,
           message: data.error || 'Rejected by Gate-0 hygiene check.'
         });
+        if (data.code === 'SOFT_HURT_REJECTED') {
+          onRefresh();
+        }
       } else if (mode === 'preview') {
         setTeachFeedback({
           ok: true,
@@ -507,31 +528,42 @@ export function OverviewPage({
           estimatedGainPct: data.estimatedGainPct,
           autoPriceDig: data.autoPriceDig,
           lobe: data.lobe,
+          helpedCount: data.softHurt?.helpedCount,
+          hurtCount: data.softHurt?.hurtCount,
+          autoScopedIff: data.softHurt?.autoScopedIff,
           message: data.tier2ClearSignRequired
-            ? 'Gate-0 passed. Alignment capsules pause for two-key human approval on the Signing page before mounting.'
-            : 'Gate-0 passed. Ready to mint into the Merkle WAL.'
+            ? 'Non-regression checks passed. Alignment capsules pause for two-key human approval on the Signing page before mounting.'
+            : 'Non-regression checks passed. Ready to mint into the Merkle WAL.'
         });
       } else if (data.status === 'PAUSED_AWAITING_CHIP0043_CLEAR_SIGN') {
         setTeachTitle('');
         setTeachContent('');
+        setTeachRationale('');
         setTeachFeedback({
           ok: true,
           mode: 'paused',
           estimatedGainPct: data.estimatedGainPct,
           autoPriceDig: data.autoPriceDig,
           missionId: data.mission?.missionId,
+          helpedCount: data.softHurt?.helpedCount,
+          hurtCount: data.softHurt?.hurtCount,
+          autoScopedIff: data.softHurt?.autoScopedIff,
           message: `Paused at safety lock -> queued ${data.mission?.missionId || ''} for two-key human sign-off on the Signing page.`
         });
         onRefresh();
       } else {
         setTeachTitle('');
         setTeachContent('');
+        setTeachRationale('');
         setTeachFeedback({
           ok: true,
           mode: 'minted',
           estimatedGainPct: data.estimatedGainPct,
           autoPriceDig: data.autoPriceDig,
           capsuleId: data.capsuleId,
+          helpedCount: data.softHurt?.helpedCount,
+          hurtCount: data.softHurt?.hurtCount,
+          autoScopedIff: data.softHurt?.autoScopedIff,
           message: `✓ Minted ${data.capsuleId} (+${data.estimatedGainPct}% Est. · ${data.autoPriceDig} $DIG).`
         });
         onRefresh();
@@ -571,6 +603,7 @@ export function OverviewPage({
   const tabIdFor = (t: NousgentConsoleTab) => `${uid}-tab-${t}`;
   const questsList = snapshot.blindSpotQuests;
   const autoQueueList = snapshot.autonomousCandidateQueue;
+  const blockedEditsList = snapshot.rejectedEdits;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
@@ -999,6 +1032,56 @@ export function OverviewPage({
                       />
                     </div>
 
+                    <details style={{ fontSize: '11.5px' }}>
+                      <summary className="mono-xs text-muted" style={{ cursor: 'pointer', userSelect: 'none' }}>
+                        Why &amp; Source Model (Optional)
+                      </summary>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.45rem' }}>
+                        <div className="dao-form-field">
+                          <label htmlFor={`${uid}-tc-why`}>Why this insight was created</label>
+                          <input
+                            type="text"
+                            id={`${uid}-tc-why`}
+                            className="spatial-input"
+                            placeholder="e.g. Prevents retry loop when upstream socket resets"
+                            maxLength={180}
+                            value={teachRationale}
+                            onChange={(e) => setTeachRationale(e.target.value)}
+                          />
+                        </div>
+                        <div className="dao-form-row" style={{ gap: '0.5rem' }}>
+                          <div className="dao-form-field">
+                            <label htmlFor={`${uid}-tc-model`}>Source Model</label>
+                            <select
+                              id={`${uid}-tc-model`}
+                              className="spatial-input"
+                              value={teachModelFamily}
+                              onChange={(e) => setTeachModelFamily(e.target.value)}
+                            >
+                              <option value="agnostic">Any / Model-Agnostic</option>
+                              <option value="claude">Claude (Cloud API)</option>
+                              <option value="gemini">Gemini (Cloud API)</option>
+                              <option value="gpt">GPT (Cloud API)</option>
+                              <option value="qwen">Qwen (Local / Open)</option>
+                              <option value="llama">Llama (Local / Open)</option>
+                            </select>
+                          </div>
+                          <div className="dao-form-field">
+                            <label htmlFor={`${uid}-tc-scope`}>Rule Scope</label>
+                            <select
+                              id={`${uid}-tc-scope`}
+                              className="spatial-input"
+                              value={teachScopeKind}
+                              onChange={(e) => setTeachScopeKind(e.target.value)}
+                            >
+                              <option value="domain_invariant">Universal Domain Rule</option>
+                              <option value="model_quirk">Model-Specific Workaround</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button
                         type="button"
@@ -1033,6 +1116,12 @@ export function OverviewPage({
                           </span>
                         </div>
                       ) : null}
+                      {teachFeedback.helpedCount !== undefined ? (
+                        <div className="mono-xs text-muted" style={{ fontSize: '10.5px', marginBottom: '0.22rem' }}>
+                          Checks Helped: {teachFeedback.helpedCount} · Regressions: {teachFeedback.hurtCount ?? 0}
+                          {teachFeedback.autoScopedIff ? ' · Auto-Scoped' : ''}
+                        </div>
+                      ) : null}
                       <div className={`mono-xs ${teachFeedback.ok ? 'text-ivory' : 'text-rose'}`} style={{ fontSize: '11px' }}>
                         {teachFeedback.message}
                       </div>
@@ -1060,8 +1149,8 @@ export function OverviewPage({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', paddingTop: '0.2rem' }}>
                   <fieldset className="dao-radio-fieldset" style={{ padding: '0.45rem 0.55rem' }}>
                     <legend className="visually-hidden">Evolution Feed</legend>
-                    <div className="dao-radio-row" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', marginBlockStart: 0 }}>
-                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.5rem' }}>
+                    <div className="dao-radio-row" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBlockStart: 0 }}>
+                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.4rem' }}>
                         <input
                           type="radio"
                           id={`${uid}-ev-quests`}
@@ -1071,11 +1160,11 @@ export function OverviewPage({
                           checked={evolveMode === 'quests'}
                           onChange={() => setEvolveMode('quests')}
                         />
-                        <label htmlFor={`${uid}-ev-quests`} className="dao-radio-label" style={{ fontSize: '11px' }}>
+                        <label htmlFor={`${uid}-ev-quests`} className="dao-radio-label" style={{ fontSize: '10.5px' }}>
                           <span>Quests ({questsList.length})</span>
                         </label>
                       </div>
-                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.5rem' }}>
+                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.4rem' }}>
                         <input
                           type="radio"
                           id={`${uid}-ev-auto`}
@@ -1085,8 +1174,22 @@ export function OverviewPage({
                           checked={evolveMode === 'auto_queue'}
                           onChange={() => setEvolveMode('auto_queue')}
                         />
-                        <label htmlFor={`${uid}-ev-auto`} className="dao-radio-label" style={{ fontSize: '11px' }}>
+                        <label htmlFor={`${uid}-ev-auto`} className="dao-radio-label" style={{ fontSize: '10.5px' }}>
                           <span>Auto Queue ({autoQueueList.length})</span>
+                        </label>
+                      </div>
+                      <div className="dao-radio-option" style={{ minBlockSize: '38px', padding: '0.28rem 0.4rem' }}>
+                        <input
+                          type="radio"
+                          id={`${uid}-ev-blocked`}
+                          name="evolveFeed"
+                          value="blocked_edits"
+                          className="dao-radio-input"
+                          checked={evolveMode === 'blocked_edits'}
+                          onChange={() => setEvolveMode('blocked_edits')}
+                        />
+                        <label htmlFor={`${uid}-ev-blocked`} className="dao-radio-label" style={{ fontSize: '10.5px' }}>
+                          <span>Blocked Edits ({blockedEditsList.length})</span>
                         </label>
                       </div>
                     </div>
@@ -1201,7 +1304,7 @@ export function OverviewPage({
                         </>
                       )}
                     </div>
-                  ) : (
+                  ) : evolveMode === 'auto_queue' ? (
                     <div className="mind-dialogue-scroll" style={{ maxBlockSize: '330px' }}>
                       {autoQueueList.length > 0 ? (
                         autoQueueList.map((c, idx) => (
@@ -1225,6 +1328,10 @@ export function OverviewPage({
                                 {c.summary.length > 110 ? `${c.summary.slice(0, 107)}…` : c.summary}
                               </div>
                             ) : null}
+                            <div className="mono-xs text-muted" style={{ fontSize: '10px' }}>
+                              Checks Helped: {c.helpedChecksCount ?? 2} · Regressions: {c.hurtChecksCount ?? 0}
+                              {c.autoScopedIff ? ' · Auto-Scoped' : ''}
+                            </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                               <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
                                 {c.withinAutoAllowance ? '⚡ M2M Auto-Queue' : '🔑 DAO Signoff'} · {c.derivationTokens.toLocaleString()} tok
@@ -1252,6 +1359,41 @@ export function OverviewPage({
                       ) : (
                         <div className="glass-well mono-xs text-muted">
                           {snapshot.loading ? 'Ranking candidate capsules…' : 'No candidate capsules available.'}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mind-dialogue-scroll" style={{ maxBlockSize: '330px' }}>
+                      {blockedEditsList.length > 0 ? (
+                        blockedEditsList.map((rej) => (
+                          <div
+                            key={rej.rejectionId}
+                            className="glass-well"
+                            style={{
+                              padding: '0.6rem 0.72rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.28rem',
+                              borderColor: 'rgb(251 113 133 / 0.42)'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                              <span className="mono-xs text-rose" style={{ fontSize: '10px', fontWeight: 700 }}>
+                                BLOCKED · {rej.hurtCheckIds.length} Regression{rej.hurtCheckIds.length === 1 ? '' : 's'}
+                              </span>
+                              <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
+                                {rej.rejectionId}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{rej.title}</div>
+                            <div className="mono-xs text-muted" style={{ fontSize: '10.5px' }}>
+                              Broke: {rej.hurtCheckIds.length > 0 ? rej.hurtCheckIds.join(', ') : 'net gain margin'} · Shared off-leaf so nodes do not retry it
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="glass-well mono-xs text-muted">
+                          0 regressive edits blocked so far — failed edits are logged off-leaf here so community nodes never retry the same broken rule.
                         </div>
                       )}
                     </div>

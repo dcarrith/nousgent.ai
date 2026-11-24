@@ -728,6 +728,64 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
         evoLines[1].missions.some((m) => m.title === 'Streamed Realtime Sidebar Evolution Test')
     );
 
+    // [42] GUARD + SIM v1.15.0: Soft-HURT gate blocks regressive Teach (422), logs off-leaf REJ-EDIT-*, auto-scopes [iff], & syncs over Morphic pulse
+    const regressiveTeach = await request(port, '/api/nousgent/teach/submit', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'Unscoped Global Retry Override',
+        content: 'Retry every failing HTTP call 10 times without checking idempotency.',
+        lobe: 'procedural',
+        tags: ['security'],
+        simLineage: { rationale: 'Mask transient 502s', sourceModelFamily: 'claude', scopeKind: 'domain_invariant' },
+        replayTasks: [
+          { checkId: 'http-get', beforeScorePct: 45, afterScorePct: 92, runtime: 'node' },
+          { checkId: 'non-idempotent-post', beforeScorePct: 100, afterScorePct: 35, runtime: 'node' }
+        ]
+      }
+    });
+    const scopedTeach = await request(port, '/api/nousgent/teach/preview', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'Pytest Fixture Timeout Guard',
+        content: 'Apply 2s asyncio fixture teardown bound when running pytest suites.',
+        lobe: 'procedural',
+        simLineage: { rationale: 'Prevent hung Qwen test loops', sourceModelFamily: 'qwen', scopeKind: 'model_quirk' },
+        replayTasks: [
+          { checkId: 'py-suite', beforeScorePct: 40, afterScorePct: 95, runtime: 'python' },
+          { checkId: 'rust-suite', beforeScorePct: 100, afterScorePct: 50, runtime: 'rust' }
+        ]
+      }
+    });
+    const evolveAfterGuard = await request(port, '/api/nousgent/evolve/candidates', { host: 'nousgent.ai' });
+    const regJson = JSON.parse(regressiveTeach.text);
+    const scopedJson = JSON.parse(scopedTeach.text);
+    const evoAfterJson = JSON.parse(evolveAfterGuard.text);
+    const pulseGossip = await request(port, '/api/nousgent/morphic/pulse', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: {
+        callsign: 'NOUSGENT-IL-GUARD',
+        rejectedEdits: [regJson.rejectedEditRecord]
+      }
+    });
+    const pulseGossipJson = JSON.parse(pulseGossip.text);
+    check(
+      'GUARD Soft-HURT gate blocks regressive Teach (422), logs off-leaf Blocked Edits, auto-scopes [iff], & gossips via Morphic pulse',
+      regressiveTeach.status === 422 &&
+        regJson.code === 'SOFT_HURT_REJECTED' &&
+        String(regJson.rejectedEditRecord?.rejectionId || '').startsWith('REJ-EDIT-') &&
+        scopedTeach.status === 200 &&
+        scopedJson.softHurt?.autoScopedIff === true &&
+        scopedJson.simLineage?.sourceModelFamily === 'qwen' &&
+        Array.isArray(evoAfterJson.rejectedEdits) &&
+        evoAfterJson.rejectedEdits.length >= 1 &&
+        evoAfterJson.frozenServe?.mode === 'FROZEN_SERVE' &&
+        pulseGossip.status === 200 &&
+        pulseGossipJson.acceptedRejectedEdits === 1
+    );
+
     console.log(`\n✓ ALL ${passed} DUAL-HOST E2E CHECKS PASSED!`);
   } finally {
     engine.close();

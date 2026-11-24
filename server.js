@@ -968,7 +968,12 @@ const server = http.createServer(async (req, res) => {
           ok: true,
           liveCapsulesTotal: liveEco.dbrain.liveCapsulesTotal,
           blindSpotQuests: engine.listBlindSpotQuests(liveEco.dbrain.liveCapsulesTotal || 100),
-          autonomousQueue: liveEco.liquidish.autonomousCandidateQueue || []
+          autonomousQueue: liveEco.liquidish.autonomousCandidateQueue || [],
+          rejectedEdits: engine.listRejectedEdits(),
+          frozenServe: engine.getFrozenServePointer(
+            liveEco.dbrain.generation,
+            liveEco.dbrain.verifiedMerkleRoot
+          )
         },
         pathname,
         activePlane
@@ -1012,7 +1017,16 @@ const server = http.createServer(async (req, res) => {
       const liveEco = await liveClient.getLiveSnapshot();
       const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
       if (!evalOut.ok) {
-        const status = evalOut.code === 'RING0_TEACH_REJECTED' ? 403 : 400;
+        const status =
+          evalOut.code === 'RING0_TEACH_REJECTED'
+            ? 403
+            : evalOut.code === 'SOFT_HURT_REJECTED'
+              ? 422
+              : 400;
+        if (evalOut.code === 'SOFT_HURT_REJECTED') {
+          await peerReplicator.broadcastLocalMutation();
+          evolutionsHub.notifyEvolutionChanged('soft_hurt_rejected');
+        }
         sendJson(res, status, evalOut, pathname, activePlane);
         return;
       }
@@ -1037,7 +1051,16 @@ const server = http.createServer(async (req, res) => {
       const liveEco = await liveClient.getLiveSnapshot();
       const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
       if (!evalOut.ok) {
-        const status = evalOut.code === 'RING0_TEACH_REJECTED' ? 403 : 400;
+        const status =
+          evalOut.code === 'RING0_TEACH_REJECTED'
+            ? 403
+            : evalOut.code === 'SOFT_HURT_REJECTED'
+              ? 422
+              : 400;
+        if (evalOut.code === 'SOFT_HURT_REJECTED') {
+          await peerReplicator.broadcastLocalMutation();
+          evolutionsHub.notifyEvolutionChanged('soft_hurt_rejected');
+        }
         sendJson(res, status, evalOut, pathname, activePlane);
         return;
       }
@@ -1078,6 +1101,11 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 503, { ok: false, error: minted.error }, pathname, activePlane);
         return;
       }
+      const frozenServe = engine.advanceFrozenServePointer({
+        generation: Number(liveEco.dbrain.generation || 1) + 1,
+        merkleRoot: minted.merkleRoot
+      });
+      await peerReplicator.broadcastLocalMutation();
       evolutionsHub.notifyEvolutionChanged('teach_minted', { forceUpstreamRefresh: true });
       sendJson(
         res,
@@ -1087,7 +1115,8 @@ const server = http.createServer(async (req, res) => {
           autoPriceDig,
           status: 'MINTED_TO_DBRAIN',
           capsuleId: minted.capsuleId,
-          merkleRoot: minted.merkleRoot
+          merkleRoot: minted.merkleRoot,
+          frozenServe
         },
         pathname,
         activePlane
@@ -1108,6 +1137,16 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/nousgent/morphic/pulse' && req.method === 'POST') {
       const body = await readJsonBody(req);
+      let acceptedRejectedEdits = 0;
+      if (Array.isArray(body && body.rejectedEdits)) {
+        for (const rej of body.rejectedEdits.slice(0, 16)) {
+          const rec = engine.recordRejectedEdit(rej);
+          if (rec.ok) acceptedRejectedEdits += 1;
+        }
+        if (acceptedRejectedEdits > 0) {
+          await peerReplicator.broadcastLocalMutation();
+        }
+      }
       const liveEco = await liveClient.getLiveSnapshot();
       const status = engine.getMissionStatus(liveEco);
       sendJson(
@@ -1118,7 +1157,9 @@ const server = http.createServer(async (req, res) => {
           plane: 'm2m_ia',
           receivedFrom: String(body.callsign || 'NOUSGENT-SWARM-NODE'),
           bariScorePct: status.bari.bariScorePct,
-          verifiedDataLayerRoot: status.leaderboard.verifiedDataLayerRoot
+          verifiedDataLayerRoot: status.leaderboard.verifiedDataLayerRoot,
+          frozenServe: status.frozenServe,
+          acceptedRejectedEdits
         },
         pathname,
         activePlane
