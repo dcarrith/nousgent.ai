@@ -41,6 +41,7 @@ const path = require('node:path');
 process.env.NOUSGENT_STATE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'nousgent-e2e-'));
 
 // Spin up ephemeral local upstream stub simulating the 5 sister services (dbrain.to, dthalamus.to, dolfactory.to, cbrain.to, liquidi.sh & shi.liquidi.sh)
+let esSeedForwardedCount = 0;
 const upstreamServer = http.createServer((req, res) => {
   const host = String(req.headers.host || '');
   const u = new URL(req.url || '/', 'http://127.0.0.1');
@@ -94,12 +95,17 @@ const upstreamServer = http.createServer((req, res) => {
     return res.end(JSON.stringify({ status: 'evaluated', gate: { blocked: false } }));
   }
   if (u.pathname === '/api/dolfactory/status') {
+    assert.equal(u.searchParams.get('compositional'), 'true');
     return res.end(JSON.stringify({
-      status: 'ok', version: '1.2.3', protocol: 'DOLFACTORY-v1.0',
-      receptorStats: { totalReceptors: 8, inlineIpsReceptors: 7, shadowIdsReceptors: 1 },
+      status: 'ok', version: '1.6.0', protocol: 'DOLFACTORY-v1.0',
+      receptorStats: { totalReceptors: 11, inlineIpsReceptors: 9, shadowIdsReceptors: 2 },
       imprintedOdors: [{ odorId: 'ODOR-1' }],
       telemetry: { totalSniffs: 5, auditChain: { headHash: '0x67db924b' } }
     }));
+  }
+  if (u.pathname === '/api/dbrain/learning/es/seed') {
+    esSeedForwardedCount += 1;
+    return res.end(JSON.stringify({ status: 'ok', accepted: true }));
   }
   if (u.pathname === '/api/dolfactory/sniff') {
     return res.end(JSON.stringify({ status: 'ok', result: { blocked: false } }));
@@ -238,6 +244,7 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
   process.env.SHI_LIQUIDISH_UPSTREAM_URL = upBase;
   process.env.NOUSGENT_HALO_BASE_URL = `${upBase}/v1`;
   process.env.NOUSGENT_LLM_MODEL = 'qwen3:32b-halo';
+  process.env.NOUSGENT_SIGNING_SECRET = 'e2e-peer-sync-secret-32-bytes-minimum-key';
 
   const { server, engine } = require('./server.js');
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -281,7 +288,7 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
         liveStatusJson.liveEcosystem.dbrain.activeMorphicBrainsCount === 2 &&
         liveStatusJson.liveEcosystem.dbrain.liveCapsulesTotal === 994 &&
         liveStatusJson.liveEcosystem.dthalamus.activeLeasesCount === 37 &&
-        liveStatusJson.liveEcosystem.dolfactory.totalReceptors === 8 &&
+        liveStatusJson.liveEcosystem.dolfactory.totalReceptors === 11 &&
         liveStatusJson.liveEcosystem.liquidish.royaltiesStreamedDig === '615.937 $DIG' &&
         liveStatusJson.liveEcosystem.liquidish.shiM2mRequestsCount === 14892
     );
@@ -420,7 +427,11 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
       host: 'ia.nousgent.ai',
       body: { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }
     });
-    check('MCP 2025-03-26 tools/list exposes 11 NOUSGENT tools', mcpList.status === 200 && JSON.parse(mcpList.text).result.tools.length === 11);
+    const mcpToolsArr = JSON.parse(mcpList.text).result.tools;
+    check(
+      'MCP 2025-03-26 tools/list exposes 12 annotated NOUSGENT tools',
+      mcpList.status === 200 && mcpToolsArr.length === 12 && mcpToolsArr.every((t) => Boolean(t.annotations))
+    );
 
     const askPersona = await request(port, '/api/nousgent/ask', {
       method: 'POST',
@@ -604,14 +615,21 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
       host: 'nousgent.ai',
       body: { text: 'I am NOUSGENT speaking aloud with verified neural clarity.' }
     });
+    const { normalizeSpeechText, toLagosAfrobeatIpa, DEFAULT_WELCOME_SPEECH } = require('./server/voice-synthesizer.js');
+    const normCheck = normalizeSpeechText("Hi, I'm NOUSGENT. Nougent's DRSI uses M-of-N approvals.");
     check(
-      'POST /api/nousgent/tts synthesizes 22.05 kHz RIFF WAVE audio & rejects empty input (400)',
+      'POST /api/nousgent/tts synthesizes 24 kHz RIFF WAVE audio, pronounces NOUSGENT as Noojent (/nˈuːʤənt/), & rejects empty input (400)',
       ttsEmpty.status === 400 &&
         ttsWav.status === 200 &&
         ttsWav.headers['content-type'] === 'audio/wav' &&
         ttsWav.buf.length > 4000 &&
         ttsWav.buf.subarray(0, 4).toString('ascii') === 'RIFF' &&
-        ttsWav.buf.subarray(8, 12).toString('ascii') === 'WAVE'
+        ttsWav.buf.subarray(8, 12).toString('ascii') === 'WAVE' &&
+        normCheck.includes("Hi, I'm Noojent.") &&
+        normCheck.includes("Noojent's D R S I uses M of N") &&
+        !normCheck.includes('Noosjent') &&
+        toLagosAfrobeatIpa('nˈuːsʤənt') === 'nˈuːʤənt' &&
+        DEFAULT_WELCOME_SPEECH.startsWith("Hi, I'm NOUSGENT.")
     );
 
     const mcpCall = await request(port, '/api/mcp', {
@@ -626,6 +644,271 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
 
     const traversal = await request(port, '/..%2fpackage.json');
     check('Path traversal blocked with HTTP 403', traversal.status === 403);
+
+    const unauthPeerSync = await request(port, '/api/internal/peer-sync', { host: 'ia.nousgent.ai' });
+    const cryptoMod = require('node:crypto');
+    const peerTs = String(Date.now());
+    const emptySha = cryptoMod.createHash('sha256').update('', 'utf8').digest('hex');
+    const getMac = cryptoMod
+      .createHmac('sha256', process.env.NOUSGENT_SIGNING_SECRET)
+      .update(`GET:${peerTs}:${emptySha}`, 'utf8')
+      .digest('hex');
+    const authPeerGet = await request(port, '/api/internal/peer-sync', {
+      host: 'ia.nousgent.ai',
+      headers: {
+        'X-Nousgent-Peer-Timestamp': peerTs,
+        'X-Nousgent-Peer-Signature': getMac
+      }
+    });
+    const authPeerGetJson = JSON.parse(authPeerGet.text);
+    const postPayloadObj = { podId: 'nousgent-web-peer-test', snapshot: authPeerGetJson.snapshot };
+    const postRaw = JSON.stringify(postPayloadObj);
+    const postSha = cryptoMod.createHash('sha256').update(postRaw, 'utf8').digest('hex');
+    const postMac = cryptoMod
+      .createHmac('sha256', process.env.NOUSGENT_SIGNING_SECRET)
+      .update(`POST:${peerTs}:${postSha}`, 'utf8')
+      .digest('hex');
+    const authPeerPost = await request(port, '/api/internal/peer-sync', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: postPayloadObj,
+      headers: {
+        'X-Nousgent-Peer-Timestamp': peerTs,
+        'X-Nousgent-Peer-Signature': postMac
+      }
+    });
+    check(
+      'StatefulSet CRDT peer-sync blocks unsigned calls (401) & reconciles HMAC-signed snapshots (200)',
+      unauthPeerSync.status === 401 &&
+        authPeerGet.status === 200 &&
+        Array.isArray(authPeerGetJson.snapshot.missions) &&
+        authPeerPost.status === 200 &&
+        JSON.parse(authPeerPost.text).merged.ok === true
+    );
+
+    const streamEvolutionsPromise = new Promise((resolve, reject) => {
+      const sReq = http.request(
+        {
+          hostname: '127.0.0.1',
+          port,
+          path: '/api/nousgent/evolutions/stream?frames=2',
+          method: 'GET',
+          headers: { Host: 'nousgent.ai', Accept: 'application/x-ndjson' }
+        },
+        (sRes) => {
+          let buf = '';
+          let triggeredMutation = false;
+          sRes.on('data', (chunk) => {
+            buf += chunk.toString('utf8');
+            if (!triggeredMutation && buf.includes('\n')) {
+              triggeredMutation = true;
+              request(port, '/api/nousgent/dao/proposals', {
+                method: 'POST',
+                host: 'nousgent.ai',
+                body: {
+                  title: 'Streamed Realtime Sidebar Evolution Test',
+                  category: 'CAPABILITY_SYNTHESIS',
+                  proposerDid: 'did:chia:1txcitizenkeyholder',
+                  rewardDig: '500.000'
+                }
+              }).catch(reject);
+            }
+          });
+          sRes.on('end', () => resolve({ status: sRes.statusCode, headers: sRes.headers, text: buf }));
+        }
+      );
+      sReq.on('error', reject);
+      sReq.end();
+    });
+    const evoStreamOut = await streamEvolutionsPromise;
+    const evoLines = evoStreamOut.text
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    check(
+      'Real-time Streamable HTTP /api/nousgent/evolutions/stream pushes initial + live mutation NDJSON frames',
+      evoStreamOut.status === 200 &&
+        String(evoStreamOut.headers['content-type'] || '').includes('application/x-ndjson') &&
+        evoStreamOut.headers['x-accel-buffering'] === 'no' &&
+        evoLines.length === 2 &&
+        evoLines[0].seq === 1 &&
+        evoLines[0].reason === 'initial' &&
+        evoLines[1].seq === 2 &&
+        evoLines[1].reason === 'dao_proposal' &&
+        evoLines[1].missions.some((m) => m.title === 'Streamed Realtime Sidebar Evolution Test')
+    );
+
+    // [42] GUARD + SIM v1.15.0: Soft-HURT gate blocks regressive Teach (422), logs off-leaf REJ-EDIT-*, auto-scopes [iff], & syncs over Morphic pulse
+    const regressiveTeach = await request(port, '/api/nousgent/teach/submit', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'Unscoped Global Retry Override',
+        content: 'Retry every failing HTTP call 10 times without checking idempotency.',
+        lobe: 'procedural',
+        tags: ['security'],
+        simLineage: { rationale: 'Mask transient 502s', sourceModelFamily: 'claude', scopeKind: 'domain_invariant' },
+        replayTasks: [
+          { checkId: 'http-get', beforeScorePct: 45, afterScorePct: 92, runtime: 'node' },
+          { checkId: 'non-idempotent-post', beforeScorePct: 100, afterScorePct: 35, runtime: 'node' }
+        ]
+      }
+    });
+    const scopedTeach = await request(port, '/api/nousgent/teach/preview', {
+      method: 'POST',
+      host: 'nousgent.ai',
+      body: {
+        title: 'Pytest Fixture Timeout Guard',
+        content: 'Apply 2s asyncio fixture teardown bound when running pytest suites.',
+        lobe: 'procedural',
+        simLineage: { rationale: 'Prevent hung Qwen test loops', sourceModelFamily: 'qwen', scopeKind: 'model_quirk' },
+        replayTasks: [
+          { checkId: 'py-suite', beforeScorePct: 40, afterScorePct: 95, runtime: 'python' },
+          { checkId: 'rust-suite', beforeScorePct: 100, afterScorePct: 50, runtime: 'rust' }
+        ]
+      }
+    });
+    const evolveAfterGuard = await request(port, '/api/nousgent/evolve/candidates', { host: 'nousgent.ai' });
+    const regJson = JSON.parse(regressiveTeach.text);
+    const scopedJson = JSON.parse(scopedTeach.text);
+    const evoAfterJson = JSON.parse(evolveAfterGuard.text);
+    const pulseGossip = await request(port, '/api/nousgent/morphic/pulse', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: {
+        callsign: 'NOUSGENT-IL-GUARD',
+        rejectedEdits: [regJson.rejectedEditRecord]
+      }
+    });
+    const pulseGossipJson = JSON.parse(pulseGossip.text);
+    check(
+      'GUARD Soft-HURT gate blocks regressive Teach (422), logs off-leaf Blocked Edits, auto-scopes [iff], & gossips via Morphic pulse',
+      regressiveTeach.status === 422 &&
+        regJson.code === 'SOFT_HURT_REJECTED' &&
+        String(regJson.rejectedEditRecord?.rejectionId || '').startsWith('REJ-EDIT-') &&
+        scopedTeach.status === 200 &&
+        scopedJson.softHurt?.autoScopedIff === true &&
+        scopedJson.simLineage?.sourceModelFamily === 'qwen' &&
+        Array.isArray(evoAfterJson.rejectedEdits) &&
+        evoAfterJson.rejectedEdits.length >= 1 &&
+        evoAfterJson.frozenServe?.mode === 'FROZEN_SERVE' &&
+        pulseGossip.status === 200 &&
+        pulseGossipJson.acceptedRejectedEdits === 1
+    );
+
+    // [43] v1.16.0 3-Wave Integration: Specialization, 89B ESS1 Pulse + Upstream Forwarding, OR-011/Sub-Harness 403, Prefix-Safe LID, Surrogate ES & MCP #12
+    const subPodChallenge = await request(port, '/api/nousgent/pod-bay/challenge', {
+      method: 'POST',
+      body: { prompt: 'Delegate child spend', mode: 'subharness' }
+    });
+    const subDaoDenied = await request(port, '/api/nousgent/dao/proposals', {
+      method: 'POST',
+      body: { title: 'Delegated Child Spend Attempt', subcallDepth: 1 }
+    });
+    const subTeachDenied = await request(port, '/api/nousgent/teach/submit', {
+      method: 'POST',
+      body: {
+        title: 'Delegated Alignment Attempt',
+        content: 'Attempted alignment capsule from delegated child sub-agent.',
+        lobe: 'alignment',
+        subcallDepth: 1
+      }
+    });
+    const lidInferRes = await request(port, '/api/nousgent/agents/infer', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: {
+        role: 'rsi_synthesizer',
+        rollingHistoryMarkerIndex: 0,
+        messages: [
+          { role: 'system', content: 'Pinned prefix' },
+          { role: 'user', content: 'turn 1 ' + 'a'.repeat(30000) },
+          { role: 'assistant', content: 'turn 2 ' + 'b'.repeat(30000) },
+          { role: 'user', content: 'Summarize minimal integer encoding.' }
+        ]
+      }
+    });
+    const dbrainMod = require('./packages/dbrain/lib/dbrain-core.js');
+    const dolfactoryMod = require('./packages/dolfactory/lib/dolfactory-core.js');
+    const dthalamusMod = require('./packages/dthalamus/lib/dthalamus-core.js');
+    const mon = dthalamusMod.createRing0ReferenceMonitor();
+    const danOut = mon.emitCohortDopaminergicOutcome({
+      cohortId: 'cohort-e2e',
+      episodeId: 'EP-E2E-1',
+      specialization: 'spec:chia/chialisp',
+      rawReward: 0.88,
+      cohortSamples: [0.2, 0.5, 0.88],
+      seedHex: '0123456789abcdef',
+      bibaTainted: false,
+      trustedHostOracle: true
+    });
+    const peerKp = dbrainMod.deriveEd25519Keypair('e2e-es-seed-peer');
+    const rawEsEnv = {
+      eventId: 'EVT-E2E-ES-01',
+      senderDid: 'did:chia:1e2epeer',
+      specialization: 'spec:chia/chialisp',
+      seedHex: danOut.seedHex,
+      zScore: danOut.zScore,
+      epoch: 3,
+      timestamp: new Date().toISOString(),
+      danSignatureHex: danOut.ed25519SignatureHex,
+      bibaPamVetoed: false,
+      publicKeyHex: peerKp.publicKeyHex
+    };
+    const esSig = dbrainMod.signEd25519Message(
+      dolfactoryMod.buildEsSeedPheromonePreimage(rawEsEnv),
+      'e2e-es-seed-peer'
+    );
+    const pulseEsRes = await request(port, '/api/nousgent/morphic/pulse', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: {
+        callsign: 'NOUSGENT-IL-ESS1',
+        esSeedPulses: [{ ...rawEsEnv, signatureHex: esSig.signatureHex }]
+      }
+    });
+    const surrEvolveRes = await request(port, '/api/nousgent/evolve/surrogate', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: { specialization: 'spec:chia/chialisp' }
+    });
+    const mcpAuditRes = await request(port, '/api/mcp', {
+      method: 'POST',
+      host: 'ia.nousgent.ai',
+      body: {
+        jsonrpc: '2.0',
+        id: 99,
+        method: 'tools/call',
+        params: { name: 'nousgent_specialization_and_harness_audit', arguments: { action: 'all' } }
+      }
+    });
+    const lidInferJson = JSON.parse(lidInferRes.text);
+    const pulseEsJson = JSON.parse(pulseEsRes.text);
+    const surrEvolveJson = JSON.parse(surrEvolveRes.text);
+    const mcpAuditJson = JSON.parse(mcpAuditRes.text);
+    check(
+      'v1.16.0 3-Wave Lockstep: Submodule SemVer, Sub-Harness 403 Spend Guard, Prefix-Safe LID Folding, VNO 89B ESS1 Pulse + Upstream Forwarding, Surrogate ES & MCP #12 verified',
+      jHuman.submodules?.dolfactory === '1.5.0' &&
+        jHuman.submodules?.dthalamus === '1.9.0' &&
+        jHuman.submodules?.dbrain === '3.22.0' &&
+        jHuman.submodules?.cbrain === '3.22.0' &&
+        JSON.parse(subPodChallenge.text).category === 'SUBHARNESS_SPONGE_AND_SPEND_INTERLOCK' &&
+        subDaoDenied.status === 403 &&
+        JSON.parse(subDaoDenied.text).code === 'SUBHARNESS_TIER2_SPEND_DENIED' &&
+        subTeachDenied.status === 403 &&
+        JSON.parse(subTeachDenied.text).code === 'SUBHARNESS_TIER2_SPEND_DENIED' &&
+        lidInferRes.status === 200 &&
+        lidInferJson.lidGovernor?.folded === true &&
+        lidInferJson.lidGovernor?.prefixMutated === false &&
+        pulseEsRes.status === 200 &&
+        pulseEsJson.acceptedEsSeedPulses === 1 &&
+        esSeedForwardedCount === 1 &&
+        surrEvolveRes.status === 200 &&
+        surrEvolveJson.ok === true &&
+        surrEvolveJson.surrogateCount >= 1 &&
+        mcpAuditRes.status === 200 &&
+        mcpAuditJson.result?.structuredContent?.verified === true
+    );
 
     console.log(`\n✓ ALL ${passed} DUAL-HOST E2E CHECKS PASSED!`);
   } finally {

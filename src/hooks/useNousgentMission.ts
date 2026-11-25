@@ -17,6 +17,7 @@ export interface LiveRecentCapsuleItem {
   readonly lobe: string;
   readonly authorName?: string;
   readonly tags?: readonly string[];
+  readonly specializations?: readonly string[];
   readonly timestamp?: string;
   readonly storeId: string;
   readonly generation: number;
@@ -29,6 +30,7 @@ export interface BlindSpotQuestItem {
   readonly questId: string;
   readonly prompt: string;
   readonly lobe: string;
+  readonly specializations?: readonly string[];
   readonly rewardDig: string;
   readonly derivationTokens: number;
   readonly hitCount: number;
@@ -44,6 +46,7 @@ export interface AutonomousCandidateCapsuleItem {
   readonly title: string;
   readonly summary: string;
   readonly lobe: string;
+  readonly specializations?: readonly string[];
   readonly storeId: string;
   readonly storeName: string;
   readonly priceDig: number;
@@ -209,6 +212,7 @@ export interface MissionSnapshot {
   readonly blindSpotQuests: readonly BlindSpotQuestItem[];
   readonly autonomousCandidateQueue: readonly AutonomousCandidateCapsuleItem[];
   readonly rejectedEdits: readonly RejectedEditItem[];
+  readonly esSeedPulsesCount: number;
   readonly frozenServeGeneration: number;
   readonly evolutionsStreamConnected: boolean;
   readonly evolutionsStreamSeq: number;
@@ -305,6 +309,7 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
   blindSpotQuests: [],
   autonomousCandidateQueue: [],
   rejectedEdits: [],
+  esSeedPulsesCount: 0,
   frozenServeGeneration: 1,
   evolutionsStreamConnected: false,
   evolutionsStreamSeq: 0
@@ -461,6 +466,7 @@ export function useNousgentMission() {
           ? liq.autonomousCandidateQueue
           : [],
         rejectedEdits: Array.isArray(d.rejectedEdits) ? d.rejectedEdits : [],
+        esSeedPulsesCount: Array.isArray(d.esSeedPulses) ? d.esSeedPulses.length : 0,
         frozenServeGeneration: Number(d.frozenServe?.pinnedGeneration || db.primaryGeneration || 1),
         evolutionsStreamConnected: prev.evolutionsStreamConnected,
         evolutionsStreamSeq: prev.evolutionsStreamSeq

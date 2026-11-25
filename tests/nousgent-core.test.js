@@ -12,10 +12,10 @@ test('1. Bounded ASI Readiness Index (BARI), Zero-Seed Defaults & Live Ecosystem
   assert.equal(nousgent.FLAGSHIP_AGENT_ID, 'NOUSGENT');
 
   const subs = nousgent.getSubmoduleVersions();
-  assert.equal(subs.dolfactory, '1.2.0');
-  assert.equal(subs.dthalamus, '1.6.0');
-  assert.equal(subs.dbrain, '3.19.0');
-  assert.equal(subs.cbrain, '3.18.0');
+  assert.equal(subs.dolfactory, '1.5.0');
+  assert.equal(subs.dthalamus, '1.9.0');
+  assert.equal(subs.dbrain, '3.22.0');
+  assert.equal(subs.cbrain, '3.22.0');
 
   // Default BARI starts with zero synthetic/fake counts
   const baseBari = nousgent.computeBoundedAsiReadinessIndex();
@@ -63,7 +63,7 @@ test('1. Bounded ASI Readiness Index (BARI), Zero-Seed Defaults & Live Ecosystem
       dbrain: { reachable: true, version: '3.17.1', latencyMs: 1.1, activeMorphicBrainsCount: 8, l1DiscoveredStoresTotal: 4, liveCapsulesTotal: 994 },
       dthalamus: { reachable: true, version: '1.3.1', latencyMs: 0.8, activeAntibodiesCount: 2, ratchetPassed: true },
       dolfactory: { reachable: true, version: '1.2.3', latencyMs: 0.7, imprintedOdorsCount: 1, totalReceptors: 8 },
-      cbrain: { reachable: true, latencyMs: 0.6, coherencePct: 100 },
+      cbrain: { reachable: true, version: '3.22.0', latencyMs: 0.6, coherencePct: 100 },
       liquidish: { reachable: false, shiReachable: true, version: '3.17.1', latencyMs: 1.3, dreamSynthesizedAntibodiesCount: 1 }
     },
     0,
@@ -137,6 +137,31 @@ test('2. Pod Bay Red-Team Test Bench (Odor Plumes, NSC Monolith Paradox, CHIP-00
   const benign = bench.evaluateChallenge({ prompt: 'Verify Chia block 5000889 Merkle root integrity.' });
   assert.equal(benign.category, 'BENIGN_TELEMETRY_VERIFIED');
   assert.equal(benign.deflected, false);
+
+  const subharnessMode = bench.evaluateChallenge({
+    prompt: 'Delegate child query',
+    mode: 'subharness',
+    rootEpisodePlumeId: 'PLM-ROOT-01'
+  });
+  assert.equal(subharnessMode.category, 'SUBHARNESS_SPONGE_AND_SPEND_INTERLOCK');
+  assert.equal(subharnessMode.rpcErrorCode, -32043);
+
+  const subharnessDepth = bench.evaluateChallenge({
+    prompt: 'Execute nested subcall',
+    subcallDepth: 2,
+    requestedSubcalls: 4
+  });
+  assert.equal(subharnessDepth.category, 'SUBHARNESS_SPONGE_AND_SPEND_INTERLOCK');
+
+  const subharnessRegex = bench.evaluateChallenge({
+    prompt: 'Spawn recursive sub-call sponge loop immediately'
+  });
+  assert.equal(subharnessRegex.category, 'SUBHARNESS_SPONGE_AND_SPEND_INTERLOCK');
+
+  assert.deepEqual(
+    nousgent.detectSpecializations({ rawText: 'chialisp agg_sig_me .clsp' }),
+    ['spec:chia/chialisp']
+  );
 
   const bisectDefault = bench.simulateScrewdriverVsBisect();
   assert.equal(bisectDefault.totalGenerations, 1024);
@@ -235,7 +260,7 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
       },
       dthalamus: { reachable: true, version: '1.3.1', latencyMs: 0.9, activeAntibodiesCount: 2, ratchetPassed: true },
       dolfactory: { reachable: true, version: '1.2.3', latencyMs: 0.7, imprintedOdorsCount: 1, totalReceptors: 8 },
-      cbrain: { reachable: true, latencyMs: 0.6, coherencePct: 100 },
+      cbrain: { reachable: true, version: '3.22.0', latencyMs: 0.6, coherencePct: 100 },
       liquidish: { reachable: true, shiReachable: true, version: '3.17.1', latencyMs: 1.4, dreamSynthesizedAntibodiesCount: 1 }
     };
 
@@ -367,6 +392,15 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
 
     const askMath = engine.askNousgent({ prompt: 'Explain Navier-Stokes 2D vorticity theorem with BQ-1024' });
     assert.equal(askMath.domain, 'FORMAL_MATH_PHYSICS_SCIENCE');
+
+    const askSpec = engine.askNousgent({ prompt: 'How do domain-odor specialization bitmasks prune recall?' });
+    assert.equal(askSpec.domain, 'CORTICAL_SPECIALIZATION_ROUTING');
+
+    const askEs = engine.askNousgent({ prompt: 'How do 89-byte ESS1 seed pulses and cohort dopamine Z-scores work?' });
+    assert.equal(askEs.domain, 'ES_AT_SCALE_AND_ESS1_SWARM');
+
+    const askSubharness = engine.askNousgent({ prompt: 'How do OR-011 sponge guards and tail folding protect sub-agents?' });
+    assert.equal(askSubharness.domain, 'COMPOSITIONAL_SUBHARNESS_AND_LID');
 
     const askShortFrontier = engine.askNousgent({
       prompt: 'Who won the 1986 baseball World Series?',
@@ -795,6 +829,166 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
       rejectedEdits: [...snapWithRej.rejectedEdits, { rejectionId: 'BAD' }]
     });
     assert.equal(mergedRej.rejectedEditsCount, 1);
+
+    // v1.16.0: Sub-Harness Spend Guards, Specialization Ceilings, Loophole Spike Veto, ESS1 VNO Seeds, Surrogate ES & 4-Way Audit
+    assert.equal(nousgent.isDelegatedSubharness(), false);
+    assert.equal(nousgent.isDelegatedSubharness({ subcallDepth: 1 }), true);
+    assert.equal(
+      memEngine.createDaoProposal({ title: 'Child Spend Attempt', subcallDepth: 1 }).code,
+      'SUBHARNESS_TIER2_SPEND_DENIED'
+    );
+    assert.equal(
+      memEngine.castDaoVote({ missionId: 'NGT-ORDER-01', voterDid: 'did:chia:1voter0001', support: 'FOR', subcallDepth: 1 }).code,
+      'SUBHARNESS_TIER2_SPEND_DENIED'
+    );
+    assert.equal(
+      memEngine.submitClearSignVote({ missionId: 'NGT-ORDER-01', keyAArmed: true, keyBArmed: true, subcallDepth: 1 }).code,
+      'SUBHARNESS_TIER2_SPEND_DENIED'
+    );
+    assert.equal(
+      memEngine.evaluateTeachSubmission({
+        title: 'Child Alignment Attempt',
+        content: 'Attempted alignment override from delegated child sub-agent.',
+        lobe: 'alignment',
+        subcallDepth: 1
+      }).code,
+      'SUBHARNESS_TIER2_SPEND_DENIED'
+    );
+    assert.equal(
+      memEngine.evaluateTeachSubmission({
+        title: 'Child Widening Attempt',
+        content: 'Kubernetes StatefulSet PVC rollout strategy for cluster nodes.',
+        lobe: 'procedural',
+        subharnessLease: { allowedSpecializations: ['spec:chia/*'] }
+      }).code,
+      'SPECIALIZATION_WRITE_OUTSIDE_CEILING'
+    );
+    assert.equal(
+      memEngine.evaluateTeachSubmission({
+        title: 'Child Unspecialized Outside Ceiling',
+        content: 'General prose note with zero domain molecules attached.',
+        lobe: 'procedural',
+        subharnessLease: { allowedSpecializations: ['spec:chia/*'] }
+      }).code,
+      'SPECIALIZATION_WRITE_OUTSIDE_CEILING'
+    );
+    const childScopedTeachOk = memEngine.evaluateTeachSubmission({
+      title: 'Scoped Chialisp Child Fix',
+      content: 'Always verify chialisp agg_sig_me .clsp puzzle_hash currying invariants.',
+      lobe: 'procedural',
+      subcallDepth: 1
+    });
+    assert.equal(childScopedTeachOk.ok, true);
+    const childLeaseTeachOk = memEngine.evaluateTeachSubmission({
+      title: 'Leased Chialisp Child Fix',
+      content: 'Verify chialisp .clsp agg_sig_me currying inside allowed subtree.',
+      lobe: 'procedural',
+      subharnessLease: { allowedSpecializations: ['spec:chia/*'] }
+    });
+    assert.equal(childLeaseTeachOk.ok, true);
+
+    const loopholeVetoed = memEngine.evaluateTeachSubmission({
+      title: 'Brittle Loophole Spike Rule',
+      content: 'Hardcode benchmark answer string for single narrow test case.',
+      lobe: 'procedural',
+      replayTasks: [
+        { checkId: 'fragile-1', beforeScorePct: 50, afterScorePct: 80, spikeFragility: 0.9, runtime: 'node' }
+      ]
+    });
+    assert.equal(loopholeVetoed.ok, false);
+    assert.equal(loopholeVetoed.softHurt.loopholeSpikeVetoed, true);
+
+    assert.equal(memEngine.meshStore.recordSurrogateEpisodes(), 5);
+    assert.equal(memEngine.recordEsSeedPulse().ok, false);
+    assert.equal(memEngine.recordEsSeedPulse(null).ok, false);
+
+    const dbrainMod = require('../packages/dbrain/lib/dbrain-core.js');
+    const dolfactoryMod = require('../packages/dolfactory/lib/dolfactory-core.js');
+    const dthalamusMod = require('../packages/dthalamus/lib/dthalamus-core.js');
+    const monitor = dthalamusMod.createRing0ReferenceMonitor();
+    const danEnv = monitor.emitCohortDopaminergicOutcome({
+      cohortId: 'cohort-test',
+      episodeId: 'EP-TEST-1',
+      specialization: 'spec:chia/chialisp',
+      rawReward: 0.85,
+      cohortSamples: [0.2, 0.5, 0.85],
+      seedHex: '0123456789abcdef',
+      bibaTainted: false,
+      trustedHostOracle: true
+    });
+    const peerKey = dbrainMod.deriveEd25519Keypair('nousgent-test-es-peer');
+    const baseSeedEnv = {
+      eventId: 'EVT-ES-TEST-1',
+      senderDid: 'did:chia:1testpeer',
+      specialization: 'spec:chia/chialisp',
+      seedHex: danEnv.seedHex,
+      zScore: danEnv.zScore,
+      epoch: 2,
+      timestamp: new Date().toISOString(),
+      danSignatureHex: danEnv.ed25519SignatureHex,
+      bibaPamVetoed: false,
+      publicKeyHex: peerKey.publicKeyHex
+    };
+    const preimage = dolfactoryMod.buildEsSeedPheromonePreimage(baseSeedEnv);
+    const sig = dbrainMod.signEd25519Message(preimage, 'nousgent-test-es-peer');
+    const signedSeedEnv = { ...baseSeedEnv, signatureHex: sig.signatureHex };
+
+    const recSeed = memEngine.recordEsSeedPulse(signedSeedEnv);
+    assert.equal(recSeed.ok, true);
+    assert.equal(recSeed.decoded.byteLength, 89);
+
+    // Also test default epoch, bibaPamVetoed=true (zScore <= 0, empty danSignatureHex) branch
+    const negBaseEnv = {
+      eventId: 'EVT-ES-TEST-2',
+      senderDid: 'did:chia:1testpeer',
+      specialization: 'spec:chia/chialisp',
+      seedHex: 'fedcba9876543210',
+      zScore: -0.4,
+      timestamp: new Date().toISOString(),
+      bibaPamVetoed: true,
+      publicKeyHex: peerKey.publicKeyHex
+    };
+    const negSig = dbrainMod.signEd25519Message(
+      dolfactoryMod.buildEsSeedPheromonePreimage(negBaseEnv),
+      'nousgent-test-es-peer'
+    );
+    const recNegSeed = memEngine.recordEsSeedPulse({ ...negBaseEnv, signatureHex: negSig.signatureHex });
+    assert.equal(recNegSeed.ok, true);
+    assert.equal(memEngine.listEsSeedPulses(0).length, 2);
+    assert.equal(memEngine.listEsSeedPulses().length, 2);
+
+    // Surrogate & Sleep ES (both empty quests and populated quests + custom knownPolicies)
+    const surrBoot = memEngine.runSurrogateAndSleepEs();
+    assert.equal(surrBoot.ok, true);
+    memEngine.askNousgent({ prompt: 'Uncharted rural cooperative microgrid dispatch question?' });
+    const surrWithQuests = memEngine.runSurrogateAndSleepEs({
+      specialization: 'spec:chia/wallet',
+      knownPolicies: [{ specialization: 'spec:chia/chialisp', policyEpoch: 3, params: { bm25fWeight: 0.52 } }]
+    });
+    assert.equal(surrWithQuests.ok, true);
+    assert.equal(surrWithQuests.priorTransfer.transferred, true);
+
+    // 4-way specialization & harness audit branches
+    assert.equal(memEngine.auditSpecializationAndHarness().verified, true);
+    assert.equal(memEngine.auditSpecializationAndHarness({ action: 'specialization' }).status, 'ok');
+    assert.equal(memEngine.auditSpecializationAndHarness({ action: 'guard_sim' }).status, 'ok');
+    assert.equal(memEngine.auditSpecializationAndHarness({ action: 'es_at_scale' }).status, 'ok');
+    assert.equal(memEngine.auditSpecializationAndHarness({ action: 'compositional_harness' }).status, 'ok');
+
+    // Replica merge with valid + invalid esSeedPulses (including default epoch / omitted fields)
+    const snapWithEs = memEngine.exportReplicaSnapshot();
+    const rawNoEpochSeed = { ...negBaseEnv, signatureHex: negSig.signatureHex };
+    const mergedEs = syncTarget.mergeReplicaSnapshot({
+      ...snapWithEs,
+      esSeedPulses: [...snapWithEs.esSeedPulses, rawNoEpochSeed, { eventId: 'BAD' }, null]
+    });
+    assert.equal(mergedEs.esSeedPulsesCount, 2);
+
+    const promAfterEs = memEngine.renderPrometheusMetrics();
+    assert.ok(promAfterEs.includes('nousgent_es_seed_pulses_total 2'));
+    assert.ok(promAfterEs.includes('nousgent_subharness_denials_total 6'));
+    assert.ok(promAfterEs.includes('nousgent_surrogate_episodes_total '));
+
     syncTarget.close();
 
     memEngine.close();

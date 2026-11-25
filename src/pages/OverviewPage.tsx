@@ -72,12 +72,19 @@ interface TeachFeedbackState {
   readonly estimatedGainPct?: number;
   readonly autoPriceDig?: string;
   readonly lobe?: string;
+  readonly specializations?: readonly string[];
   readonly capsuleId?: string;
   readonly missionId?: string;
   readonly helpedCount?: number;
   readonly hurtCount?: number;
+  readonly surrogateChecksCount?: number;
+  readonly loopholeSpikeVetoed?: boolean;
   readonly autoScopedIff?: boolean;
   readonly message: string;
+}
+
+function formatSpecBadge(spec: string): string {
+  return spec.replace(/^spec:/i, '');
 }
 
 const CONSOLE_TABS: readonly { readonly id: NousgentConsoleTab; readonly label: string }[] = [
@@ -197,6 +204,7 @@ export function OverviewPage({
   const [teachRationale, setTeachRationale] = useState<string>('');
   const [teachModelFamily, setTeachModelFamily] = useState<string>('agnostic');
   const [teachScopeKind, setTeachScopeKind] = useState<string>('domain_invariant');
+  const [teachSpecialization, setTeachSpecialization] = useState<string>('');
   const [teachBusy, setTeachBusy] = useState<boolean>(false);
   const [teachFeedback, setTeachFeedback] = useState<TeachFeedbackState | null>(null);
 
@@ -505,6 +513,7 @@ export function OverviewPage({
           lobe: teachLobe,
           authorDid: teachDid.trim(),
           content: cleanContent,
+          ...(teachSpecialization ? { specializations: [teachSpecialization] } : {}),
           ...(simLineage ? { simLineage } : {})
         })
       });
@@ -513,8 +522,11 @@ export function OverviewPage({
         setTeachFeedback({
           ok: false,
           mode: 'preview',
+          specializations: data.specializations,
           helpedCount: data.softHurt?.helpedCount,
           hurtCount: data.softHurt?.hurtCount,
+          surrogateChecksCount: data.softHurt?.surrogateChecksCount,
+          loopholeSpikeVetoed: data.softHurt?.loopholeSpikeVetoed,
           autoScopedIff: data.softHurt?.autoScopedIff,
           message: data.error || 'Rejected by Gate-0 hygiene check.'
         });
@@ -528,8 +540,10 @@ export function OverviewPage({
           estimatedGainPct: data.estimatedGainPct,
           autoPriceDig: data.autoPriceDig,
           lobe: data.lobe,
+          specializations: data.specializations,
           helpedCount: data.softHurt?.helpedCount,
           hurtCount: data.softHurt?.hurtCount,
+          surrogateChecksCount: data.softHurt?.surrogateChecksCount,
           autoScopedIff: data.softHurt?.autoScopedIff,
           message: data.tier2ClearSignRequired
             ? 'Non-regression checks passed. Alignment capsules pause for two-key human approval on the Signing page before mounting.'
@@ -544,9 +558,11 @@ export function OverviewPage({
           mode: 'paused',
           estimatedGainPct: data.estimatedGainPct,
           autoPriceDig: data.autoPriceDig,
+          specializations: data.specializations,
           missionId: data.mission?.missionId,
           helpedCount: data.softHurt?.helpedCount,
           hurtCount: data.softHurt?.hurtCount,
+          surrogateChecksCount: data.softHurt?.surrogateChecksCount,
           autoScopedIff: data.softHurt?.autoScopedIff,
           message: `Paused at safety lock -> queued ${data.mission?.missionId || ''} for two-key human sign-off on the Signing page.`
         });
@@ -560,9 +576,11 @@ export function OverviewPage({
           mode: 'minted',
           estimatedGainPct: data.estimatedGainPct,
           autoPriceDig: data.autoPriceDig,
+          specializations: data.specializations,
           capsuleId: data.capsuleId,
           helpedCount: data.softHurt?.helpedCount,
           hurtCount: data.softHurt?.hurtCount,
+          surrogateChecksCount: data.softHurt?.surrogateChecksCount,
           autoScopedIff: data.softHurt?.autoScopedIff,
           message: `✓ Minted ${data.capsuleId} (+${data.estimatedGainPct}% Est. · ${data.autoPriceDig} $DIG).`
         });
@@ -1034,7 +1052,7 @@ export function OverviewPage({
 
                     <details style={{ fontSize: '11.5px' }}>
                       <summary className="mono-xs text-muted" style={{ cursor: 'pointer', userSelect: 'none' }}>
-                        Why &amp; Source Model (Optional)
+                        Why, Domain &amp; Source Model (Optional)
                       </summary>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.45rem' }}>
                         <div className="dao-form-field">
@@ -1042,6 +1060,7 @@ export function OverviewPage({
                           <input
                             type="text"
                             id={`${uid}-tc-why`}
+                            name="rationale"
                             className="spatial-input"
                             placeholder="e.g. Prevents retry loop when upstream socket resets"
                             maxLength={180}
@@ -1049,11 +1068,35 @@ export function OverviewPage({
                             onChange={(e) => setTeachRationale(e.target.value)}
                           />
                         </div>
+                        <div className="dao-form-field">
+                          <label htmlFor={`${uid}-tc-spec`}>Domain Specialization</label>
+                          <select
+                            id={`${uid}-tc-spec`}
+                            name="specialization"
+                            className="spatial-input"
+                            value={teachSpecialization}
+                            onChange={(e) => setTeachSpecialization(e.target.value)}
+                          >
+                            <option value="">Auto-Detect (From Content)</option>
+                            <option value="spec:chia/chialisp">Chia / Chialisp &amp; CLVM</option>
+                            <option value="spec:chia/dao">Chia / DAO Governance</option>
+                            <option value="spec:chia/datalayer">Chia / DataLayer &amp; .dig</option>
+                            <option value="spec:security/thalamus">Security / Ring-0 Thalamus</option>
+                            <option value="spec:security/olfactory">Security / Pre-Cortical Olfactory</option>
+                            <option value="spec:cognition/continual-learning">Cognition / Continual Learning</option>
+                            <option value="spec:node/sqlite">Node.js / SQLite WAL</option>
+                            <option value="spec:rust/simd">Rust / SIMD &amp; WASM</option>
+                            <option value="spec:infra/k8s">Infrastructure / Kubernetes</option>
+                            <option value="spec:ui/webgl">UI / 3D WebGL &amp; Accessibility</option>
+                            <option value="spec:market">Market / $DIG Royalties</option>
+                          </select>
+                        </div>
                         <div className="dao-form-row" style={{ gap: '0.5rem' }}>
                           <div className="dao-form-field">
                             <label htmlFor={`${uid}-tc-model`}>Source Model</label>
                             <select
                               id={`${uid}-tc-model`}
+                              name="sourceModelFamily"
                               className="spatial-input"
                               value={teachModelFamily}
                               onChange={(e) => setTeachModelFamily(e.target.value)}
@@ -1070,6 +1113,7 @@ export function OverviewPage({
                             <label htmlFor={`${uid}-tc-scope`}>Rule Scope</label>
                             <select
                               id={`${uid}-tc-scope`}
+                              name="scopeKind"
                               className="spatial-input"
                               value={teachScopeKind}
                               onChange={(e) => setTeachScopeKind(e.target.value)}
@@ -1119,7 +1163,18 @@ export function OverviewPage({
                       {teachFeedback.helpedCount !== undefined ? (
                         <div className="mono-xs text-muted" style={{ fontSize: '10.5px', marginBottom: '0.22rem' }}>
                           Checks Helped: {teachFeedback.helpedCount} · Regressions: {teachFeedback.hurtCount ?? 0}
+                          {teachFeedback.surrogateChecksCount ? ` · +${teachFeedback.surrogateChecksCount} Surrogate` : ''}
+                          {teachFeedback.loopholeSpikeVetoed ? ' · Loophole Spike Vetoed' : ''}
                           {teachFeedback.autoScopedIff ? ' · Auto-Scoped' : ''}
+                        </div>
+                      ) : null}
+                      {teachFeedback.specializations && teachFeedback.specializations.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.28rem', marginBottom: '0.24rem' }}>
+                          {teachFeedback.specializations.slice(0, 3).map((sp) => (
+                            <span key={sp} className="pill-badge pistachio" style={{ fontSize: '9.5px' }}>
+                              {formatSpecBadge(sp)}
+                            </span>
+                          ))}
                         </div>
                       ) : null}
                       <div className={`mono-xs ${teachFeedback.ok ? 'text-ivory' : 'text-rose'}`} style={{ fontSize: '11px' }}>
@@ -1222,7 +1277,10 @@ export function OverviewPage({
                                 +{q.estimatedGainPct}% Est.
                               </span>
                               <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
-                                {q.lobe.toUpperCase()} · {q.hitCount}× · {q.rewardDig} $DIG
+                                {q.lobe.toUpperCase()}
+                                {q.specializations && q.specializations[0] ? ` · ${formatSpecBadge(q.specializations[0])}` : ''}
+                                {' · '}
+                                {q.hitCount}× · {q.rewardDig} $DIG
                               </span>
                             </div>
                             <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{q.prompt}</div>
@@ -1319,7 +1377,10 @@ export function OverviewPage({
                                 #{idx + 1} · +{c.estimatedGainPct}% Est.
                               </span>
                               <span className="mono-xs text-jade" style={{ fontSize: '10px' }}>
-                                {c.lobe.toUpperCase()} · {c.priceDigFormatted}
+                                {c.lobe.toUpperCase()}
+                                {c.specializations && c.specializations[0] ? ` · ${formatSpecBadge(c.specializations[0])}` : ''}
+                                {' · '}
+                                {c.priceDigFormatted}
                               </span>
                             </div>
                             <div style={{ fontSize: '12.5px', fontWeight: 600 }}>{c.title}</div>
@@ -1379,7 +1440,9 @@ export function OverviewPage({
                           >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                               <span className="mono-xs text-rose" style={{ fontSize: '10px', fontWeight: 700 }}>
-                                BLOCKED · {rej.hurtCheckIds.length} Regression{rej.hurtCheckIds.length === 1 ? '' : 's'}
+                                {rej.reason === 'LOOPHOLE_SPIKE_VETOED'
+                                  ? 'BLOCKED · Brittle Loophole Spike'
+                                  : `BLOCKED · ${rej.hurtCheckIds.length} Regression${rej.hurtCheckIds.length === 1 ? '' : 's'}`}
                               </span>
                               <span className="mono-xs text-muted" style={{ fontSize: '10px' }}>
                                 {rej.rejectionId}
@@ -1445,9 +1508,10 @@ export function OverviewPage({
                         onChange={(e) => setHackMode(e.target.value)}
                       >
                         <option value="">Auto-Detect</option>
-                        <option value="airlock">Unsigned Actuation (-32044)</option>
+                        <option value="airlock">Unsigned Actuation</option>
                         <option value="paradox">Conflicting Directive Paradox</option>
                         <option value="plume">Prompt Injection Plume</option>
+                        <option value="subharness">Sub-Agent Sponge &amp; Spend Escalation</option>
                       </select>
                     </div>
 

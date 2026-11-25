@@ -14,6 +14,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const nousgent = require('./lib/nousgent-core.js');
+const dthalamus = require('./packages/dthalamus/lib/dthalamus-core.js');
 const {
   createLiveEcosystemClient,
   mergeEnlistedRigsIntoRsiLeaderboard
@@ -309,10 +310,17 @@ async function runAskWithLiveOrgans(body = {}) {
 
 async function runGuardedLocalAgentInference(body = {}) {
   const promptStr = String(body.prompt || '').trim();
-  if (promptStr) {
+  const tailText = Array.isArray(body.messages)
+    ? body.messages.map((m) => String(m?.content || '')).join('\n')
+    : '';
+  const combinedInspect = `${promptStr}\n${tailText}`.trim();
+  if (combinedInspect) {
     const check = engine.podBay.evaluateChallenge({
-      prompt: promptStr,
-      sessionId: `agent-${Date.now()}`
+      prompt: combinedInspect,
+      sessionId: `agent-${Date.now()}`,
+      subcallDepth: body.subcallDepth,
+      requestedSubcalls: body.requestedSubcalls,
+      rootEpisodePlumeId: body.rootEpisodePlumeId
     });
     if (check.deflected) {
       engine.meshStore.recordRedTeamDeflection();
@@ -327,10 +335,31 @@ async function runGuardedLocalAgentInference(body = {}) {
       };
     }
   }
-  const out = await haloClient.runAgentInference(body);
+
+  let effectiveBody = body;
+  let lidFolded = null;
+  if (Array.isArray(body.messages) && body.messages.length > 0) {
+    lidFolded = dthalamus.foldUncachedTrajectoryTail({
+      messages: body.messages,
+      rollingHistoryMarkerIndex: Number(body.rollingHistoryMarkerIndex || 0)
+    });
+    effectiveBody = { ...body, messages: lidFolded.messages };
+  }
+
+  const out = await haloClient.runAgentInference(effectiveBody);
   return {
     statusCode: out.ok ? 200 : out.configured === false ? 503 : 400,
-    payload: out
+    payload: lidFolded
+      ? {
+          ...out,
+          lidGovernor: {
+            folded: lidFolded.folded,
+            prefixMutated: lidFolded.prefixMutated,
+            savedTokens: lidFolded.savedTokens,
+            spillId: lidFolded.spillId || null
+          }
+        }
+      : out
   };
 }
 
@@ -371,16 +400,21 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_get_bari_status',
     description: 'Return NOUSGENT Bounded ASI Readiness Index (BARI), 5-organ health, 50-state Chia mesh, and human vs. ia.nousgent.ai M2M plane counters.',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     inputSchema: { type: 'object', properties: {} }
   },
   {
     name: 'nousgent_pod_bay_challenge',
-    description: 'Run an adversarial prompt or unsigned airlock actuation test against NOUSGENT Cranial Nerve I + Ring-0 Thalamus + Dentate Cortex.',
+    description: 'Run an adversarial prompt, sponge fork-bomb, or unsigned actuation test against NOUSGENT Cranial Nerve I + Ring-0 Thalamus + Dentate Cortex.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     inputSchema: {
       type: 'object',
       properties: {
         prompt: { type: 'string' },
-        mode: { type: 'string', enum: ['airlock', 'paradox', 'plume'] }
+        mode: { type: 'string', enum: ['airlock', 'paradox', 'plume', 'subharness'] },
+        subcallDepth: { type: 'number' },
+        requestedSubcalls: { type: 'number' },
+        rootEpisodePlumeId: { type: 'string' }
       },
       required: ['prompt']
     }
@@ -388,6 +422,7 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_simulate_bisect',
     description: 'Compare 1968 Dave Bowman physical screwdriver core pull against O(log N) dbrain bisect across N capsule generations.',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     inputSchema: {
       type: 'object',
       properties: {
@@ -399,6 +434,7 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_enlist_rig',
     description: 'Enlist an open-source citizen or public library rig into the 50-state Chia Morphic Mesh and issue a NOUSGENT-<STATE>-<SEQ> callsign.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -411,11 +447,13 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_list_missions',
     description: 'List active Co-Op Bounded ASI Major Orders and their Two-Key CHIP-0043 Clear-Sign quorum progress.',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     inputSchema: { type: 'object', properties: {} }
   },
   {
     name: 'nousgent_submit_clear_sign',
     description: 'Submit a Two-Key CHIP-0043 Clear-Sign co-signature (requires keyAArmed=true and keyBArmed=true).',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -430,11 +468,13 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_get_plane_telemetry',
     description: 'Return dedicated traffic segmentation between https://nousgent.ai (human_ui) and https://ia.nousgent.ai (m2m_ia).',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     inputSchema: { type: 'object', properties: {} }
   },
   {
     name: 'nousgent_ask_persona',
     description: 'Converse directly with NOUSGENT across live dolfactory.to, dthalamus.to, dbrain.to, cbrain.to, shi.liquidi.sh, and optional local Ryzen AI Halo fallback.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -446,7 +486,8 @@ const MCP_TOOLS = Object.freeze([
   },
   {
     name: 'nousgent_local_agent_infer',
-    description: 'Execute a Ring-0 screened autonomous agent task (persona_qa, rsi_synthesizer, dream_consolidator, redteam_auditor, general_agent) against the configured local AMD Ryzen AI Halo OpenAI-compatible endpoint.',
+    description: 'Execute a Ring-0 screened autonomous agent task (persona_qa, rsi_synthesizer, dream_consolidator, redteam_auditor, general_agent) with prefix-safe LID tail folding.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -465,6 +506,7 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_create_dao_proposal',
     description: 'Propose a new Bounded RSI mission in chia-dao-v1 with a $DIG CAT2 reward target.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -483,6 +525,7 @@ const MCP_TOOLS = Object.freeze([
   {
     name: 'nousgent_cast_dao_vote',
     description: 'Cast a Mode-2 nullified chia-dao-v1 governance vote (FOR, AGAINST, ABSTAIN) weighted in $DIG CAT2 (10^3 mojos) on a Bounded RSI mission.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -492,6 +535,23 @@ const MCP_TOOLS = Object.freeze([
         stakeDig: { type: 'string' }
       },
       required: ['missionId', 'voterDid', 'support']
+    }
+  },
+  {
+    name: 'nousgent_specialization_and_harness_audit',
+    description: 'Audit 3-organ cortical specialization (DBRAIN-SPECIALIZATION-v1.0: 32+32 dual-BigInt masks & OR-SPEC-01..08), GUARD + SIM, DBRAIN-ES-AT-SCALE-v1.0 (89B ESS1 & DAN-v1.1 cohort Z-scores), and DBRAIN-HARNESS-CG-v1.0 (OR-011 sponge, prefix-safe LID tail folding, child leases & surrogate subtree transfer).',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['all', 'specialization', 'guard_sim', 'es_at_scale', 'compositional_harness']
+        },
+        specialization: { type: 'string' },
+        targetSpecialization: { type: 'string' },
+        bibaTainted: { type: 'boolean' }
+      }
     }
   }
 ]);
@@ -555,6 +615,8 @@ async function handleMcpRpc(body) {
     } else if (name === 'nousgent_cast_dao_vote') {
       data = engine.castDaoVote(args);
       if (data.ok) await peerReplicator.broadcastLocalMutation();
+    } else if (name === 'nousgent_specialization_and_harness_audit') {
+      data = engine.auditSpecializationAndHarness(args);
     }
     else {
       return {
@@ -686,7 +748,7 @@ const server = http.createServer(async (req, res) => {
           halo: haloClient.getPublicRuntimeSummary(),
           daoSingletonId: nousgent.DAO_SINGLETON_ID,
           planes: status.planes,
-          submodules: status.bari.submoduleVersions
+          submodules: status.bari.submodules
         },
         pathname,
         activePlane
@@ -734,6 +796,12 @@ const server = http.createServer(async (req, res) => {
           mcpEndpoint: `${M2M_ORIGIN}/api/mcp`,
           streamEndpoint: `${M2M_ORIGIN}/api/nousgent/stream`,
           metricsEndpoint: `${M2M_ORIGIN}/metrics`,
+          capabilities: {
+            corticalSpecialization: 'DBRAIN-SPECIALIZATION-v1.0',
+            esAtScale: 'DBRAIN-ES-AT-SCALE-v1.0',
+            cohortDopamine: 'DTHALAMUS-DAN-v1.1',
+            compositionalHarness: 'DBRAIN-HARNESS-CG-v1.0'
+          },
           sisterOrgans: [
             'https://dolfactory.to',
             'https://dthalamus.to',
@@ -797,11 +865,11 @@ const server = http.createServer(async (req, res) => {
         `- 1-Command Citizen Installer: curl -fsSL ${CANONICAL_ORIGIN}/enlist.sh | sh -s -- --chip=0043`,
         '',
         '## 5-Organ Orthogonal Bus',
-        '1. https://dolfactory.to — Cranial Nerve I Pre-Thalamic IPS & 2,048-KC Fly-LSH Immunity',
-        '2. https://dthalamus.to — Ring-0 Reference Monitor, OS Sandbox & Two-Key CHIP-0043 Gate',
-        '3. https://dbrain.to — 5-Lobe Chia Merkle Cortex, 0.00% Forgetting WAL & O(log N) Git Bisect',
-        '4. https://cbrain.to — Live 4D WebGL/wasm32 Connectome Observatory',
-        '5. https://shi.liquidi.sh — $DIG CAT2 (10^3 Mojos) Exchange & 60/25/10/5% Citation Royalties',
+        '1. https://dolfactory.to — Cranial Nerve I Pre-Thalamic IPS (11 ORs), OR-SPEC-01..08 & 2,048-KC Fly-LSH Immunity',
+        '2. https://dthalamus.to — Ring-0 Reference Monitor, DAN-v1.1 Cohort RPE, Prefix-Safe LID & Two-Key CHIP-0043 Gate',
+        '3. https://dbrain.to — 5-Lobe Chia Merkle Cortex, 32+32 Specialization, 89B ESS1 Sleep ES & Surrogate Replay',
+        '4. https://cbrain.to — Live 4D WebGL/wasm32 Connectome Observatory & Compositional Dissectors',
+        '5. https://shi.liquidi.sh — $DIG CAT2 (10^3 Mojos) Exchange, Sub-Harness Spend Guard & 60/25/10/5% Royalties',
         ''
       ].join('\n');
       setSecurityHeaders(res, pathname, activePlane);
@@ -924,7 +992,8 @@ const server = http.createServer(async (req, res) => {
         await peerReplicator.broadcastLocalMutation();
         evolutionsHub.notifyEvolutionChanged('dao_proposal');
       }
-      sendJson(res, out.ok ? 201 : 400, out, pathname, activePlane);
+      const statusCode = out.ok ? 201 : out.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ? 403 : 400;
+      sendJson(res, statusCode, out, pathname, activePlane);
       return;
     }
 
@@ -935,7 +1004,13 @@ const server = http.createServer(async (req, res) => {
         await peerReplicator.broadcastLocalMutation();
         evolutionsHub.notifyEvolutionChanged('dao_vote');
       }
-      const statusCode = out.ok ? 200 : out.code === 'DUPLICATE_VOTE_NULLIFIER' ? 409 : 400;
+      const statusCode = out.ok
+        ? 200
+        : out.code === 'DUPLICATE_VOTE_NULLIFIER'
+          ? 409
+          : out.code === 'SUBHARNESS_TIER2_SPEND_DENIED'
+            ? 403
+            : 400;
       sendJson(res, statusCode, out, pathname, activePlane);
       return;
     }
@@ -970,11 +1045,38 @@ const server = http.createServer(async (req, res) => {
           blindSpotQuests: engine.listBlindSpotQuests(liveEco.dbrain.liveCapsulesTotal || 100),
           autonomousQueue: liveEco.liquidish.autonomousCandidateQueue || [],
           rejectedEdits: engine.listRejectedEdits(),
+          esSeedPulses: engine.listEsSeedPulses(),
           frozenServe: engine.getFrozenServePointer(
-            liveEco.dbrain.generation,
+            liveEco.dbrain.primaryGeneration,
             liveEco.dbrain.verifiedMerkleRoot
           )
         },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/evolve/surrogate' && (req.method === 'GET' || req.method === 'POST')) {
+      const body = req.method === 'POST' ? await readJsonBody(req) : {};
+      const specParam = parsedUrl.searchParams.get('specialization') || body.specialization || undefined;
+      sendJson(
+        res,
+        200,
+        engine.runSurrogateAndSleepEs({ ...body, ...(specParam ? { specialization: specParam } : {}) }),
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/specialization/audit' && (req.method === 'GET' || req.method === 'POST')) {
+      const body = req.method === 'POST' ? await readJsonBody(req) : {};
+      const actionParam = parsedUrl.searchParams.get('action') || body.action || 'all';
+      sendJson(
+        res,
+        200,
+        engine.auditSpecializationAndHarness({ ...body, action: actionParam }),
         pathname,
         activePlane
       );
@@ -1018,7 +1120,9 @@ const server = http.createServer(async (req, res) => {
       const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
       if (!evalOut.ok) {
         const status =
-          evalOut.code === 'RING0_TEACH_REJECTED'
+          evalOut.code === 'RING0_TEACH_REJECTED' ||
+          evalOut.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ||
+          evalOut.code === 'SPECIALIZATION_WRITE_OUTSIDE_CEILING'
             ? 403
             : evalOut.code === 'SOFT_HURT_REJECTED'
               ? 422
@@ -1052,7 +1156,9 @@ const server = http.createServer(async (req, res) => {
       const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
       if (!evalOut.ok) {
         const status =
-          evalOut.code === 'RING0_TEACH_REJECTED'
+          evalOut.code === 'RING0_TEACH_REJECTED' ||
+          evalOut.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ||
+          evalOut.code === 'SPECIALIZATION_WRITE_OUTSIDE_CEILING'
             ? 403
             : evalOut.code === 'SOFT_HURT_REJECTED'
               ? 422
@@ -1102,7 +1208,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const frozenServe = engine.advanceFrozenServePointer({
-        generation: Number(liveEco.dbrain.generation || 1) + 1,
+        generation: Number(liveEco.dbrain.primaryGeneration || 1) + 1,
         merkleRoot: minted.merkleRoot
       });
       await peerReplicator.broadcastLocalMutation();
@@ -1131,21 +1237,32 @@ const server = http.createServer(async (req, res) => {
         await peerReplicator.broadcastLocalMutation();
         evolutionsHub.notifyEvolutionChanged('two_key_sign');
       }
-      sendJson(res, out.ok ? 200 : 400, out, pathname, activePlane);
+      const statusCode = out.ok ? 200 : out.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ? 403 : 400;
+      sendJson(res, statusCode, out, pathname, activePlane);
       return;
     }
 
     if (pathname === '/api/nousgent/morphic/pulse' && req.method === 'POST') {
       const body = await readJsonBody(req);
       let acceptedRejectedEdits = 0;
+      let acceptedEsSeedPulses = 0;
       if (Array.isArray(body && body.rejectedEdits)) {
         for (const rej of body.rejectedEdits.slice(0, 16)) {
           const rec = engine.recordRejectedEdit(rej);
           if (rec.ok) acceptedRejectedEdits += 1;
         }
-        if (acceptedRejectedEdits > 0) {
-          await peerReplicator.broadcastLocalMutation();
+      }
+      if (Array.isArray(body && body.esSeedPulses)) {
+        for (const seedEnv of body.esSeedPulses.slice(0, 16)) {
+          const rec = engine.recordEsSeedPulse(seedEnv);
+          if (rec.ok) {
+            acceptedEsSeedPulses += 1;
+            await liveClient.forwardEsSeedPulse(seedEnv);
+          }
         }
+      }
+      if (acceptedRejectedEdits > 0 || acceptedEsSeedPulses > 0) {
+        await peerReplicator.broadcastLocalMutation();
       }
       const liveEco = await liveClient.getLiveSnapshot();
       const status = engine.getMissionStatus(liveEco);
@@ -1159,7 +1276,8 @@ const server = http.createServer(async (req, res) => {
           bariScorePct: status.bari.bariScorePct,
           verifiedDataLayerRoot: status.leaderboard.verifiedDataLayerRoot,
           frozenServe: status.frozenServe,
-          acceptedRejectedEdits
+          acceptedRejectedEdits,
+          acceptedEsSeedPulses
         },
         pathname,
         activePlane

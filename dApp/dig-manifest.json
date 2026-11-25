@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,17 +11,17 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-24T02:18:39.234Z",
+  "builtAt": "2026-11-25T01:10:32.425Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0x08e8709bb7bd80a7e0de830d0cb16c9708064ddbe5adcad085135973cd7b70b3",
+    "manifestTreeSha256": "0xa70e0860ff551202f74816ce8d12da72ec70b7f50084c42a754674da0ebff7ab",
     "totalFiles": 23,
-    "totalBytes": 3304509
+    "totalBytes": 3365655
   },
   "files": [
     {
       "path": "api/dbrain-core-docs.json",
-      "bytes": 881380,
-      "sha256": "cb91b35030d35ef768c139b4e082bc4ff72e79c23cec8f44d3acded142aaed16"
+      "bytes": 939510,
+      "sha256": "de1267aea342c3c5068f8443ac83e4d3aff36300187f950b50f45357b1ffa30a"
     },
     {
       "path": "apple-touch-icon.png",
@@ -29,9 +29,9 @@
       "sha256": "ff5bc6c261999264bdc32d1ebb1d40a551b0f585c6c86ac5da0ae23a359c7332"
     },
     {
-      "path": "assets/cbrain-4d-4V_lWxKo.js",
-      "bytes": 42949,
-      "sha256": "38599fb84ada9c89da634b71551b0ec454388afe5d0678e5b9ccda59c1635202"
+      "path": "assets/cbrain-4d-nfIl8hWn.js",
+      "bytes": 43386,
+      "sha256": "09b9ea51c8b35ab599d2d99bdc46476079c74c9255ac2d986d5805b7dd99e663"
     },
     {
       "path": "assets/index-CYMXw76M.css",
@@ -39,9 +39,9 @@
       "sha256": "499c18215d7cf2b442f24cff83479772ee045318f988dc3cd6f8ae55d271e844"
     },
     {
-      "path": "assets/index-d0NYnZwU.js",
-      "bytes": 140801,
-      "sha256": "9fa67e1cb5d319941e1d2a60057354e55344454457699a1976f4d030b1e7037f"
+      "path": "assets/index-CZ1S1glq.js",
+      "bytes": 143380,
+      "sha256": "533472bc891a7646bc7935b2e49536d0b5f78137d6f598cdb89cef7b8f78445d"
     },
     {
       "path": "assets/react-vendor-BxSl43nu.js",
@@ -96,7 +96,7 @@
     {
       "path": "index.html",
       "bytes": 5927,
-      "sha256": "33a4ed8b7993de084a19ef777f7057e8454de140e2ab67c7720662a917bd1bb5"
+      "sha256": "42a1dc3bc0431d6eeb07cd31d355dd1d560319d2f40586103d88b4ddbd4ee0a1"
     },
     {
       "path": "logo-wordmark.svg",

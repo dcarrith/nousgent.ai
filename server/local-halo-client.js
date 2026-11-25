@@ -298,7 +298,8 @@ function createLocalHaloClient(env = process.env) {
     }
     const sysPrompt = String(input.systemPrompt || AGENT_ROLE_SYSTEM_PROMPTS[roleKey]).slice(0, 2000);
     const userPrompt = String(input.prompt || '').trim().slice(0, 4000);
-    if (!userPrompt) {
+    const hasMessages = Array.isArray(input.messages) && input.messages.length > 0;
+    if (!userPrompt && !hasMessages) {
       return { ok: false, configured: true, role: roleKey, error: 'Agent inference requires a non-empty prompt.' };
     }
     const model = String(input.model || target.model).trim();
@@ -308,10 +309,12 @@ function createLocalHaloClient(env = process.env) {
       temperature: Number.isFinite(Number(input.temperature)) ? Number(input.temperature) : 0.2,
       maxTokens: Number.isFinite(Number(input.maxTokens)) ? Number(input.maxTokens) : cfg.maxTokens,
       timeoutMs: cfg.timeoutMs,
-      messages: [
-        { role: 'system', content: sysPrompt },
-        { role: 'user', content: userPrompt }
-      ]
+      messages: hasMessages
+        ? input.messages
+        : [
+            { role: 'system', content: sysPrompt },
+            { role: 'user', content: userPrompt }
+          ]
     });
     return {
       ...out,

@@ -16,6 +16,7 @@ const http = require('node:http');
 const https = require('node:https');
 const zlib = require('node:zlib');
 const { estimateCapsuleIntelligenceGain } = require('../lib/modules/morphic-mesh-and-missions.js');
+const { detectSpecializations } = require('../lib/modules/pod-bay-redteam.js');
 
 const RFC5737_TEST_FIXTURE_RE = /(?:198[.-]51[.-]100[.-]|203[.-]0[.-]113[.-]|192[.-]0[.-]2[.-])/;
 const INTERNAL_UI_RUNBOOK_RE = /\b(morphattributes|morphtargetinfluences|facebookexternalhit|renderorder)\b/i;
@@ -498,7 +499,7 @@ function createLiveEcosystemClient(env = process.env) {
       fetchJsonWithFallback(targets.dbrain, '/api/dbrain/stores', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=100', { timeoutMs: 2200 }),
       fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/status', { timeoutMs: 1800 }),
-      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status', { timeoutMs: 1800 }),
+      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status?compositional=true', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.cbrain, '/api/cbrain/chronology', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/state', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/orderbook?projection=compact', {
@@ -548,6 +549,13 @@ function createLiveEcosystemClient(env = process.env) {
         lobe: String(c.lobe || 'semantic'),
         authorName: String(c.authorAgent?.name || market?.creatorName || 'Community Node'),
         tags: Array.isArray(c.tags) ? c.tags.slice(0, 4).map((t) => String(t)) : [],
+        specializations: detectSpecializations({
+          title,
+          summary,
+          content: c.content,
+          tags: c.tags,
+          specializations: c.specializations
+        }),
         timestamp: String(c.timestamp || c.createdAt || ''),
         storeId: String(c.storeId || dbStat.primaryStoreId || ''),
         generation: Number(c.generation || primaryStore?.generation || 0),
@@ -639,6 +647,9 @@ function createLiveEcosystemClient(env = process.env) {
       reachable: cbrainChronRes.ok,
       origin: 'https://cbrain.to',
       latencyMs: cbrainChronRes.latencyMs,
+      version: String(cbStat.cbrainProtocol || '').includes('@')
+        ? String(cbStat.cbrainProtocol).split('@').pop()
+        : '',
       cbrainProtocol: String(cbStat.cbrainProtocol || ''),
       wasmSpatialVerified: Boolean(cbStat.wasmSpatialVerified),
       coherencePct: Number(cbStat.driftAudit?.coherencePct || 0)
@@ -702,6 +713,13 @@ function createLiveEcosystemClient(env = process.env) {
             title: String(item.title || capId),
             summary: String(item.summary || '').slice(0, 180),
             lobe,
+            specializations: detectSpecializations({
+              title: item.title,
+              summary: item.summary,
+              content: item.content,
+              tags: item.tags,
+              specializations: item.effectiveSpecializations || item.specializations
+            }),
             storeId: String(item.storeId || ''),
             storeName: String(item.storeName || 'Community Brain Store'),
             priceDig: Number(priceDigNum.toFixed(3)),
@@ -775,12 +793,15 @@ function createLiveEcosystemClient(env = process.env) {
     if (!cleanPrompt || offlineTest) {
       return {
         recalledCapsules: [],
+        specializations: [],
         dolfactoryLiveSniff: null,
         dthalamusLiveGate: null,
         liquidishAutoQuote: null,
         ecosystem: await getLiveSnapshot()
       };
     }
+
+    const specializations = detectSpecializations({ rawText: cleanPrompt });
 
     const [sniffRes, gateRes, mcpRecallRes, quoteRes, ecosystem] = await Promise.all([
       fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/sniff', {
@@ -790,7 +811,8 @@ function createLiveEcosystemClient(env = process.env) {
           plane: 'orthonasal_ingress',
           sessionId: 'nousgent-mind-arena',
           taskPhase: 'REASONING',
-          originTrust: 'UNTRUSTED_WEB'
+          originTrust: 'UNTRUSTED_WEB',
+          detectSpecialization: true
         },
         timeoutMs: 550
       }),
@@ -810,7 +832,13 @@ function createLiveEcosystemClient(env = process.env) {
           method: 'tools/call',
           params: {
             name: 'dbrain_recall',
-            arguments: { query: cleanPrompt.slice(0, 280), limit: 4 }
+            arguments: {
+              query: cleanPrompt.slice(0, 280),
+              limit: 4,
+              ...(specializations.length > 0
+                ? { specializations, fallbackOnZeroHits: true }
+                : {})
+            }
           }
         },
         timeoutMs: 650
@@ -838,6 +866,7 @@ function createLiveEcosystemClient(env = process.env) {
 
     return {
       recalledCapsules,
+      specializations,
       dbrainRecallLatencyMs: mcpRecallRes.ok ? mcpRecallRes.latencyMs : null,
       dolfactoryLiveSniff: sniffRes.ok
         ? { latencyMs: sniffRes.latencyMs, result: sniffRes.data?.result || null }
@@ -868,8 +897,18 @@ function createLiveEcosystemClient(env = process.env) {
     return res.ok && res.data?.priceDig !== undefined ? Number(res.data.priceDig) : null;
   }
 
-  async function mintTeachCapsule({ title, content, lobe, authorDid, derivationTokens, simLineage, dentateFacets }) {
+  async function mintTeachCapsule({
+    title,
+    content,
+    lobe,
+    authorDid,
+    derivationTokens,
+    simLineage,
+    dentateFacets,
+    specializations
+  }) {
     if (offlineTest) return { ok: false, error: 'Offline mode' };
+    const specList = Array.isArray(specializations) ? specializations : [];
     const res = await fetchJsonWithFallback(targets.dbrain, '/api/mcp', {
       method: 'POST',
       body: {
@@ -885,11 +924,13 @@ function createLiveEcosystemClient(env = process.env) {
             lobe,
             ...(simLineage ? { simLineage } : {}),
             ...(dentateFacets ? { dentateFacets } : {}),
+            ...(specList.length > 0 ? { specializations: specList } : {}),
             tags: [
               'teach-nousgent',
               `author-did:${authorDid}`,
               `derivation-tokens:${derivationTokens}`,
-              'turns:1'
+              'turns:1',
+              ...specList
             ]
           }
         }
@@ -916,11 +957,23 @@ function createLiveEcosystemClient(env = process.env) {
     };
   }
 
+  async function forwardEsSeedPulse(envelope) {
+    if (offlineTest) return { ok: false, offline: true };
+    const res = await fetchJsonWithFallback(targets.dbrain, '/api/dbrain/learning/es/seed', {
+      method: 'POST',
+      body: envelope,
+      timeoutMs: 1200
+    });
+    if (res.ok) invalidateCache();
+    return { ok: res.ok, data: res.data };
+  }
+
   return Object.freeze({
     getLiveSnapshot,
     runLiveOrganPromptPipeline,
     quoteTeachCapsule,
     mintTeachCapsule,
+    forwardEsSeedPulse,
     invalidateCache
   });
 }
