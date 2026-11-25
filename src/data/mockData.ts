@@ -18,7 +18,7 @@ export interface StateHubItem {
   readonly mapY: number;
 }
 
-export interface DaoMissionGovernance {
+interface DaoMissionGovernance {
   readonly daoSingletonId: string;
   readonly proposalPuzzleHash: string;
   readonly category: string;
@@ -100,43 +100,43 @@ export const FALLBACK_ORGANS: readonly OrganBusItem[] = [
     slot: '01 // SENSORY',
     domain: 'Olfactory',
     url: 'https://dolfactory.to',
-    packageName: '@dolfactory/core@1.1.1',
+    packageName: '@dolfactory/core@1.6.0',
     status: 'NOMINAL',
     latencyMs: 0.14,
-    role: 'Pre-thalamic sensory screening and 2,048-KC Fly-LSH immunity'
+    role: 'Pre-thalamic IPS (12 ORs), VNO skill pinning, and 2,048-KC Fly-LSH immunity'
   },
   {
     slot: '02 // RELAY',
     domain: 'Thalamus',
     url: 'https://dthalamus.to',
-    packageName: '@dthalamus/core@1.3.1',
+    packageName: '@dthalamus/core@1.10.0',
     status: 'FILTERED',
     latencyMs: 0.09,
-    role: 'Ring-0 reference monitor, OS sandbox, and Biba policy gate'
+    role: 'Ring-0 reference monitor, SEP-2640 skill firewall, and Biba policy gate'
   },
   {
     slot: '03 // CORTEX',
     domain: 'Cortex',
     url: 'https://dbrain.to',
-    packageName: '@dbrain/core@3.17.1',
+    packageName: '@dbrain/core@3.23.0',
     status: 'BOUNDED',
     latencyMs: 0.045,
-    role: '5-lobe Chia Merkle WAL with 0% forgetting and O(log N) bisect'
+    role: '5-lobe Chia Merkle WAL, SEP-2640 skills catalog, and O(log N) bisect'
   },
   {
     slot: '04 // CONNECTOME',
     domain: 'Connectome',
     url: 'https://cbrain.to',
-    packageName: '@cbrain/core@3.16.0',
+    packageName: '@cbrain/core@3.23.0',
     status: 'VERIFIED',
     latencyMs: 0.18,
-    role: '3D WebGL connectome and Kenyon synapse firing telemetry'
+    role: '3D WebGL connectome, Kenyon synapse firing, and forensic dissectors'
   },
   {
     slot: '05 // EXCHANGE',
     domain: 'Exchange',
     url: 'https://liquidi.sh',
-    packageName: 'liquidi.sh@3.17.1',
+    packageName: 'liquidi.sh@3.23.0',
     status: 'SYNCED',
     latencyMs: 0.42,
     role: '$DIG CAT2 market and 60/25/10/5% citation royalties'

@@ -63,6 +63,9 @@ function stripReasoningBlocks(rawText) {
 function postJson(targetUrl, payload, { apiKey = '', timeoutMs = 12000, method = 'POST' } = {}) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(targetUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return reject(new Error(`Unsupported Local Halo URL scheme: ${parsed.protocol}`));
+    }
     const transport = parsed.protocol === 'https:' ? https : http;
     const bodyBuf = method === 'GET' ? null : Buffer.from(JSON.stringify(payload), 'utf8');
     const headers = {

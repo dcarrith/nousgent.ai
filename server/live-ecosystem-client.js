@@ -626,6 +626,7 @@ function createLiveEcosystemClient(env = process.env) {
       rawDthalamusStatus,
       rawDolfactoryStatus,
       rawDolfactoryHarness,
+      rawDolfactoryVnoSkills,
       rawCbrainChron,
       rawLiquidishState,
       rawLiquidishOrderbook,
@@ -637,6 +638,7 @@ function createLiveEcosystemClient(env = process.env) {
       fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/status', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/harness/guard', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/vno/skills', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.cbrain, '/api/cbrain/chronology', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/state', { timeoutMs: 4500 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/orderbook?projection=compact', {
@@ -652,6 +654,7 @@ function createLiveEcosystemClient(env = process.env) {
     const dthalamusStatusRes = resolveProbe('dthalamusStatus', rawDthalamusStatus, nowMs);
     const dolfactoryStatusRes = resolveProbe('dolfactoryStatus', rawDolfactoryStatus, nowMs);
     const dolfactoryHarnessRes = resolveProbe('dolfactoryHarness', rawDolfactoryHarness, nowMs);
+    const dolfactoryVnoSkillsRes = resolveProbe('dolfactoryVnoSkills', rawDolfactoryVnoSkills, nowMs);
     const cbrainChronRes = resolveProbe('cbrainChron', rawCbrainChron, nowMs);
     const liquidishStateRes = resolveProbe('liquidishState', rawLiquidishState, nowMs);
     const liquidishOrderbookRes = resolveProbe('liquidishOrderbook', rawLiquidishOrderbook, nowMs);
@@ -691,6 +694,7 @@ function createLiveEcosystemClient(env = process.env) {
     const dtStat = dthalamusStatusRes.data || {};
     const dolfStat = dolfactoryStatusRes.data || {};
     const dolfHarness = dolfactoryHarnessRes.data || {};
+    const dolfVnoSkills = dolfactoryVnoSkillsRes.data || {};
     const cbStat = cbrainChronRes.data || {};
     const liqStat = liquidishStateRes.data || {};
     const shiStat = shiTelemetryRes.data || {};
@@ -805,6 +809,7 @@ function createLiveEcosystemClient(env = process.env) {
       version: String(dolfStat.version || ''),
       protocol: String(dolfStat.protocol || ''),
       totalReceptors: Math.max(
+        Number(dolfVnoSkills.totalReceptorsWhenEnabled || 0),
         Number(dolfHarness.totalReceptorsWhenEnabled || 0),
         Number(dolfStat.collectiveReceptorStats?.totalReceptors || 0),
         Number(dolfStat.receptorStats?.totalReceptors ?? dolfStat.receptors?.length ?? 0)
@@ -1220,6 +1225,41 @@ function createLiveEcosystemClient(env = process.env) {
     return { ok: res.ok, data: res.data };
   }
 
+  async function resolveCapsuleById(capsuleId) {
+    const cleanId = String(capsuleId || '')
+      .trim()
+      .replace(/[^A-Za-z0-9._-]/g, '');
+    if (!cleanId || cleanId !== String(capsuleId || '').trim()) {
+      return null;
+    }
+    if (!offlineTest) {
+      const digRes = await fetchJsonWithFallback(
+        targets.dbrain,
+        `/dig/${encodeURIComponent(cleanId)}.json`,
+        { timeoutMs: 1500 }
+      );
+      if (digRes.ok && digRes.data) {
+        const directCap = digRes.data.capsule || (digRes.data.id ? digRes.data : null);
+        if (directCap && String(directCap.id) === cleanId) {
+          return directCap;
+        }
+      }
+      const cachedCaps = lastGoodProbes.get('dbrainCapsules')?.data?.capsules;
+      if (Array.isArray(cachedCaps)) {
+        const hit = cachedCaps.find((c) => c && String(c.id) === cleanId);
+        if (hit) return hit;
+      }
+      const listRes = await fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=100', {
+        timeoutMs: 1800
+      });
+      if (listRes.ok && Array.isArray(listRes.data?.capsules)) {
+        const hit = listRes.data.capsules.find((c) => c && String(c.id) === cleanId);
+        if (hit) return hit;
+      }
+    }
+    return null;
+  }
+
   return Object.freeze({
     getLiveSnapshot,
     refreshDbrainEvolutions,
@@ -1227,6 +1267,7 @@ function createLiveEcosystemClient(env = process.env) {
     quoteTeachCapsule,
     mintTeachCapsule,
     forwardEsSeedPulse,
+    resolveCapsuleById,
     invalidateCache
   });
 }

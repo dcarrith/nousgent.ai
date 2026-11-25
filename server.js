@@ -8,6 +8,7 @@
  * ============================================================================
  */
 
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const http = require('node:http');
 const os = require('node:os');
@@ -73,6 +74,47 @@ const renderHtmlWithSeo = createHtmlMetadataRenderer({
 });
 
 const recentAlertDeliveries = [];
+
+// Default-ON per-IP HMAC-bucketed rate limiter (NoMoreSlop Layer 2 Rule #1)
+const RATE_LIMIT_SALT = crypto.randomBytes(16);
+const rateBuckets = new Map();
+const MAX_RATE_BUCKETS = 10_000;
+const TRUST_PROXY = process.env.NOUSGENT_TRUST_PROXY === '1' || process.env.NODE_ENV === 'production';
+const RATE_LIMIT_WINDOW_MS = Math.max(1000, Number(process.env.NOUSGENT_RATE_LIMIT_WINDOW_MS || 60_000));
+const RATE_LIMIT_MCP_MAX = Math.max(10, Number(process.env.NOUSGENT_RATE_LIMIT_MCP_MAX || 180));
+const RATE_LIMIT_API_POST_MAX = Math.max(10, Number(process.env.NOUSGENT_RATE_LIMIT_POST_MAX || 120));
+let rateLimitedBlocksTotal = 0;
+
+function resolveClientIp(req) {
+  if (TRUST_PROXY) {
+    const xff = req.headers['x-forwarded-for'];
+    if (typeof xff === 'string' && xff.length > 0) {
+      return xff.split(',')[0].trim();
+    }
+  }
+  return (req.socket && req.socket.remoteAddress) || 'unknown';
+}
+
+function isRateLimited(req, bucket, limit, windowMs = RATE_LIMIT_WINDOW_MS) {
+  const ip = resolveClientIp(req);
+  const key = `${bucket}:${crypto.createHmac('sha256', RATE_LIMIT_SALT).update(ip).digest('hex')}`;
+  const now = Date.now();
+  const entry = rateBuckets.get(key);
+  if (!entry || now - entry.start > windowMs) {
+    if (rateBuckets.size >= MAX_RATE_BUCKETS) {
+      const oldestKey = rateBuckets.keys().next().value;
+      if (oldestKey) rateBuckets.delete(oldestKey);
+    }
+    rateBuckets.set(key, { start: now, count: 1 });
+    return false;
+  }
+  entry.count += 1;
+  if (entry.count > limit) {
+    rateLimitedBlocksTotal += 1;
+    return true;
+  }
+  return false;
+}
 
 const NOUSGENT_ALERT_RULES_CATALOG = Object.freeze([
   {
@@ -548,35 +590,82 @@ const MCP_TOOLS = Object.freeze([
   },
   {
     name: 'nousgent_specialization_and_harness_audit',
-    description: 'Audit 3-organ cortical specialization (DBRAIN-SPECIALIZATION-v1.0: 32+32 dual-BigInt masks & OR-SPEC-01..08), GUARD + SIM, DBRAIN-ES-AT-SCALE-v1.0 (89B ESS1 & DAN-v1.1 cohort Z-scores), and DBRAIN-HARNESS-CG-v1.0 (OR-011 sponge, prefix-safe LID tail folding, child leases & surrogate subtree transfer).',
+    description: 'Audit 3-organ cortical specialization (DBRAIN-SPECIALIZATION-v1.0: 32+32 dual-BigInt masks & OR-SPEC-01..08), GUARD + SIM, DBRAIN-ES-AT-SCALE-v1.0 (89B ESS1 & DAN-v1.1 cohort Z-scores), DBRAIN-HARNESS-CG-v1.0 (OR-011 sponge, prefix-safe LID tail folding & child leases), and DBRAIN-MCP-SKILLS-v1.0 (SEP-2640 skills, OR-012 & Ring-0 skill firewall).',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     inputSchema: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['all', 'specialization', 'guard_sim', 'es_at_scale', 'compositional_harness']
+          enum: ['all', 'specialization', 'guard_sim', 'es_at_scale', 'compositional_harness', 'mcp_skills']
         },
         specialization: { type: 'string' },
         targetSpecialization: { type: 'string' },
         bibaTainted: { type: 'boolean' }
       }
     }
+  },
+  {
+    name: 'nousgent_verify_skill_resource',
+    description: 'Verify an inbound or bundled SEP-2640 skill:// resource against Ring-0 sha256 digest, UTF-8 byte size, SKILL.md frontmatter parity, and Olfactory OR-012 Trojan-skill quarantine rules.',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        preset: {
+          type: 'string',
+          enum: ['custom', 'verified', 'unlisted', 'digest', 'frontmatter', 'trojan']
+        },
+        skillName: { type: 'string' },
+        uri: { type: 'string' },
+        text: { type: 'string' },
+        verifyDigests: { type: 'boolean' },
+        screenBodies: { type: 'boolean' }
+      }
+    }
   }
 ]);
 
-async function handleMcpRpc(body) {
-  const id = body && Object.prototype.hasOwnProperty.call(body, 'id') ? body.id : null;
+async function resolveCapsulesForSkillUri(uri) {
+  const match = String(uri || '').trim().match(/^skill:\/\/capsules\/([^/]+)(?:\/.*)?$/);
+  if (!match) return [];
+  const cap = await liveClient.resolveCapsuleById(match[1]);
+  return cap ? [cap] : [];
+}
+
+async function handleMcpRpc(body, rpcContext = {}) {
+  const hasId = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'id'));
+  const id = hasId ? body.id : null;
   const method = body && body.method;
   const params = (body && body.params) || {};
+  const skillsScope = params.skillsScope || rpcContext.skillsScope || '';
 
-  if (method === 'initialize') {
+  if (
+    method === 'notifications/initialized' ||
+    (typeof method === 'string' && method.startsWith('notifications/')) ||
+    (!hasId && typeof method === 'string')
+  ) {
+    return null;
+  }
+
+  if (method === 'initialize' || method === 'server/discover') {
+    const negotiatedProtocol = nousgent.negotiateMcpProtocolVersion(
+      params.protocolVersion ? String(params.protocolVersion) : '2025-03-26'
+    );
     return {
       jsonrpc: '2.0',
       id,
       result: {
-        protocolVersion: '2025-03-26',
-        capabilities: { tools: { listChanged: false } },
+        protocolVersion: negotiatedProtocol,
+        capabilities: {
+          tools: { listChanged: false },
+          resources: { subscribe: false, listChanged: false },
+          streaming: true,
+          extensions: {
+            [nousgent.MCP_SKILLS_EXTENSION_ID]: { directoryRead: true }
+          }
+        },
+        instructions: nousgent.NOUSGENT_MCP_SERVER_INSTRUCTIONS,
         serverInfo: {
           name: 'ia.nousgent.ai-mcp',
           version: APP_VERSION,
@@ -586,11 +675,74 @@ async function handleMcpRpc(body) {
       }
     };
   }
-  if (method === 'notifications/initialized' || method === 'ping') {
+  if (method === 'ping') {
     return { jsonrpc: '2.0', id, result: {} };
   }
   if (method === 'tools/list') {
     return { jsonrpc: '2.0', id, result: { tools: MCP_TOOLS } };
+  }
+  if (method === 'skills/list') {
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: nousgent.listNousgentMcpSkills({
+        cursor: params.cursor,
+        pageSize: params.pageSize,
+        filterSkillNames: params.filterSkillNames,
+        skillsScope
+      })
+    };
+  }
+  if (method === 'skills/get') {
+    const uri = String(params.uri || '');
+    const capsules = await resolveCapsulesForSkillUri(uri);
+    const lookup = engine.getGuardedSkillByUri(uri, {
+      capsules,
+      filterSkillNames: params.filterSkillNames,
+      skillsScope
+    });
+    if (!lookup.found) {
+      return { jsonrpc: '2.0', id, error: lookup.error };
+    }
+    return { jsonrpc: '2.0', id, result: lookup.result };
+  }
+  if (method === 'resources/list') {
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: {
+        resources: nousgent.listNousgentMcpSkillResources({
+          filterSkillNames: params.filterSkillNames,
+          skillsScope
+        })
+      }
+    };
+  }
+  if (method === 'resources/read') {
+    const uri = String(params.uri || '');
+    const capsules = await resolveCapsulesForSkillUri(uri);
+    const readOut = engine.readVerifiedSkillResource(uri, {
+      capsules,
+      filterSkillNames: params.filterSkillNames,
+      skillsScope
+    });
+    if (!readOut.found) {
+      return { jsonrpc: '2.0', id, error: readOut.error };
+    }
+    return { jsonrpc: '2.0', id, result: readOut.result };
+  }
+  if (method === 'resources/directory/read') {
+    const uri = String(params.uri || '');
+    const capsules = await resolveCapsulesForSkillUri(uri);
+    const dirOut = nousgent.readNousgentMcpSkillDirectory(uri, {
+      capsules,
+      filterSkillNames: params.filterSkillNames,
+      skillsScope
+    });
+    if (!dirOut.found) {
+      return { jsonrpc: '2.0', id, error: dirOut.error };
+    }
+    return { jsonrpc: '2.0', id, result: dirOut.result };
   }
   if (method === 'tools/call') {
     const name = params.name;
@@ -637,6 +789,9 @@ async function handleMcpRpc(body) {
       }
     } else if (name === 'nousgent_specialization_and_harness_audit') {
       data = engine.auditSpecializationAndHarness(args);
+    } else if (name === 'nousgent_verify_skill_resource') {
+      const capsules = args.uri ? await resolveCapsulesForSkillUri(args.uri) : [];
+      data = engine.verifySkillResource({ ...args, capsules });
     }
     else {
       return {
@@ -751,6 +906,29 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === 'POST' && pathname.startsWith('/api/')) {
+      const isMcpRoute = pathname === '/api/mcp';
+      const bucketName = isMcpRoute ? 'mcp-rpc' : 'api-post';
+      const bucketLimit = isMcpRoute ? RATE_LIMIT_MCP_MAX : RATE_LIMIT_API_POST_MAX;
+      if (isRateLimited(req, bucketName, bucketLimit)) {
+        setSecurityHeaders(res, pathname, activePlane);
+        res.writeHead(429, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'Retry-After': String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000))
+        });
+        res.end(
+          JSON.stringify({
+            ok: false,
+            code: 'RATE_LIMITED',
+            rateLimitedBlocksTotal,
+            error: 'Rate limit exceeded for public API/MCP endpoint. Please retry shortly.'
+          })
+        );
+        return;
+      }
+    }
+
     if (pathname === '/api/health' && req.method === 'GET') {
       const status = engine.getMissionStatus();
       sendJson(
@@ -782,7 +960,9 @@ const server = http.createServer(async (req, res) => {
 
     if ((pathname === '/metrics' || pathname === '/api/nousgent/metrics') && req.method === 'GET') {
       const liveEco = await liveClient.getLiveSnapshot();
-      const body = engine.renderPrometheusMetrics(liveEco);
+      const body = engine.renderPrometheusMetrics(liveEco, {
+        rateLimitedBlocks: rateLimitedBlocksTotal
+      });
       setSecurityHeaders(res, pathname, activePlane);
       res.writeHead(200, {
         'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
@@ -824,7 +1004,8 @@ const server = http.createServer(async (req, res) => {
             corticalSpecialization: 'DBRAIN-SPECIALIZATION-v1.0',
             esAtScale: 'DBRAIN-ES-AT-SCALE-v1.0',
             cohortDopamine: 'DTHALAMUS-DAN-v1.1',
-            compositionalHarness: 'DBRAIN-HARNESS-CG-v1.0'
+            compositionalHarness: 'DBRAIN-HARNESS-CG-v1.0',
+            mcpSkills: nousgent.DBRAIN_MCP_SKILLS_PROTOCOL
           },
           sisterOrgans: [
             'https://dolfactory.to',
@@ -841,16 +1022,21 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname === '/.well-known/mcp.json' && req.method === 'GET') {
+      const skillsCatalog = nousgent.listNousgentMcpSkills();
       sendJson(
         res,
         200,
         {
           protocolVersion: '2025-03-26',
+          supportedProtocolVersions: nousgent.SUPPORTED_MCP_PROTOCOL_VERSIONS,
+          skillsExtension: nousgent.MCP_SKILLS_EXTENSION_ID,
+          skillsProtocol: nousgent.DBRAIN_MCP_SKILLS_PROTOCOL,
           serverName: 'ia.nousgent.ai-mcp',
           version: APP_VERSION,
           endpoint: `${M2M_ORIGIN}/api/mcp`,
           humanPortal: CANONICAL_ORIGIN,
-          tools: MCP_TOOLS.map((t) => t.name)
+          tools: MCP_TOOLS.map((t) => t.name),
+          skills: skillsCatalog.skills.map((s) => s.uri)
         },
         pathname,
         activePlane
@@ -884,14 +1070,15 @@ const server = http.createServer(async (req, res) => {
         '',
         `- Primary Human Mission Control: ${CANONICAL_ORIGIN} (plane="human_ui")`,
         `- Dedicated Autonomous A2A / M2M Swarm Plane: ${M2M_ORIGIN} (plane="m2m_ia")`,
-        `- MCP 2025-03-26 JSON-RPC Endpoint: ${M2M_ORIGIN}/api/mcp`,
+        `- MCP 2024-11-05 / 2025-03-26 / 2026-07-28 + SEP-2640 Skills Endpoint: ${M2M_ORIGIN}/api/mcp`,
+        `- SEP-2640 Skill Catalog & Firewall Diagnostics: ${M2M_ORIGIN}/api/nousgent/mcp/skills & ${M2M_ORIGIN}/api/nousgent/mcp/skills-firewall`,
         `- Unbuffered NDJSON Telemetry Stream: ${M2M_ORIGIN}/api/nousgent/stream`,
         `- 1-Command Citizen Installer: curl -fsSL ${CANONICAL_ORIGIN}/enlist.sh | sh -s -- --chip=0043`,
         '',
         '## 5-Organ Orthogonal Bus',
-        '1. https://dolfactory.to — Cranial Nerve I Pre-Thalamic IPS (11 ORs), OR-SPEC-01..08 & 2,048-KC Fly-LSH Immunity',
-        '2. https://dthalamus.to — Ring-0 Reference Monitor, DAN-v1.1 Cohort RPE, Prefix-Safe LID & Two-Key CHIP-0043 Gate',
-        '3. https://dbrain.to — 5-Lobe Chia Merkle Cortex, 32+32 Specialization, 89B ESS1 Sleep ES & Surrogate Replay',
+        '1. https://dolfactory.to — Cranial Nerve I Pre-Thalamic IPS (12 ORs), VNO Skill Pinning & 2,048-KC Fly-LSH Immunity',
+        '2. https://dthalamus.to — Ring-0 Reference Monitor, SEP-2640 Skill Firewall, Prefix-Safe LID & Two-Key CHIP-0043 Gate',
+        '3. https://dbrain.to — 5-Lobe Chia Merkle Cortex, SEP-2640 Skills Catalog, 89B ESS1 Sleep ES & Surrogate Replay',
         '4. https://cbrain.to — Live 4D WebGL/wasm32 Connectome Observatory & Compositional Dissectors',
         '5. https://shi.liquidi.sh — $DIG CAT2 (10^3 Mojos) Exchange, Sub-Harness Spend Guard & 60/25/10/5% Royalties',
         ''
@@ -1431,9 +1618,105 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (
+      (pathname === '/api/nousgent/mcp/skills' || pathname === '/api/dbrain/mcp/skills') &&
+      req.method === 'GET'
+    ) {
+      const skillsScope = parsedUrl.searchParams.get('skills') || '';
+      const cursor = parsedUrl.searchParams.get('cursor') || null;
+      const pageSize = Number(parsedUrl.searchParams.get('pageSize') || 20);
+      const listed = nousgent.listNousgentMcpSkills({ cursor, pageSize, skillsScope });
+      const resources = nousgent.listNousgentMcpSkillResources({ skillsScope });
+      sendJson(
+        res,
+        200,
+        {
+          status: 'ok',
+          protocol: nousgent.DBRAIN_MCP_SKILLS_PROTOCOL,
+          extensionId: nousgent.MCP_SKILLS_EXTENSION_ID,
+          supportedProtocolVersions: nousgent.SUPPORTED_MCP_PROTOCOL_VERSIONS,
+          skillsScope: skillsScope || 'all',
+          ...listed,
+          resourcesCount: resources.length,
+          stats: engine.skillsFirewall.getStats()
+        },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (
+      (pathname === '/api/nousgent/mcp/skills-firewall' || pathname === '/api/dthalamus/mcp/skills-firewall') &&
+      (req.method === 'GET' || req.method === 'POST')
+    ) {
+      const body = req.method === 'POST' ? await readJsonBody(req) : {};
+      const preset = parsedUrl.searchParams.get('preset') || body.preset || 'verified';
+      const skillName = parsedUrl.searchParams.get('skill') || body.skillName || nousgent.NOUSGENT_SKILL_NAME;
+      const uri = parsedUrl.searchParams.get('uri') || body.uri || undefined;
+      const capsules = uri ? await resolveCapsulesForSkillUri(uri) : [];
+      const out = engine.verifySkillResource({
+        ...body,
+        preset,
+        skillName,
+        ...(uri ? { uri } : {}),
+        capsules
+      });
+      sendJson(res, 200, out, pathname, activePlane);
+      return;
+    }
+
+    if (
+      (pathname === '/api/nousgent/vno/skills' || pathname === '/api/dolfactory/vno/skills') &&
+      (req.method === 'GET' || req.method === 'POST')
+    ) {
+      if (req.method === 'GET') {
+        const baseline = engine.auditVnoSkillCatalog();
+        sendJson(
+          res,
+          200,
+          {
+            status: 'ok',
+            protocol: baseline.protocol,
+            extensionId: baseline.extensionId,
+            version: baseline.version,
+            guardCartridges: baseline.guardCartridges,
+            totalReceptorsWhenEnabled: baseline.totalReceptorsWhenEnabled,
+            servedSkillsCount: engine.skillsFirewall.getStats().bundledSkillsCount
+          },
+          pathname,
+          activePlane
+        );
+        return;
+      }
+      const body = await readJsonBody(req);
+      sendJson(res, 200, engine.auditVnoSkillCatalog(body), pathname, activePlane);
+      return;
+    }
+
     if (pathname === '/api/mcp' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      const out = Array.isArray(body) ? await Promise.all(body.map(handleMcpRpc)) : await handleMcpRpc(body);
+      const skillsScope = parsedUrl.searchParams.get('skills') || '';
+      if (Array.isArray(body)) {
+        const batchOut = (await Promise.all(body.map((item) => handleMcpRpc(item, { skillsScope })))).filter(
+          (item) => item !== null
+        );
+        if (batchOut.length === 0) {
+          setSecurityHeaders(res, pathname, activePlane);
+          res.writeHead(204);
+          res.end();
+          return;
+        }
+        sendJson(res, 200, batchOut, pathname, activePlane);
+        return;
+      }
+      const out = await handleMcpRpc(body, { skillsScope });
+      if (out === null) {
+        setSecurityHeaders(res, pathname, activePlane);
+        res.writeHead(204);
+        res.end();
+        return;
+      }
       sendJson(res, 200, out, pathname, activePlane);
       return;
     }

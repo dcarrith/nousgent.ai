@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "package": {
     "name": "@dbrain/core",
-    "version": "3.22.0",
-    "engineBanner": "@dbrain/core v3.22.0",
+    "version": "3.23.0",
+    "engineBanner": "@dbrain/core v3.23.0",
     "protocol": "DBRAIN-v1.3",
     "mcpProtocolVersion": "2024-11-05",
     "license": "Apache-2.0",
@@ -11,14 +11,14 @@
   },
   "stats": {
     "acyclicVerified": true,
-    "totalDependencyEdges": 150,
-    "totalJsModules": 50,
-    "totalUniqueJsSymbols": 347,
+    "totalDependencyEdges": 154,
+    "totalJsModules": 51,
+    "totalUniqueJsSymbols": 360,
     "totalRustModules": 7,
     "totalRustItems": 54,
     "totalMcpTools": 8,
     "totalCliCommands": 13,
-    "totalHttpEndpoints": 35
+    "totalHttpEndpoints": 36
   },
   "pillars": [
     {
@@ -10436,7 +10436,7 @@
           "filePath": "lib/pillars/pillar11/agentic-discovery.js",
           "title": "@dbrain/core/pillars/pillar11/agentic-discovery",
           "purpose": "For autonomous AI agents browsing the Agentic Internet to hire `dbrain.to` without human intervention, they need standardized, machine-verifiable service discovery manifests and trust/SLO scoring metadata. This sub-module publishes the canonical counterparty DID, primary `CHIP-0035` singleton store, the 6-blueprint autonomous Business-to-Agent / Agent-to-Agent (`B2A`/`A2A`) service catalog, and the four discovery endpoints: 1. `/.well-known/agent.json` (`buildAgenticInternetManifest`) advertising Wyoming DUNA legal counterparty identity, `$DIG` CAT asset IDs, P99 benchmark SLOs (`0.29 ms`), and Chialisp escrow safety opcodes. 2. `/.well-known/mcp.json` (`buildMcpDiscoveryManifest`) listing HTTP JSON-RPC and `stdio` transports alongside core + extended MCP tools. 3. `/llms.txt` & `/llms-full.txt` (`buildLlmsTxtManifest`) summarizing the 4-step smart-contract handshake in clean Markdown for LLM crawlers. 4. Multi-predicate capability & budget discovery (`discoverAgenticServices`).",
-          "lineCount": 628,
+          "lineCount": 643,
           "ownSymbolCount": 5,
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js"
         }
@@ -10504,7 +10504,7 @@
           "signature": "const AGENTIC_SERVICE_CATALOG",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
           "line": 97,
-          "lineCount": 628,
+          "lineCount": 643,
           "summary": "Autonomous 6-blueprint `B2A`/`A2A` service catalog with `$DIG`/`XCH` pricing, P99 SLOs, and Merkle contracts.",
           "description": "Autonomous 6-blueprint `B2A`/`A2A` service catalog with `$DIG`/`XCH` pricing, P99 SLOs, and Merkle contracts.",
           "params": [],
@@ -10525,7 +10525,7 @@
           "signature": "function buildAgenticInternetManifest(originInput)",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
           "line": 242,
-          "lineCount": 628,
+          "lineCount": 643,
           "summary": "Builds the `/.well-known/agent.json` Agentic Internet discovery manifest with trust identity, SLOs, and settlement rails.",
           "description": "Builds the `/.well-known/agent.json` Agentic Internet discovery manifest with trust identity, SLOs, and settlement rails.",
           "params": [
@@ -10554,7 +10554,7 @@
           "signature": "function buildMcpDiscoveryManifest(originInput)",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
           "line": 410,
-          "lineCount": 628,
+          "lineCount": 643,
           "summary": "Builds the `/.well-known/mcp.json` Model Context Protocol discovery manifest for HTTP JSON-RPC and `stdio` clients.",
           "description": "Builds the `/.well-known/mcp.json` Model Context Protocol discovery manifest for HTTP JSON-RPC and `stdio` clients.",
           "params": [
@@ -10582,8 +10582,8 @@
           "isAsync": false,
           "signature": "function buildLlmsTxtManifest(originInput, fullMode = false)",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
-          "line": 479,
-          "lineCount": 628,
+          "line": 493,
+          "lineCount": 643,
           "summary": "Builds the `/llms.txt` (compact) or `/llms-full.txt` (catalog-expanded) Markdown brief for autonomous LLM agents.",
           "description": "Builds the `/llms.txt` (compact) or `/llms-full.txt` (catalog-expanded) Markdown brief for autonomous LLM agents.",
           "params": [
@@ -10610,7 +10610,7 @@
           "example": "const txt = buildLlmsTxtManifest('https://dbrain.to', true);\n// txt.includes('SVC-SOVEREIGN-STORE-PROVISION') => true",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L479"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L493"
         },
         {
           "name": "discoverAgenticServices",
@@ -10618,8 +10618,8 @@
           "isAsync": false,
           "signature": "function discoverAgenticServices(filter = {})",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
-          "line": 566,
-          "lineCount": 628,
+          "line": 581,
+          "lineCount": 643,
           "summary": "Filters the autonomous `B2A`/`A2A` service catalog by service ID, category, capability, `$DIG`/`XCH` budget, and search query.",
           "description": "Filters the autonomous `B2A`/`A2A` service catalog by service ID, category, capability, `$DIG`/`XCH` budget, and search query.",
           "params": [
@@ -10681,7 +10681,7 @@
           "example": "const res = discoverAgenticServices({ capability: 'writer-delegation', maxDigCost: 30 });\n// res.count => 1",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L566"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L581"
         },
         {
           "name": "synthesizeAgentServiceSmartContract",
@@ -13331,7 +13331,7 @@
         "Bounded Low-Cardinality Labels: Never embeds raw `storeId`, `capsuleId`, or attacker-controlled strings inside Prometheus label sets.",
         "Fail-Closed GDPR & Custody Verdict: `auditDbrainCoreSecurityPosture` returns `healthy: false` immediately if any tombstoned capsule retains a wrapped DEK, `secure_delete` is disabled, or a WOTS+ OTS key was reused."
       ],
-      "lineCount": 468,
+      "lineCount": 476,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/core-metrics.js",
       "symbols": [
         {
@@ -13341,7 +13341,7 @@
           "signature": "const DBRAIN_PROMETHEUS_CONTENT_TYPE",
           "sourceFile": "lib/server/core-metrics.js",
           "line": 54,
-          "lineCount": 468,
+          "lineCount": 476,
           "summary": "Canonical Prometheus `0.0.4` text exposition `Content-Type`.",
           "description": "Canonical Prometheus `0.0.4` HTTP `Content-Type` header string emitted by standalone `dbrain serve` (`GET /metrics` and `GET /api/dbrain/metrics`).",
           "params": [],
@@ -13359,7 +13359,7 @@
           "signature": "function escapeCorePromLabel(raw)",
           "sourceFile": "lib/server/core-metrics.js",
           "line": 67,
-          "lineCount": 468,
+          "lineCount": 476,
           "summary": "Escapes a label value string for Prometheus text exposition.",
           "description": "Escapes backslashes, double quotes, and newlines inside a Prometheus label value per the Prometheus `0.0.4` & OpenMetrics `1.0` specification.",
           "params": [
@@ -13388,7 +13388,7 @@
           "signature": "function auditDbrainCoreSecurityPosture({ walStore = null, gossipMesh = null, securityStats = null, peerMerkleDivergenceStores = 0 } = {})",
           "sourceFile": "lib/server/core-metrics.js",
           "line": 98,
-          "lineCount": 468,
+          "lineCount": 476,
           "summary": "Audits `@dbrain/core` storage, GDPR erasure, DID custody, WOTS+ OTS, gossip, and sequencer invariants.",
           "description": "Executes a deterministic security & cryptographic invariant audit over a `@dbrain/core` node's SQLite WAL storage engine, Morphic Gossip mesh, Singleton UTXO sequencer, synaptic plasticity overlay, and HTTP Gate-0 guards.",
           "params": [
@@ -13444,8 +13444,8 @@
           "isAsync": false,
           "signature": "function renderDbrainCorePrometheusMetrics({ audit = null, walStore = null, gossipMesh = null, securityStats = null, totalStores = 0, totalCapsules = 0, l1DiscoveredStores = 0, l1SyncCursorHeight = 0, dataLayerWalletReady = false, recallLatencyStats = null, omitStoreCapsulesHeader = false } = {})",
           "sourceFile": "lib/server/core-metrics.js",
-          "line": 233,
-          "lineCount": 468,
+          "line": 234,
+          "lineCount": 476,
           "summary": "Serializes `@dbrain/core` security, consensus, and storage metrics in Prometheus `0.0.4` exposition format.",
           "description": "Renders `@dbrain/core`-native storage, cryptographic, GDPR erasure, DID custody, WOTS+ OTS, Morphic Gossip, Chia Singleton UTXO sequencer, Gate-0 admission, synaptic plasticity, and recall latency telemetry in Prometheus `0.0.4` / OpenMetrics `1.0` text format.",
           "params": [
@@ -13542,7 +13542,7 @@
           "example": "const prom = renderDbrainCorePrometheusMetrics({ totalStores: 2, totalCapsules: 14 });\n// prom.includes('dbrain_dek_unshredded_tombstone_anomalies 0') === true",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/core-metrics.js#L233"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/core-metrics.js#L234"
         }
       ]
     },
@@ -13554,7 +13554,7 @@
         "Defensive HTTP hardening: enforces `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and a 2 MiB JSON request body cap.",
         "Instance isolation: two `createDbrainNodeServer()` instances never contaminate each other's store state or LRU caches."
       ],
-      "lineCount": 1124,
+      "lineCount": 1157,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js",
       "symbols": [
         {
@@ -13563,8 +13563,8 @@
           "isAsync": false,
           "signature": "const STANDALONE_HTTP_ENDPOINTS",
           "sourceFile": "lib/server/http-router.js",
-          "line": 59,
-          "lineCount": 1124,
+          "line": 65,
+          "lineCount": 1157,
           "summary": "Declarative catalog of standalone `dbrain` HTTP node endpoints.",
           "description": "Canonical list of HTTP endpoints exposed by a standalone `dbrain` node, surfaced both in the root discovery JSON and in generated documentation.",
           "params": [],
@@ -13573,7 +13573,7 @@
           "example": null,
           "valueType": "ReadonlyArray<string>",
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L59"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L65"
         },
         {
           "name": "sendJson",
@@ -13581,8 +13581,8 @@
           "isAsync": false,
           "signature": "function sendJson(res, status, payload)",
           "sourceFile": "lib/server/http-router.js",
-          "line": 106,
-          "lineCount": 1124,
+          "line": 113,
+          "lineCount": 1157,
           "summary": "Write a hardened JSON HTTP response.",
           "description": "Serializes `payload` as formatted UTF-8 JSON with baseline security headers.",
           "params": [
@@ -13616,7 +13616,7 @@
           "example": null,
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L106"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L113"
         },
         {
           "name": "readJsonBody",
@@ -13624,8 +13624,8 @@
           "isAsync": false,
           "signature": "function readJsonBody(req, maxBytes = MAX_JSON_BODY_BYTES)",
           "sourceFile": "lib/server/http-router.js",
-          "line": 127,
-          "lineCount": 1124,
+          "line": 134,
+          "lineCount": 1157,
           "summary": "Safely buffer and parse a bounded JSON HTTP request body.",
           "description": "Reads and parses a UTF-8 JSON HTTP request body up to `maxBytes` (default 2 MiB), returning `{}` for empty bodies and rejecting malformed or oversized payloads cleanly.",
           "params": [
@@ -13652,7 +13652,7 @@
           "example": null,
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L127"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L134"
         },
         {
           "name": "createDbrainNodeServer",
@@ -13660,8 +13660,8 @@
           "isAsync": false,
           "signature": "function createDbrainNodeServer(options = {})",
           "sourceFile": "lib/server/http-router.js",
-          "line": 185,
-          "lineCount": 1124,
+          "line": 192,
+          "lineCount": 1157,
           "summary": "Create an isolated HTTP REST + MCP `2024-11-05` `dbrain` node server.",
           "description": "Creates a standalone open-source `dbrain` HTTP + MCP `2024-11-05` server configured for a `homelab`, `community`, or `city` topology profile.",
           "params": [
@@ -13681,7 +13681,7 @@
           "example": "const { createDbrainNodeServer } = require('./lib/server/http-router');\nconst { server, state } = createDbrainNodeServer({ profile: 'homelab' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L185"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L192"
         }
       ]
     },
@@ -13735,7 +13735,7 @@
         "Every tool entry in `DBRAIN_MCP_TOOLS` includes a complete JSON Schema `inputSchema` conforming to the MCP `2024-11-05` specification.",
         "Every `serverInfo.version` response dynamically reflects `PACKAGE_VERSION` from `package.json` via `lib/adapters/pkg-meta.js`."
       ],
-      "lineCount": 529,
+      "lineCount": 617,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js",
       "symbols": [
         {
@@ -13744,8 +13744,8 @@
           "isAsync": false,
           "signature": "const DBRAIN_MCP_TOOLS",
           "sourceFile": "lib/server/mcp-registry.js",
-          "line": 48,
-          "lineCount": 529,
+          "line": 58,
+          "lineCount": 617,
           "summary": "Canonical MCP `2024-11-05` tool descriptors with JSON Schema `inputSchema`.",
           "description": "Canonical frozen list of all 7 open-source `@dbrain/core` Model Context Protocol (`2024-11-05`) tools and their JSON Schema input contracts.",
           "params": [],
@@ -13754,7 +13754,7 @@
           "example": null,
           "valueType": "ReadonlyArray<{ name: string, description: string, inputSchema: Record<string, unknown> }>",
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L48"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L58"
         },
         {
           "name": "dispatchMcpToolCall",
@@ -13762,8 +13762,8 @@
           "isAsync": false,
           "signature": "function dispatchMcpToolCall(toolName, rawArgs = {}, state, recallCache)",
           "sourceFile": "lib/server/mcp-registry.js",
-          "line": 240,
-          "lineCount": 529,
+          "line": 250,
+          "lineCount": 617,
           "summary": "Execute an open-source `dbrain_*` MCP tool call against node state.",
           "description": "Executes a single named MCP tool (`tools/call`) against the supplied node `state`, incrementing `state.stateEpoch` whenever a write tool (`dbrain_remember`) mutates the active store.",
           "params": [
@@ -13804,7 +13804,7 @@
           "example": "const { dispatchMcpToolCall } = require('./lib/server/mcp-registry');\nconst { loadNodeProfile } = require('./lib/server/node-state');\nconst stores = dispatchMcpToolCall('dbrain_list_stores', {}, loadNodeProfile());",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L240"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L250"
         },
         {
           "name": "handleMcpJsonRpcRequest",
@@ -13812,8 +13812,8 @@
           "isAsync": false,
           "signature": "function handleMcpJsonRpcRequest(rpc, state, options = {})",
           "sourceFile": "lib/server/mcp-registry.js",
-          "line": 441,
-          "lineCount": 529,
+          "line": 451,
+          "lineCount": 617,
           "summary": "Handle an MCP `2024-11-05` JSON-RPC 2.0 envelope over HTTP or stdio.",
           "description": "Processes a full JSON-RPC 2.0 Model Context Protocol (`2024-11-05`) request (`initialize`, `notifications/initialized`, `tools/list`, or `tools/call`) and returns a spec-compliant JSON-RPC 2.0 response envelope (or `null` for one-way notifications without an `id`).",
           "params": [
@@ -13847,7 +13847,392 @@
           "example": "const { handleMcpJsonRpcRequest } = require('./lib/server/mcp-registry');\nconst { loadNodeProfile } = require('./lib/server/node-state');\nconst res = handleMcpJsonRpcRequest({ jsonrpc: '2.0', id: 1, method: 'initialize' }, loadNodeProfile());",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L441"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L451"
+        }
+      ]
+    },
+    {
+      "filePath": "lib/server/mcp-skills-catalog.js",
+      "title": "Dual-Mode `SEP-2640` (`io.modelcontextprotocol/skills`) & MCP Resources Catalog",
+      "purpose": "External autonomous agents connecting to `dbrain` via Model Context Protocol otherwise only see compact `tools/list` schemas and lack the operational runbooks needed to route across the 5 cortical lobes, attach `DBRAIN-AUTOPRICE-v1.0` telemetry tags, scale `$DIG` CAT2 (`10^3` mojos) vs `XCH` (`10^12` mojos) safely, inspect `dthalamus` `SPL-*` spills, and honor `dolfactory` Biba taint. This module implements the official MCP **Skills Extension** (`SEP-2640`, `io.modelcontextprotocol/skills`) alongside core MCP `Resources` (`resources/list` & `resources/read`) so both `SEP-2640`-native hosts (Claude Code, Claude.ai, VS Code Copilot `>= 1.147`, MCPJam) and standard resource-enabled hosts (Google Antigravity, Cursor, Claude Desktop, Goose) can progressively load `sha256`-pinned `SKILL.md` playbooks on demand with zero eager context bloat.",
+      "invariants": [
+        "Deterministic `SHA-256` Content Pinning: Every bundled skill file and unlisted `skill://capsules/<id>/SKILL.md` entry publishes exact UTF-8 byte `size` and `sha256:{hex}` digests (never `\"dynamic\"`).",
+        "Zero `skills/list` Bloat: `skills/list` enumerates only the 5 static stack playbooks; procedural `.dig` capsules resolve unlisted on-demand via `skills/get` and `resources/read` with uniform `-32602` error semantics.",
+        "Verbatim Frontmatter Parity: Every `Skill.frontmatter` object is parsed directly from its `SKILL.md` YAML frontmatter so host re-parse checks pass `1:1`."
+      ],
+      "lineCount": 833,
+      "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js",
+      "symbols": [
+        {
+          "name": "DBRAIN_MCP_SKILLS_PROTOCOL",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const DBRAIN_MCP_SKILLS_PROTOCOL",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 50,
+          "lineCount": 833,
+          "summary": "Canonical `DBRAIN-MCP-SKILLS-v1.0` protocol identifier.",
+          "description": "Normative protocol identifier for `dbrain` Dual-Mode MCP Skills delivery.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
+          "valueType": "string",
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L50"
+        },
+        {
+          "name": "MCP_SKILLS_EXTENSION_ID",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const MCP_SKILLS_EXTENSION_ID",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 58,
+          "lineCount": 833,
+          "summary": "Official `SEP-2640` extension identifier (`io.modelcontextprotocol/skills`).",
+          "description": "Official Model Context Protocol `SEP-2640` Skills extension capability key.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
+          "valueType": "string",
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L58"
+        },
+        {
+          "name": "SUPPORTED_MCP_PROTOCOL_VERSIONS",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const SUPPORTED_MCP_PROTOCOL_VERSIONS",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 66,
+          "lineCount": 833,
+          "summary": "Ordered list of supported MCP protocol revision dates.",
+          "description": "Supported MCP wire protocol versions negotiated during `initialize` and `server/discover`.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
+          "valueType": "ReadonlyArray<string>",
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L66"
+        },
+        {
+          "name": "DEFAULT_MCP_SERVER_INSTRUCTIONS",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const DEFAULT_MCP_SERVER_INSTRUCTIONS",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 1,
+          "reExported": true,
+          "summary": "Re-exported constant `DEFAULT_MCP_SERVER_INSTRUCTIONS`.",
+          "description": "Re-exported constant `DEFAULT_MCP_SERVER_INSTRUCTIONS`.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
+          "valueType": "string",
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L1"
+        },
+        {
+          "name": "DBRAIN_BUNDLED_MCP_SKILLS",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const DBRAIN_BUNDLED_MCP_SKILLS",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 381,
+          "lineCount": 833,
+          "summary": "Canonical 5-skill `SEP-2640` manifest catalog (`skill://<name>/SKILL.md`).",
+          "description": "Frozen array of all 5 `SEP-2640` `Skill` manifest entries served by `@dbrain/core`.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
+          "valueType": "ReadonlyArray<{ uri: string, frontmatter: Record<string, unknown>, resources: ReadonlyArray<{ uri: string, digest: string, size: number }> }>",
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L381"
+        },
+        {
+          "name": "negotiateMcpProtocolVersion",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function negotiateMcpProtocolVersion(requestedVersion)",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 94,
+          "lineCount": 833,
+          "summary": "Negotiate a supported MCP protocol version string.",
+          "description": "Negotiates the MCP protocol version returned by `initialize` or `server/discover`, echoing supported revisions (`2024-11-05`, `2025-03-26`, `2026-07-28`) and falling back to `MCP_PROTOCOL_VERSION` (`2024-11-05`) for unknown or omitted inputs.",
+          "params": [
+            {
+              "name": "requestedVersion",
+              "type": "string",
+              "optional": true,
+              "defaultValue": null,
+              "description": "Client-requested `protocolVersion`."
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Negotiated MCP protocol version string."
+          },
+          "complexity": "O(1) time and O(1) space.",
+          "example": "negotiateMcpProtocolVersion('2026-07-28'); // '2026-07-28'",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L94"
+        },
+        {
+          "name": "computeSkillResourceDigest",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function computeSkillResourceDigest(contentText)",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 110,
+          "lineCount": 833,
+          "summary": "Compute `sha256:{hex}` digest and UTF-8 byte length for a skill resource.",
+          "description": "Computes the `SEP-2640` raw-byte `sha256:{hex}` digest and UTF-8 byte `size` for a skill file's exact text payload.",
+          "params": [
+            {
+              "name": "contentText",
+              "type": "string",
+              "optional": false,
+              "defaultValue": null,
+              "description": "UTF-8 text content of the skill file."
+            }
+          ],
+          "returns": {
+            "type": "{ digest: string, size: number }",
+            "description": "Digest and byte length pair."
+          },
+          "complexity": "O(B) where B is UTF-8 byte length.",
+          "example": "computeSkillResourceDigest('# Hello\\n'); // { digest: 'sha256:...', size: 8 }",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L110"
+        },
+        {
+          "name": "parseSkillMarkdownFrontmatter",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function parseSkillMarkdownFrontmatter(markdownText)",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 131,
+          "lineCount": 833,
+          "summary": "Parse `SKILL.md` YAML frontmatter into `{ frontmatter, body }`.",
+          "description": "Deterministically parses a `SKILL.md` YAML frontmatter header (`--- ... ---`) into a frozen plain object without external dependencies or `eval`, preserving every top-level `key: value` field verbatim as required by `SEP-2640`.",
+          "params": [
+            {
+              "name": "markdownText",
+              "type": "string",
+              "optional": false,
+              "defaultValue": null,
+              "description": "Raw `SKILL.md` content."
+            }
+          ],
+          "returns": {
+            "type": "{ frontmatter: Record<string, string> | null, body: string }",
+            "description": "Parsed frontmatter and markdown body."
+          },
+          "complexity": "O(L) where L is frontmatter character length.",
+          "example": "parseSkillMarkdownFrontmatter('---\\nname: demo\\ndescription: Demo skill\\n---\\n# Body');",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L131"
+        },
+        {
+          "name": "projectCapsuleAsMcpSkill",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function projectCapsuleAsMcpSkill(capsule)",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 403,
+          "lineCount": 833,
+          "summary": "Project a verified `procedural` `.dig` capsule into a digest-pinned `SEP-2640` skill bundle.",
+          "description": "Projects a verified, non-encrypted, non-tombstoned `procedural` `.dig` capsule into a deterministic unlisted `SEP-2640` `Skill` bundle (`skill://capsules/<id>/SKILL.md` + `skill://capsules/<id>/references/attestation.json`) with exact `sha256:{hex}` digests and byte sizes. Returns `null` for missing, non-procedural, encrypted, or tombstoned capsules so callers emit uniform `-32602` errors without leaking state.",
+          "params": [
+            {
+              "name": "capsule",
+              "type": "Record<string, any>",
+              "optional": false,
+              "defaultValue": null,
+              "description": "Candidate `.dig` capsule object."
+            }
+          ],
+          "returns": {
+            "type": "{ skill: Record<string, any>, files: Map<string, { uri: string, name: string, mimeType: string, text: string, digest: string, size: number }> } | null",
+            "description": "Compiled capsule skill bundle or `null`."
+          },
+          "complexity": "O(B) where B is serialized capsule markdown length.",
+          "example": "projectCapsuleAsMcpSkill({ id: 'CAP-1', lobe: 'procedural', title: 'Fix', content: 'Run test' });",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L403"
+        },
+        {
+          "name": "listMcpSkills",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function listMcpSkills({ cursor = null, pageSize = 20, filterSkillNames = null, ttlMs = 300000 } = {})",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 528,
+          "lineCount": 833,
+          "summary": "Build a spec-compliant `SEP-2640` `skills/list` result object.",
+          "description": "Enumerates the deterministic `SEP-2640` `skills/list` catalog with cursor pagination and required `resultType: \"complete\"`, `ttlMs`, and `cacheScope` fields.",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ cursor?: string | null, pageSize?: number, filterSkillNames?: string[] | null, ttlMs?: number }",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Optional pagination and subset filter parameters."
+            }
+          ],
+          "returns": {
+            "type": "{ resultType: string, skills: Array<Record<string, unknown>>, nextCursor?: string, ttlMs: number, cacheScope: string }",
+            "description": "`SEP-2640` `ListSkillsResult` payload."
+          },
+          "complexity": "O(S) where S <= 5 static skills.",
+          "example": "listMcpSkills({ pageSize: 2 });",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L528"
+        },
+        {
+          "name": "getMcpSkillByUri",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function getMcpSkillByUri(uri, { capsules = [], filterSkillNames = null } = {})",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 577,
+          "lineCount": 833,
+          "summary": "Resolve a `SEP-2640` `skills/get` entry by `SKILL.md` URI.",
+          "description": "Resolves a single `SEP-2640` `skills/get` request by exact `SKILL.md` URI across both the 5 static bundled skills and unlisted verified `procedural` `.dig` capsules (`skill://capsules/<capsuleId>/SKILL.md`), returning standard `-32602` on unknown URIs.",
+          "params": [
+            {
+              "name": "uri",
+              "type": "string",
+              "optional": false,
+              "defaultValue": null,
+              "description": "Target `skill://.../SKILL.md` URI."
+            },
+            {
+              "name": "options",
+              "type": "{ capsules?: Array<Record<string, any>>, filterSkillNames?: string[] | null }",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Optional runtime capsules array and static filter."
+            }
+          ],
+          "returns": {
+            "type": "{ found: boolean, result?: Record<string, unknown>, error?: { code: number, message: string } }",
+            "description": "Lookup result or `-32602` error."
+          },
+          "complexity": "O(N) over runtime capsules only when querying `skill://capsules/*` (`O(1)` for static skills).",
+          "example": "getMcpSkillByUri('skill://dbrain-second-brain/SKILL.md');",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L577"
+        },
+        {
+          "name": "listMcpSkillResources",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function listMcpSkillResources({ filterSkillNames = null } = {})",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 627,
+          "lineCount": 833,
+          "summary": "Build standard MCP `resources/list` entries for bundled `skill://` files.",
+          "description": "Lists all bundled `skill://` files as standard MCP `Resource` descriptors (`resources/list`) so clients without `SEP-2640` (`list_resources` / `read_resource` in Antigravity, Cursor, and Claude Desktop) can discover and read every skill file.",
+          "params": [
+            {
+              "name": "options",
+              "type": "{ filterSkillNames?: string[] | null }",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Optional subset filter."
+            }
+          ],
+          "returns": {
+            "type": "Array<{ uri: string, name: string, description: string, mimeType: string, size: number }>",
+            "description": "MCP `Resource` descriptors."
+          },
+          "complexity": "O(F) where F <= 10 static files.",
+          "example": "listMcpSkillResources();",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L627"
+        },
+        {
+          "name": "readMcpSkillResource",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function readMcpSkillResource(uri, { capsules = [], filterSkillNames = null } = {})",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 663,
+          "lineCount": 833,
+          "summary": "Read a `skill://` file for MCP `resources/read`.",
+          "description": "Reads an individual `skill://` file via standard MCP `resources/read` across both bundled stack skills and unlisted procedural capsules (`skill://capsules/<id>/*`), returning `-32602` (`Invalid params`) when the URI is not served.",
+          "params": [
+            {
+              "name": "uri",
+              "type": "string",
+              "optional": false,
+              "defaultValue": null,
+              "description": "Resource URI (`skill://<skill>/<path>`)."
+            },
+            {
+              "name": "options",
+              "type": "{ capsules?: Array<Record<string, any>>, filterSkillNames?: string[] | null }",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Optional runtime capsules and static filter."
+            }
+          ],
+          "returns": {
+            "type": "{ found: boolean, result?: { contents: Array<{ uri: string, mimeType: string, text: string }> }, error?: { code: number, message: string } }",
+            "description": "Resource content or `-32602` error."
+          },
+          "complexity": "O(1) for static skills; O(N) scan for capsule URIs.",
+          "example": "readMcpSkillResource('skill://chia-consensus-safety/SKILL.md');",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L663"
+        },
+        {
+          "name": "readMcpSkillDirectory",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function readMcpSkillDirectory(uri, { capsules = [], filterSkillNames = null } = {})",
+          "sourceFile": "lib/server/mcp-skills-catalog.js",
+          "line": 729,
+          "lineCount": 833,
+          "summary": "List direct child resources of a `skill://` directory (`SEP-2640` `resources/directory/read`).",
+          "description": "Implements `SEP-2640` `resources/directory/read` (`directoryRead: true`), listing direct child resources of `skill://<name>`, `skill://<name>/references`, `skill://capsules/<id>`, or `skill://capsules/<id>/references` and returning `-32602` when the URI does not exist or names a file rather than a directory.",
+          "params": [
+            {
+              "name": "uri",
+              "type": "string",
+              "optional": false,
+              "defaultValue": null,
+              "description": "Directory URI without trailing file name."
+            },
+            {
+              "name": "options",
+              "type": "{ capsules?: Array<Record<string, any>>, filterSkillNames?: string[] | null }",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Optional runtime capsules and static filter."
+            }
+          ],
+          "returns": {
+            "type": "{ found: boolean, result?: { resultType: string, resources: Array<Record<string, unknown>>, ttlMs: number, cacheScope: string }, error?: { code: number, message: string } }",
+            "description": "Directory listing or `-32602` error."
+          },
+          "complexity": "O(F) where F is file count inside the target skill.",
+          "example": "readMcpSkillDirectory('skill://dbrain-second-brain/references');",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-skills-catalog.js#L729"
         }
       ]
     },
@@ -16136,7 +16521,8 @@
     "POST /api/dbrain/ontology",
     "POST /api/dbrain/bootstrap",
     "GET  /api/dbrain/docs",
-    "POST /api/mcp (MCP 2024-11-05 JSON-RPC 2.0)"
+    "GET  /api/dbrain/mcp/skills",
+    "POST /api/mcp (MCP 2024-11-05 .. 2026-07-28 + SEP-2640 Skills JSON-RPC 2.0)"
   ],
   "cliCommands": [
     {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FALLBACK_ORGANS, OrganBusItem, StateHubItem, SwarmMissionItem } from '../data/mockData';
 
-export interface LiveDbrainStoreSummary {
+interface LiveDbrainStoreSummary {
   readonly storeId: string;
   readonly name: string;
   readonly source: string;
@@ -10,7 +10,7 @@ export interface LiveDbrainStoreSummary {
   readonly lastUpdatedBlock: number;
 }
 
-export interface LiveRecentCapsuleItem {
+interface LiveRecentCapsuleItem {
   readonly id: string;
   readonly title: string;
   readonly summary?: string;
@@ -43,7 +43,7 @@ export interface EvolutionFeedItem {
   readonly externalHref?: string;
 }
 
-export interface BlindSpotQuestItem {
+interface BlindSpotQuestItem {
   readonly questId: string;
   readonly prompt: string;
   readonly lobe: string;
@@ -57,7 +57,7 @@ export interface BlindSpotQuestItem {
   readonly estimatedGainPct: number;
 }
 
-export interface AutonomousCandidateCapsuleItem {
+interface AutonomousCandidateCapsuleItem {
   readonly capsuleId: string;
   readonly swapId: string;
   readonly title: string;
@@ -80,7 +80,7 @@ export interface AutonomousCandidateCapsuleItem {
   readonly capsuleUrl: string;
 }
 
-export interface RejectedEditItem {
+interface RejectedEditItem {
   readonly rejectionId: string;
   readonly problemClusterId: string;
   readonly diffHashHex: string;
@@ -131,7 +131,7 @@ export interface DidLeaderboardEntry {
   readonly rsiImpactScore: number;
 }
 
-export interface EnlistedRigLeaderboardEntry {
+interface EnlistedRigLeaderboardEntry {
   readonly callsign: string;
   readonly stateCode: string;
   readonly executionEnv: string;
@@ -144,7 +144,7 @@ export interface EnlistedRigLeaderboardEntry {
   };
 }
 
-export interface RsiLeaderboardSummary {
+interface RsiLeaderboardSummary {
   readonly activeCommunitiesCount: number;
   readonly distinctDidsCount: number;
   readonly distinctAgentHandlesCount: number;

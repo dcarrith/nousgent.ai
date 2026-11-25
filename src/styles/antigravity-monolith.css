@@ -398,8 +398,8 @@ li {
 .sidebar-nav-link[aria-current='page'] {
   background: var(--color-surface-container);
   color: var(--color-ink);
-  border-color: var(--color-outline-strong);
-  box-shadow: inset 3px 0 0 var(--color-pistachio), 0 6px 18px rgb(0 0 0 / 0.35);
+  border-color: rgb(126 217 87 / 0.48);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
 }
 
 .sidebar-epoch-card {
@@ -857,13 +857,6 @@ li {
 
 .text-muted {
   color: var(--color-ink-muted);
-}
-
-.hero-gradient-text {
-  background: linear-gradient(90deg, var(--color-pistachio) 0%, var(--color-jade) 55%, var(--color-bronze) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* ==========================================================================
@@ -1922,10 +1915,6 @@ textarea.spatial-input {
 }
 
 @media (forced-colors: active) {
-  .hero-gradient-text {
-    background: none;
-    color: CanvasText;
-  }
   .glass-card,
   .cbrain-persona-stage,
   .tabpanel-inner {

@@ -16,3 +16,20 @@ This repository powers **`https://nousgent.ai`** (Human Civic & Gamified Mission
 ## 4. Submodule & Testing Discipline
 - `packages/dolfactory`, `packages/dthalamus`, `packages/dbrain`, and `packages/cbrain` are independent Git submodules. Commit/tag/push submodules BEFORE pushing `nousgent.ai`.
 - `lib/*.js` and `lib/modules/*.js` MUST maintain **100.00% V8 Line/Branch/Function coverage** (`npm run test:unit`).
+
+## 5. NoMoreSlop Pre-Ship Quality Gate (`.agent/skills/no-more-slop-gate/SKILL.md`)
+Run both layers of the NoMoreSlop Pre-Ship Quality Gate before finalizing multi-file features, new endpoints, cryptographic/auth flows, or React/TSX UI updates:
+
+1. **Layer 1 — Deterministic CLI Scanners**:
+   - `impeccable detect --json src/` (WCAG AA contrast, nested card kits, tracked-out ALL-CAPS eyebrow clutter, touch targets)
+   - `fallow --no-color` and `knip --no-progress` (dead files, unused exports, stray dependencies)
+   - `jscpd --min-lines 12 --min-tokens 90 <touched-paths>` (copy/paste structural clone detection)
+   - `git status --short && git ls-files | grep -E '\.env$|\.env\.' || true` (`.env` and secret hygiene)
+2. **Layer 2 — Logic, Protocol & Security Review**:
+   - Rate limiting defaults to ON on public HTTP/JSON-RPC endpoints (`POST /api/*`, `/api/mcp`).
+   - Authenticated encryption (`AES-256-GCM` with CSPRNG/HKDF keys, never `base64`/`AES-256-CBC` or predictable keys).
+   - SSRF scheme + hostname/CIDR allowlisting (`validateOnChainUriSafety`).
+   - Fail-closed integrity verification (`SHA-256` `skill://` resource digests and `Ed25519` signatures fail closed when missing or mismatched).
+   - Uniform protocol error codes (`-32602`) on public lookup routes (`skills/get`, `resources/read`) with zero enumeration oracles.
+   - Zero silent `catch {}` swallowing without explicit best-effort telemetry documentation.
+   - Plain, actionable verb + object UI button copy (`Verify Skill Manifest`, `Test Skill Firewall`) without decorative eyebrow clutter.

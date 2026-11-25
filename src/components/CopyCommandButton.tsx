@@ -57,7 +57,7 @@ async function performClipboardCopy(button: HTMLElement, target: HTMLElement): P
   }
 }
 
-export function bindGlobalInvokerCopyOnce(): void {
+function bindGlobalInvokerCopyOnce(): void {
   if (copyListenersBound || typeof window === 'undefined' || typeof document === 'undefined') return;
   copyListenersBound = true;
 
