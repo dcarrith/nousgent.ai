@@ -34,14 +34,14 @@ groups:
           plane: bari-index
         annotations:
           summary: "Bounded ASI Readiness Index dropped below 75%"
-      - alert: NousgentEnlistedMeshDegraded
-        expr: min(nousgent_enlisted_nodes_total) < 100
-        for: 5m
+      - alert: NousgentUpstreamOrganDegraded
+        expr: min(nousgent_upstream_organs_reachable) < 5
+        for: 2m
         labels:
-          severity: warning
+          severity: critical
           plane: morphic-mesh
         annotations:
-          summary: "Active Morphic Mesh node count below 100"
+          summary: "One or more of the 5 Sovereign AI Stack sister organs is unreachable"
       - alert: NousgentClearSignCeremonySpike
         expr: sum(increase(nousgent_clear_sign_signatures_total[10m])) > 10
         for: 1m
@@ -66,19 +66,79 @@ groups:
           plane: soc-telemetry
         annotations:
           summary: "NOUSGENT StatefulSet pod unreachable by Prometheus"
-      - alert: NousgentHighMemoryFootprint
-        expr: max(nousgent_enlisted_nodes_total) > 1000000
-        for: 10m
+      - alert: NousgentSep2640TrojanSkillBlocked
+        expr: sum(increase(nousgent_mcp_skill_reads_total{outcome="blocked"}[5m])) > 0
+        for: 0m
+        labels:
+          severity: critical
+          plane: sep2640-skill-firewall
+        annotations:
+          summary: "Ring-0 or OR-012 quarantined a tampered or Trojan SEP-2640 skill:// resource"
+      - alert: NousgentRateLimitBurstBlocked
+        expr: sum(increase(nousgent_rate_limited_blocks_total[5m])) > 20
+        for: 1m
         labels:
           severity: warning
-          plane: statefulset
+          plane: api-rate-limiter
         annotations:
-          summary: "Morphic Mesh exceeded 1M nodes; scale StatefulSet shard"
-      - alert: NousgentSqliteWalPersistenceCheck
-        expr: max(nousgent_enlisted_nodes_total) >= 4108
+          summary: "Elevated HTTP 429 rate-limited blocks on POST /api/* or POST /api/mcp"
+
+  - name: dbrain_five_organ_stack_soc_rules
+    interval: 15s
+    rules:
+      - alert: DbrainStackOrganScrapeDown
+        expr: up{job=~"dolfactory-pods-headless|dthalamus-pods-headless|dbrain-cluster-headless|cbrain-web|liquidish-pods-headless"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          plane: five-organ-bus
+        annotations:
+          summary: "A dbrain stack organ pod (dolfactory, dthalamus, dbrain, cbrain, or liquidi.sh) is down"
+      - alert: DolfactoryInlineIpsQuarantineSurge
+        expr: sum(increase(dolfactory_ips_drops_total{job=~"dolfactory.*"}[5m])) > 5
+        for: 1m
+        labels:
+          severity: critical
+          plane: dolfactory-cn1
+        annotations:
+          summary: "dolfactory CN-I Tufted Inline IPS dropped >5 adversarial frames in 5m"
+      - alert: DthalamusTier2ClearSignPending
+        expr: sum(increase(dthalamus_reference_monitor_evaluations_total{job=~"dthalamus.*",outcome="held_tier2_clearsign"}[10m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+          plane: dthalamus-ring0
+        annotations:
+          summary: "dthalamus Ring-0 paused an action awaiting Tier-2 CHIP-0043 human Clear-Signing"
+      - alert: DthalamusRatchetFailure
+        expr: min(nousgent_dthalamus_ratchet_passed) == 0 and max(nousgent_organ_up{organ="dthalamus.to"}) == 1
+        for: 1m
+        labels:
+          severity: critical
+          plane: dthalamus-ratchet
+        annotations:
+          summary: "dthalamus self-repairing regression ratchet reported failure"
+      - alert: DbrainGdprDekOrPqcIntegrityAnomaly
+        expr: max(dbrain_dek_unshredded_tombstone_anomalies{job=~"dbrain.*"} + dbrain_tombstone_unredacted_anomalies{job=~"dbrain.*"}) > 0 or sum(increase(dbrain_wots_ots_key_reuse_violations_total{job=~"dbrain.*"}[10m])) > 0
+        for: 0m
+        labels:
+          severity: critical
+          plane: dbrain-pqc-gdpr
+        annotations:
+          summary: "dbrain GDPR Art. 17 DEK shredding or WOTS+ one-time signature anomaly detected"
+      - alert: DbrainPeerMerkleDivergence
+        expr: max(dbrain_peer_merkle_divergence_stores{job=~"dbrain.*"}) > 0
+        for: 2m
+        labels:
+          severity: warning
+          plane: dbrain-morphic-gossip
+        annotations:
+          summary: "dbrain peer sync manifest Merkle root divergence detected across replicas"
+      - alert: LiquidishCollectiveHealthDegraded
+        expr: min(liquidish_collective_health_score{job=~"liquidish.*"}) < 80
         for: 5m
         labels:
-          severity: info
-          plane: wal-storage
+          severity: warning
+          plane: liquidish-dex
         annotations:
-          summary: "SQLite WAL state verified healthy"
+          summary: "liquidi.sh Orderbook collective glymphatic health score dropped below 80"

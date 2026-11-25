@@ -711,10 +711,11 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     const standaloneArena = nousgent.createPersonaMindArena({ podBay: engine.podBay });
     assert.equal(standaloneArena.askPersona().generation, 0);
 
-    // Prometheus metrics exposition (both default and liveEcosystem)
+    // Prometheus metrics exposition (default, partial liveEcosystem, and full 5-organ telemetry bridge)
     const promDefault = engine.renderPrometheusMetrics();
     assert.ok(promDefault.includes('nousgent_enlisted_nodes_total 4'));
     assert.ok(promDefault.includes('nousgent_dao_votes_total 6'));
+    assert.ok(promDefault.includes('nousgent_organ_up{organ="dolfactory.to"} 0'));
     const promLive = engine.renderPrometheusMetrics(liveEcoMock);
     assert.ok(promLive.includes('nousgent_http_requests_total{host="nousgent.ai",plane="human_ui"} 1'));
     assert.ok(promLive.includes('nousgent_http_requests_total{host="ia.nousgent.ai",plane="m2m_ia"} 2'));
@@ -722,6 +723,32 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     assert.ok(promLive.includes('nousgent_dbrain_live_capsules_total 994'));
     assert.ok(promLive.includes('nousgent_upstream_organs_reachable 5'));
     assert.ok(promLive.includes('nousgent_redteam_deflections_total 4'));
+    assert.ok(promLive.includes('nousgent_organ_up{organ="dolfactory.to"} 1'));
+    const promFull = engine.renderPrometheusMetrics(
+      {
+        ...liveEcoMock,
+        dbrain: { ...liveEcoMock.dbrain, primaryGeneration: 1431, peakHeight: 3826259, netspaceBytes: 1e15 },
+        dthalamus: { ...liveEcoMock.dthalamus, ratchetCasesTotal: 29, governedCallsTotal: 64 },
+        cbrain: { ...liveEcoMock.cbrain, wasmSpatialVerified: true },
+        liquidish: {
+          ...liveEcoMock.liquidish,
+          orderbookAvailableCount: 50,
+          royaltiesStreamedDigNum: 615.937,
+          stakedAntibodyTvlDig: 2742,
+          dreamSurvivingVerifiedCount: 3,
+          autonomousCandidateQueue: [{ id: 'CAP-1' }, { id: 'CAP-2' }],
+          shiM2mRequestsCount: 14892,
+          shiHumanRequestsCount: 11559,
+          shiM2mTrafficSharePct: 56.3
+        }
+      },
+      { rateLimitedBlocks: 3, activeEvolutionsStreams: 2, haloConfigured: 1 }
+    );
+    assert.ok(promFull.includes('nousgent_dbrain_primary_generation 1431'));
+    assert.ok(promFull.includes('nousgent_liquidish_royalties_dig 615.937'));
+    assert.ok(promFull.includes('nousgent_liquidish_candidate_queue_total 2'));
+    assert.ok(promFull.includes('nousgent_active_evolutions_streams 2'));
+    assert.ok(promFull.includes('nousgent_halo_configured 1'));
 
     // Multi-pod StatefulSet CRDT snapshot export & idempotent reconciliation (eliminates pod-0/pod-1 flapping)
     const peerEngine = nousgent.createNousgentEngine();

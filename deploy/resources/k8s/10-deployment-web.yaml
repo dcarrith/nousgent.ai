@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: nousgent
     app.kubernetes.io/component: web
-    app.kubernetes.io/version: "1.17.0"
+    app.kubernetes.io/version: "1.18.0"
 spec:
   serviceName: nousgent-web-headless
   replicas: 2
@@ -26,7 +26,7 @@ spec:
       labels:
         app.kubernetes.io/name: nousgent
         app.kubernetes.io/component: web
-        app.kubernetes.io/version: "1.17.0"
+        app.kubernetes.io/version: "1.18.0"
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
@@ -39,7 +39,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: web
-          image: nousgent-web:1.17.0
+          image: nousgent-web:1.18.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

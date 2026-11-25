@@ -1279,6 +1279,64 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
         fsLocal.existsSync('./.agent/skills/no-more-slop-gate/SKILL.md')
     );
 
+    // Check [47]: v1.18.0 5-Organ Split-Out Grafana 11 SOC Dashboards (79 panels), 17 Alert Rules & Enriched Stack Prometheus Telemetry
+    const obsCatalogRes = await request(port, '/api/nousgent/observability/dashboards', { host: 'nousgent.ai' });
+    const obsAlertsRes = await request(port, '/api/nousgent/observability/alerts', { host: 'nousgent.ai' });
+    const obsUnknownRes = await request(port, '/api/nousgent/observability/dashboards/unknown-organ.json', {
+      host: 'nousgent.ai'
+    });
+    const slugList = ['dolfactory', 'dthalamus', 'dbrain', 'liquidish', 'nousgent'];
+    const dashResponses = await Promise.all(
+      slugList.map((slug) =>
+        request(port, `/api/nousgent/observability/dashboards/${slug}.json`, { host: 'nousgent.ai' })
+      )
+    );
+    const parsedCatalog = JSON.parse(obsCatalogRes.text);
+    const parsedAlerts = JSON.parse(obsAlertsRes.text);
+    const parsedDashes = dashResponses.map((r) => JSON.parse(r.text));
+    const allDashValid = parsedDashes.every((d) => {
+      const vizPanels = (d.panels || []).filter((p) => p.type !== 'row');
+      return (
+        d.schemaVersion === 39 &&
+        Array.isArray(d.links) &&
+        d.links.length === 1 &&
+        d.links[0].type === 'dashboards' &&
+        Array.isArray(d.tags) &&
+        d.tags.includes('dbrain-five-organ-soc') &&
+        vizPanels.length >= 13 &&
+        vizPanels.every(
+          (p) =>
+            p.datasource &&
+            p.datasource.uid === 'DS_PROMETHEUS' &&
+            Array.isArray(p.targets) &&
+            p.targets.length >= 1 &&
+            p.targets.every((t) => typeof t.expr === 'string' && t.expr.length > 5)
+        )
+      );
+    });
+    check(
+      'v1.18.0 5-Organ Split-Out Grafana 11 SOC Dashboards (dolfactory, dthalamus, dbrain, liquidish, nousgent · 79 panels), 17 Alerts & 46 Metric Families verified',
+      obsCatalogRes.status === 200 &&
+        parsedCatalog.dashboardsCount === 5 &&
+        parsedCatalog.totalVisualizationPanels === 79 &&
+        parsedCatalog.scrapeJobs.length === 6 &&
+        obsAlertsRes.status === 200 &&
+        parsedAlerts.rulesCount === 17 &&
+        obsUnknownRes.status === 404 &&
+        dashResponses.every((r) => r.status === 200) &&
+        allDashValid &&
+        finalMetrics.text.includes('nousgent_bari_axis_pct{axis="reasoning_rank1"}') &&
+        finalMetrics.text.includes('nousgent_organ_up{organ="dolfactory.to"} 1') &&
+        finalMetrics.text.includes('nousgent_organ_latency_ms{organ="dbrain.to"}') &&
+        finalMetrics.text.includes('nousgent_dbrain_primary_generation ') &&
+        finalMetrics.text.includes('nousgent_dolfactory_total_receptors ') &&
+        finalMetrics.text.includes('nousgent_dthalamus_ratchet_passed ') &&
+        finalMetrics.text.includes('nousgent_cbrain_coherence_pct ') &&
+        finalMetrics.text.includes('nousgent_liquidish_royalties_dig ') &&
+        finalMetrics.text.includes('nousgent_liquidish_shi_requests{plane="m2m_shi"}') &&
+        finalMetrics.text.includes('nousgent_active_evolutions_streams ')
+    );
+
     console.log(`\n✓ ALL ${passed} DUAL-HOST E2E CHECKS PASSED!`);
   } finally {
     engine.close();

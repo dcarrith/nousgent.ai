@@ -270,12 +270,11 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards/provider.yaml
               subPath: grafana-dashboards-provider.yaml
               readOnly: true
-            - name: observability-configs
-              mountPath: /var/lib/grafana/dashboards/grafana-nousgent-soc-dashboard.json
-              subPath: grafana-nousgent-soc-dashboard.json
-              readOnly: true
             - name: grafana-storage
               mountPath: /var/lib/grafana
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+              readOnly: true
             - name: tmp-dir
               mountPath: /tmp
           resources:
@@ -307,6 +306,20 @@ spec:
         - name: observability-configs
           configMap:
             name: nousgent-observability-configs
+        - name: grafana-dashboards
+          configMap:
+            name: nousgent-observability-configs
+            items:
+              - key: grafana-01-dolfactory-soc-dashboard.json
+                path: grafana-01-dolfactory-soc-dashboard.json
+              - key: grafana-02-dthalamus-soc-dashboard.json
+                path: grafana-02-dthalamus-soc-dashboard.json
+              - key: grafana-03-dbrain-soc-dashboard.json
+                path: grafana-03-dbrain-soc-dashboard.json
+              - key: grafana-04-liquidish-soc-dashboard.json
+                path: grafana-04-liquidish-soc-dashboard.json
+              - key: grafana-nousgent-soc-dashboard.json
+                path: grafana-nousgent-soc-dashboard.json
         - name: grafana-storage
           emptyDir: {}
         - name: tmp-dir

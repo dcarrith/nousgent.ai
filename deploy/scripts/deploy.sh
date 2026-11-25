@@ -156,7 +156,7 @@ kubectl apply -f "$K8S_DIR/30-ingress.yaml"
 kubectl apply -f "$K8S_DIR/40-hpa.yaml"
 
 if [ "$WITH_OBSERVABILITY" = true ] && [ -f "$K8S_DIR/60-observability-stack.yaml" ]; then
-  echo -e "\n${CYAN}>>> Provisioning Standalone Dual-Host Prometheus, Alertmanager & Grafana SOC Stack...${NC}"
+  echo -e "\n${CYAN}>>> Provisioning Standalone 5-Organ Prometheus, Alertmanager & Grafana SOC Stack...${NC}"
   kubectl create configmap nousgent-observability-configs \
     -n dbrain \
     --from-file=prometheus.yml="$OBS_DIR/prometheus.yml" \
@@ -164,6 +164,10 @@ if [ "$WITH_OBSERVABILITY" = true ] && [ -f "$K8S_DIR/60-observability-stack.yam
     --from-file=alertmanager.yml="$OBS_DIR/alertmanager.yml" \
     --from-file=grafana-datasources.yaml="$OBS_DIR/grafana-datasources.yaml" \
     --from-file=grafana-dashboards-provider.yaml="$OBS_DIR/grafana-dashboards-provider.yaml" \
+    --from-file=grafana-01-dolfactory-soc-dashboard.json="$OBS_DIR/grafana-01-dolfactory-soc-dashboard.json" \
+    --from-file=grafana-02-dthalamus-soc-dashboard.json="$OBS_DIR/grafana-02-dthalamus-soc-dashboard.json" \
+    --from-file=grafana-03-dbrain-soc-dashboard.json="$OBS_DIR/grafana-03-dbrain-soc-dashboard.json" \
+    --from-file=grafana-04-liquidish-soc-dashboard.json="$OBS_DIR/grafana-04-liquidish-soc-dashboard.json" \
     --from-file=grafana-nousgent-soc-dashboard.json="$OBS_DIR/grafana-nousgent-soc-dashboard.json" \
     --dry-run=client -o yaml | kubectl apply -f -
   kubectl apply -f "$K8S_DIR/60-observability-stack.yaml"

@@ -20,8 +20,15 @@ bash /Users/dcarrith/Repositories/nousgent.ai/deploy/scripts/deploy.sh --cluster
 bash /Users/dcarrith/Repositories/nousgent.ai/deploy/scripts/scan.sh
 ```
 
-## Observability Port-Forwards (Namespace `dbrain`)
+## Observability Port-Forwards & 5-Organ SOC Dashboards (Namespace `dbrain`)
 
 - **Grafana (`nousgent-soc`)**: `kubectl port-forward -n dbrain svc/nousgent-grafana 3600:3000`
 - **Prometheus**: `kubectl port-forward -n dbrain svc/nousgent-prometheus 9096:9090`
 - **Alertmanager**: `kubectl port-forward -n dbrain svc/nousgent-alertmanager 9097:9093`
+
+Auto-provisioned Grafana 11 dashboards (`folder: "dbrain & NOUSGENT 5-Organ SOC"`):
+1. `01 · dolfactory.to` (`uid: dolfactory-cn1-soc-v2`) — CN-I Pre-Thalamic Olfactory IDS/IPS, 2,048-KC Fly-LSH & VNO Guard
+2. `02 · dthalamus.to` (`uid: dthalamus-ring0-soc-v2`) — Ring-0 Sensory/Motor Relay, 4-Layer Cache, Leases & Ratchet
+3. `03 · dbrain.to & cbrain.to` (`uid: dbrain-cortex-soc-v2`) — 5-Lobe Chia Cortex, PQC/GDPR Integrity, Sleep ES & 4D Connectome
+4. `04 · liquidi.sh & shi.liquidi.sh` (`uid: liquidish-dex-soc-v2`) — `$DIG` CAT2 Intelligence Exchange, Royalties & Glymphatic Health
+5. `05 · nousgent.ai & ia.nousgent.ai` (`uid: nousgent-cleanroom-soc-v1`) — Bounded ASI Mission Control, BARI, SEP-2640 Firewall & 5-Organ Bus

@@ -133,25 +133,25 @@ const NOUSGENT_ALERT_RULES_CATALOG = Object.freeze([
     alert: 'NousgentPodBayRedTeamSurge',
     severity: 'critical',
     plane: 'pod-bay-airlock',
-    expr: 'increase(nousgent_redteam_deflections_total[5m]) > 25'
+    expr: 'sum(increase(nousgent_redteam_deflections_total[5m])) > 25'
   },
   {
     alert: 'NousgentBariReadinessDrop',
     severity: 'critical',
     plane: 'bari-index',
-    expr: 'nousgent_bari_score_pct < 75'
+    expr: 'min(nousgent_bari_score_pct) < 75'
   },
   {
     alert: 'NousgentUpstreamOrganDegraded',
-    severity: 'warning',
+    severity: 'critical',
     plane: 'morphic-mesh',
-    expr: 'nousgent_upstream_organs_reachable < 5'
+    expr: 'min(nousgent_upstream_organs_reachable) < 5'
   },
   {
     alert: 'NousgentClearSignCeremonySpike',
     severity: 'info',
     plane: 'chip0043-quorum',
-    expr: 'increase(nousgent_clear_sign_signatures_total[10m]) > 10'
+    expr: 'sum(increase(nousgent_clear_sign_signatures_total[10m])) > 10'
   },
   {
     alert: 'NousgentM2mToHumanRatioSkew',
@@ -166,25 +166,128 @@ const NOUSGENT_ALERT_RULES_CATALOG = Object.freeze([
     expr: 'up{job="nousgent-web"} == 0'
   },
   {
-    alert: 'NousgentHighMemoryFootprint',
-    severity: 'warning',
-    plane: 'statefulset',
-    expr: 'process_resident_memory_bytes{job="nousgent-web"} > 900000000'
+    alert: 'NousgentSep2640TrojanSkillBlocked',
+    severity: 'critical',
+    plane: 'sep2640-skill-firewall',
+    expr: 'sum(increase(nousgent_mcp_skill_reads_total{outcome="blocked"}[5m])) > 0'
   },
   {
-    alert: 'NousgentDbrainLiveCapsulesCheck',
-    severity: 'info',
-    plane: 'wal-storage',
-    expr: 'nousgent_dbrain_live_capsules_total > 0'
+    alert: 'NousgentRateLimitBurstBlocked',
+    severity: 'warning',
+    plane: 'api-rate-limiter',
+    expr: 'sum(increase(nousgent_rate_limited_blocks_total[5m])) > 20'
+  },
+  {
+    alert: 'DbrainStackOrganScrapeDown',
+    severity: 'critical',
+    plane: 'five-organ-bus',
+    expr: 'up{job=~"dolfactory-pods-headless|dthalamus-pods-headless|dbrain-cluster-headless|cbrain-web|liquidish-pods-headless"} == 0'
+  },
+  {
+    alert: 'DolfactoryInlineIpsQuarantineSurge',
+    severity: 'critical',
+    plane: 'dolfactory-cn1',
+    expr: 'sum(increase(dolfactory_ips_drops_total{job=~"dolfactory.*"}[5m])) > 5'
+  },
+  {
+    alert: 'DthalamusTier2ClearSignPending',
+    severity: 'warning',
+    plane: 'dthalamus-ring0',
+    expr: 'sum(increase(dthalamus_reference_monitor_evaluations_total{job=~"dthalamus.*",outcome="held_tier2_clearsign"}[10m])) > 0'
+  },
+  {
+    alert: 'DthalamusRatchetFailure',
+    severity: 'critical',
+    plane: 'dthalamus-ratchet',
+    expr: 'min(nousgent_dthalamus_ratchet_passed) == 0 and max(nousgent_organ_up{organ="dthalamus.to"}) == 1'
+  },
+  {
+    alert: 'DbrainGdprDekOrPqcIntegrityAnomaly',
+    severity: 'critical',
+    plane: 'dbrain-pqc-gdpr',
+    expr: 'max(dbrain_dek_unshredded_tombstone_anomalies{job=~"dbrain.*"} + dbrain_tombstone_unredacted_anomalies{job=~"dbrain.*"}) > 0 or sum(increase(dbrain_wots_ots_key_reuse_violations_total{job=~"dbrain.*"}[10m])) > 0'
+  },
+  {
+    alert: 'DbrainPeerMerkleDivergence',
+    severity: 'warning',
+    plane: 'dbrain-morphic-gossip',
+    expr: 'max(dbrain_peer_merkle_divergence_stores{job=~"dbrain.*"}) > 0'
+  },
+  {
+    alert: 'LiquidishCollectiveHealthDegraded',
+    severity: 'warning',
+    plane: 'liquidish-dex',
+    expr: 'min(liquidish_collective_health_score{job=~"liquidish.*"}) < 80'
   }
 ]);
 
+const FIVE_ORGAN_DASHBOARD_CATALOG = Object.freeze([
+  Object.freeze({
+    slug: 'dolfactory',
+    organ: 'dolfactory.to',
+    uid: 'dolfactory-cn1-soc-v2',
+    file: 'grafana-01-dolfactory-soc-dashboard.json',
+    title: '01 · dolfactory.to — CN-I Pre-Thalamic Olfactory IDS/IPS & VNO SOC',
+    jsonEndpoint: '/api/nousgent/observability/dashboards/dolfactory.json',
+    grafanaPath: '/d/dolfactory-cn1-soc-v2/01-dolfactory-cn1-soc'
+  }),
+  Object.freeze({
+    slug: 'dthalamus',
+    organ: 'dthalamus.to',
+    uid: 'dthalamus-ring0-soc-v2',
+    file: 'grafana-02-dthalamus-soc-dashboard.json',
+    title: '02 · dthalamus.to — Ring-0 Sensory/Motor Relay, Cache & Ratchet SOC',
+    jsonEndpoint: '/api/nousgent/observability/dashboards/dthalamus.json',
+    grafanaPath: '/d/dthalamus-ring0-soc-v2/02-dthalamus-ring0-soc'
+  }),
+  Object.freeze({
+    slug: 'dbrain',
+    organ: 'dbrain.to + cbrain.to',
+    uid: 'dbrain-cortex-soc-v2',
+    file: 'grafana-03-dbrain-soc-dashboard.json',
+    title: '03 · dbrain.to & cbrain.to — 5-Lobe Chia Cortex, PQC/GDPR & Connectome SOC',
+    jsonEndpoint: '/api/nousgent/observability/dashboards/dbrain.json',
+    grafanaPath: '/d/dbrain-cortex-soc-v2/03-dbrain-cortex-soc'
+  }),
+  Object.freeze({
+    slug: 'liquidish',
+    organ: 'liquidi.sh + shi.liquidi.sh',
+    uid: 'liquidish-dex-soc-v2',
+    file: 'grafana-04-liquidish-soc-dashboard.json',
+    title: '04 · liquidi.sh & shi.liquidi.sh — $DIG CAT2 Intelligence Exchange & Royalties SOC',
+    jsonEndpoint: '/api/nousgent/observability/dashboards/liquidish.json',
+    grafanaPath: '/d/liquidish-dex-soc-v2/04-liquidish-dex-soc'
+  }),
+  Object.freeze({
+    slug: 'nousgent',
+    organ: 'nousgent.ai + ia.nousgent.ai',
+    uid: 'nousgent-cleanroom-soc-v1',
+    file: 'grafana-nousgent-soc-dashboard.json',
+    title: '05 · nousgent.ai & ia.nousgent.ai — Bounded ASI Mission Control & 5-Organ Bus SOC',
+    jsonEndpoint: '/api/nousgent/observability/dashboards/nousgent.json',
+    grafanaPath: '/d/nousgent-cleanroom-soc-v1/05-nousgent-cleanroom-soc'
+  })
+]);
+
+const DASHBOARD_BY_SLUG = new Map(FIVE_ORGAN_DASHBOARD_CATALOG.map((entry) => [entry.slug, entry]));
+
 const NOUSGENT_OBSERVABILITY_STACK = Object.freeze({
   namespace: 'dbrain',
+  folder: 'dbrain & NOUSGENT 5-Organ SOC',
   deployCmd: 'bash deploy/scripts/deploy.sh --cluster kind-kind --with-observability',
   dashboardUid: 'nousgent-cleanroom-soc-v1',
   dashboardJsonEndpoint: '/api/nousgent/observability/dashboard.json',
+  dashboardsCatalogEndpoint: '/api/nousgent/observability/dashboards',
   alertWebhookEndpoint: '/api/nousgent/alerts/webhook',
+  scrapeJobs: [
+    'nousgent-web',
+    'dolfactory-pods-headless',
+    'dthalamus-pods-headless',
+    'dbrain-cluster-headless',
+    'cbrain-web',
+    'liquidish-pods-headless'
+  ],
+  dashboards: FIVE_ORGAN_DASHBOARD_CATALOG,
   services: [
     {
       name: 'nousgent-grafana',
@@ -961,7 +1064,9 @@ const server = http.createServer(async (req, res) => {
     if ((pathname === '/metrics' || pathname === '/api/nousgent/metrics') && req.method === 'GET') {
       const liveEco = await liveClient.getLiveSnapshot();
       const body = engine.renderPrometheusMetrics(liveEco, {
-        rateLimitedBlocks: rateLimitedBlocksTotal
+        rateLimitedBlocks: rateLimitedBlocksTotal,
+        activeEvolutionsStreams: evolutionsHub.getClientCount(),
+        haloConfigured: haloClient.getPublicRuntimeSummary().configured ? 1 : 0
       });
       setSecurityHeaders(res, pathname, activePlane);
       res.writeHead(200, {
@@ -1335,7 +1440,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (pathname === '/api/nousgent/teach/preview' && req.method === 'POST') {
+    async function evaluateAndQuoteTeachRequest() {
       const body = await readJsonBody(req);
       const liveEco = await liveClient.getLiveSnapshot();
       const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
@@ -1353,47 +1458,24 @@ const server = http.createServer(async (req, res) => {
           evolutionsHub.notifyEvolutionChanged('soft_hurt_rejected');
         }
         sendJson(res, status, evalOut, pathname, activePlane);
-        return;
+        return null;
       }
       const liveQuote = await liveClient.quoteTeachCapsule(evalOut);
-      const autoPriceDig =
-        liveQuote !== null ? Number(liveQuote).toFixed(3) : evalOut.autoPriceDig;
-      sendJson(
-        res,
-        200,
-        {
-          ...evalOut,
-          autoPriceDig
-        },
-        pathname,
-        activePlane
-      );
+      const autoPriceDig = liveQuote !== null ? Number(liveQuote).toFixed(3) : evalOut.autoPriceDig;
+      return { evalOut, autoPriceDig, liveEco };
+    }
+
+    if (pathname === '/api/nousgent/teach/preview' && req.method === 'POST') {
+      const quoted = await evaluateAndQuoteTeachRequest();
+      if (!quoted) return;
+      sendJson(res, 200, { ...quoted.evalOut, autoPriceDig: quoted.autoPriceDig }, pathname, activePlane);
       return;
     }
 
     if (pathname === '/api/nousgent/teach/submit' && req.method === 'POST') {
-      const body = await readJsonBody(req);
-      const liveEco = await liveClient.getLiveSnapshot();
-      const evalOut = engine.evaluateTeachSubmission(body, liveEco.dbrain.liveCapsulesTotal || 100);
-      if (!evalOut.ok) {
-        const status =
-          evalOut.code === 'RING0_TEACH_REJECTED' ||
-          evalOut.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ||
-          evalOut.code === 'SPECIALIZATION_WRITE_OUTSIDE_CEILING'
-            ? 403
-            : evalOut.code === 'SOFT_HURT_REJECTED'
-              ? 422
-              : 400;
-        if (evalOut.code === 'SOFT_HURT_REJECTED') {
-          await peerReplicator.broadcastLocalMutation({ reason: 'soft_hurt_rejected' });
-          evolutionsHub.notifyEvolutionChanged('soft_hurt_rejected');
-        }
-        sendJson(res, status, evalOut, pathname, activePlane);
-        return;
-      }
-      const liveQuote = await liveClient.quoteTeachCapsule(evalOut);
-      const autoPriceDig =
-        liveQuote !== null ? Number(liveQuote).toFixed(3) : evalOut.autoPriceDig;
+      const quoted = await evaluateAndQuoteTeachRequest();
+      if (!quoted) return;
+      const { evalOut, autoPriceDig, liveEco } = quoted;
 
       if (evalOut.tier2ClearSignRequired) {
         const proposal = engine.createDaoProposal({
@@ -1546,6 +1628,78 @@ const server = http.createServer(async (req, res) => {
         pathname,
         activePlane
       );
+      return;
+    }
+
+    if (pathname === '/api/nousgent/observability/dashboards' && req.method === 'GET') {
+      const obsDir = path.join(__dirname, 'deploy/resources/observability');
+      const dashboards = FIVE_ORGAN_DASHBOARD_CATALOG.map((entry) => {
+        const dashPath = path.join(obsDir, entry.file);
+        let visualizationPanels = 0;
+        let rowSections = 0;
+        let promqlTargets = 0;
+        let schemaVersion = 39;
+        let tags = [];
+        if (fs.existsSync(dashPath)) {
+          const parsed = JSON.parse(fs.readFileSync(dashPath, 'utf8'));
+          const allPanels = Array.isArray(parsed.panels) ? parsed.panels : [];
+          visualizationPanels = allPanels.filter((p) => p && p.type !== 'row').length;
+          rowSections = allPanels.filter((p) => p && p.type === 'row').length;
+          promqlTargets = allPanels.reduce(
+            (acc, p) => acc + (Array.isArray(p && p.targets) ? p.targets.length : 0),
+            0
+          );
+          schemaVersion = Number(parsed.schemaVersion || 39);
+          tags = Array.isArray(parsed.tags) ? parsed.tags : [];
+        }
+        return {
+          ...entry,
+          schemaVersion,
+          rowSections,
+          visualizationPanels,
+          promqlTargets,
+          tags
+        };
+      });
+      sendJson(
+        res,
+        200,
+        {
+          status: 'ok',
+          folder: NOUSGENT_OBSERVABILITY_STACK.folder,
+          dashboardsCount: dashboards.length,
+          totalVisualizationPanels: dashboards.reduce((acc, d) => acc + d.visualizationPanels, 0),
+          totalPromqlTargets: dashboards.reduce((acc, d) => acc + d.promqlTargets, 0),
+          scrapeJobs: NOUSGENT_OBSERVABILITY_STACK.scrapeJobs,
+          dashboards
+        },
+        pathname,
+        activePlane
+      );
+      return;
+    }
+
+    if (
+      pathname.startsWith('/api/nousgent/observability/dashboards/') &&
+      pathname.endsWith('.json') &&
+      req.method === 'GET'
+    ) {
+      const slug = pathname
+        .slice('/api/nousgent/observability/dashboards/'.length, -'.json'.length)
+        .toLowerCase();
+      const entry = DASHBOARD_BY_SLUG.get(slug);
+      if (!entry) {
+        sendJson(res, 404, { error: 'Unknown observability dashboard slug' }, pathname, activePlane);
+        return;
+      }
+      const dashPath = path.join(__dirname, 'deploy/resources/observability', entry.file);
+      if (!fs.existsSync(dashPath)) {
+        sendJson(res, 404, { error: 'Dashboard artifact missing on disk' }, pathname, activePlane);
+        return;
+      }
+      setSecurityHeaders(res, pathname, activePlane);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(fs.readFileSync(dashPath));
       return;
     }
 

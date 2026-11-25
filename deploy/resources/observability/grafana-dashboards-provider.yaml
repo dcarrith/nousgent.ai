@@ -1,8 +1,8 @@
 apiVersion: 1
 providers:
-  - name: "nousgent-soc-dashboards"
+  - name: "dbrain-five-organ-soc-dashboards"
     orgId: 1
-    folder: "NOUSGENT Bounded ASI SOC"
+    folder: "dbrain & NOUSGENT 5-Organ SOC"
     type: file
     disableDeletion: true
     editable: false

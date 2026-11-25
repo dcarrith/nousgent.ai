@@ -1,6 +1,16 @@
+# ==============================================================================
+# Unified 5-Organ Sovereign AI Stack Prometheus Configuration (nousgent-prometheus)
+# Scrapes per-pod /metrics across dolfactory.to, dthalamus.to, dbrain.to,
+# cbrain.to, liquidi.sh / shi.liquidi.sh, and nousgent.ai / ia.nousgent.ai
+# via zero-RBAC Headless DNS Service Discovery in namespace 'dbrain'.
+# ==============================================================================
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: "dbrain-sovereign"
+    stack: "nousgent-five-organ-soc"
 
 alerting:
   alertmanagers:
@@ -12,9 +22,82 @@ rule_files:
   - "/etc/prometheus/rules/prometheus-nousgent-alerts.yaml"
 
 scrape_configs:
+  # 1. Flagship Orchestrator: nousgent.ai (human_ui) & ia.nousgent.ai (m2m_ia)
   - job_name: "nousgent-web"
+    metrics_path: "/metrics"
+    dns_sd_configs:
+      - names:
+          - "nousgent-web-headless.dbrain.svc.cluster.local"
+        type: "A"
+        port: 3000
+    relabel_configs:
+      - target_label: stack_organ
+        replacement: "nousgent.ai"
+
+  # 2. Organ 01 (Ring -1): dolfactory.to Cranial Nerve I Pre-Thalamic IDS/IPS
+  - job_name: "dolfactory-pods-headless"
+    metrics_path: "/metrics"
+    dns_sd_configs:
+      - names:
+          - "dolfactory-web-headless.dbrain.svc.cluster.local"
+        type: "A"
+        port: 3000
+    relabel_configs:
+      - target_label: stack_organ
+        replacement: "dolfactory.to"
+
+  # 3. Organ 02 (Ring 0): dthalamus.to Reference Monitor, DAN-v1.1 & 4-Layer Cache
+  - job_name: "dthalamus-pods-headless"
+    metrics_path: "/metrics"
+    dns_sd_configs:
+      - names:
+          - "dthalamus-web-headless.dbrain.svc.cluster.local"
+        type: "A"
+        port: 3000
+    relabel_configs:
+      - target_label: stack_organ
+        replacement: "dthalamus.to"
+
+  # 4. Organ 03 (Ring 1): dbrain.to 5-Lobe Chia DataLayer Merkle Cortex
+  - job_name: "dbrain-cluster-headless"
+    metrics_path: "/metrics"
+    dns_sd_configs:
+      - names:
+          - "dbrain-web-headless.dbrain.svc.cluster.local"
+        type: "A"
+        port: 3000
+    relabel_configs:
+      - target_label: stack_organ
+        replacement: "dbrain.to"
+
+  # 5. Organ 04 (Ring 2): cbrain.to 4D WebGL/wasm32 Connectome Observatory
+  - job_name: "cbrain-web"
     metrics_path: "/metrics"
     static_configs:
       - targets:
-          - "nousgent-web-0.nousgent-web-headless.dbrain.svc.cluster.local:3000"
-          - "nousgent-web-1.nousgent-web-headless.dbrain.svc.cluster.local:3000"
+          - "cbrain-web.dbrain.svc.cluster.local:80"
+        labels:
+          stack_organ: "cbrain.to"
+
+  # 6. Organ 05 (Ring 3): liquidi.sh & shi.liquidi.sh Liquid Intelligence DEX
+  - job_name: "liquidish-pods-headless"
+    metrics_path: "/metrics"
+    dns_sd_configs:
+      - names:
+          - "liquidish-web-headless.dbrain.svc.cluster.local"
+        type: "A"
+        port: 3000
+    relabel_configs:
+      - target_label: stack_organ
+        replacement: "liquidi.sh"
+
+  # 7. SOC Observability Self-Health
+  - job_name: "nousgent-prometheus"
+    static_configs:
+      - targets:
+          - "127.0.0.1:9090"
+
+  - job_name: "nousgent-alertmanager"
+    static_configs:
+      - targets:
+          - "nousgent-alertmanager.dbrain.svc.cluster.local:9093"
