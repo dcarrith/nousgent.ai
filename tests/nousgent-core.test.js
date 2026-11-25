@@ -975,14 +975,76 @@ test('3. Durable Zero-Seed SQLite WAL Mesh, Live Ecosystem Telemetry, Clear-Sign
     assert.equal(memEngine.auditSpecializationAndHarness({ action: 'es_at_scale' }).status, 'ok');
     assert.equal(memEngine.auditSpecializationAndHarness({ action: 'compositional_harness' }).status, 'ok');
 
-    // Replica merge with valid + invalid esSeedPulses (including default epoch / omitted fields)
+    // Replica merge with valid + invalid esSeedPulses (including default epoch / omitted fields) + servingPointers
     const snapWithEs = memEngine.exportReplicaSnapshot();
+    assert.equal(snapWithEs.servingPointers.length, 1);
+    assert.equal(snapWithEs.servingPointers[0].pinnedGeneration, 8);
     const rawNoEpochSeed = { ...negBaseEnv, signatureHex: negSig.signatureHex };
     const mergedEs = syncTarget.mergeReplicaSnapshot({
       ...snapWithEs,
       esSeedPulses: [...snapWithEs.esSeedPulses, rawNoEpochSeed, { eventId: 'BAD' }, null]
     });
     assert.equal(mergedEs.esSeedPulsesCount, 2);
+    assert.equal(syncTarget.getFrozenServePointer().pinnedGeneration, 8);
+    assert.equal(syncTarget.getFrozenServePointer().merkleRoot, '0xabc');
+
+    // Unified chronological Recent Evolutions feed (autonomous + human capsules, governance, ESS1 seeds, quests & blocked edits)
+    const { buildRecentEvolutionsFeed } = require('../server/evolutions-stream-hub.js');
+    const tAutoIso = new Date(Date.now() + 10_000).toISOString();
+    const tHumanIso = new Date(Date.now() + 20_000).toISOString();
+    const tDaoIso = new Date(Date.now() + 30_000).toISOString();
+    const unifiedFeed = buildRecentEvolutionsFeed({
+      recentCapsules: [
+        {
+          id: 'CAP-AUTO-1',
+          title: 'Autonomous Cortex Capsule',
+          lobe: 'semantic',
+          origin: 'autonomous',
+          authorName: 'Sovereign-Agent-Node',
+          generation: 1306,
+          merkleRoot: '0x1234567890abcdef1234567890abcdef',
+          priceDig: '42.500 $DIG',
+          timestamp: tAutoIso,
+          capsuleUrl: 'https://dbrain.to/dig/CAP-AUTO-1.json'
+        },
+        {
+          id: 'CAP-HUMAN-1',
+          title: 'Human Teach Capsule',
+          lobe: 'procedural',
+          tags: ['teach-nousgent'],
+          generation: 1307,
+          merkleRoot: '0xabcdef1234567890abcdef1234567890',
+          timestamp: tHumanIso,
+          capsuleUrl: 'https://dbrain.to/dig/CAP-HUMAN-1.json'
+        }
+      ],
+      missions: [
+        ...memEngine.listMissions(),
+        {
+          missionId: 'NGT-DAO-09-AA11',
+          title: 'Newest Community DAO Upgrade',
+          summary: 'Latest proposal should sort above older seeds.',
+          rewardDig: '1500.000',
+          quorumSignatures: 1,
+          quorumTarget: 3,
+          status: 'AWAITING_CHIP0043_QUORUM',
+          updatedAt: tDaoIso,
+          dao: { proposerDid: 'did:chia:1citizenvoter', votesForDig: '2500.000', voterCount: 1 }
+        }
+      ],
+      blindSpotQuests: memEngine.listBlindSpotQuests(100),
+      rejectedEdits: memEngine.listRejectedEdits(),
+      esSeedPulses: memEngine.listEsSeedPulses(),
+      limit: 10
+    });
+    assert.equal(unifiedFeed[0].key, 'mission-NGT-DAO-09-AA11');
+    assert.equal(unifiedFeed[0].origin, 'human');
+    assert.equal(unifiedFeed[1].key, 'cap-CAP-HUMAN-1');
+    assert.equal(unifiedFeed[1].origin, 'human');
+    assert.equal(unifiedFeed[2].key, 'cap-CAP-AUTO-1');
+    assert.equal(unifiedFeed[2].origin, 'autonomous');
+    assert.ok(unifiedFeed.some((e) => e.kind === 'es_seed' && e.origin === 'autonomous'));
+    assert.ok(unifiedFeed.some((e) => e.kind === 'guard_block'));
 
     const promAfterEs = memEngine.renderPrometheusMetrics();
     assert.ok(promAfterEs.includes('nousgent_es_seed_pulses_total 2'));

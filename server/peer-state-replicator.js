@@ -43,6 +43,7 @@ function getLocalIpv4Set() {
 function createPeerStateReplicator(options = {}) {
   const engine = options.engine;
   const env = options.env || process.env;
+  const onPeerMerged = typeof options.onPeerMerged === 'function' ? options.onPeerMerged : null;
   const getLocalPort = typeof options.getLocalPort === 'function' ? options.getLocalPort : () => Number(env.PORT || 3000);
   const podId = String(env.NOUSGENT_POD_ID || os.hostname() || 'nousgent-web-local').trim();
   const signingSecret = String(env.NOUSGENT_SIGNING_SECRET || '').trim();
@@ -176,12 +177,17 @@ function createPeerStateReplicator(options = {}) {
     });
   }
 
-  async function broadcastLocalMutation() {
+  async function broadcastLocalMutation(meta = {}) {
     if (!enabled) return { syncedPeers: 0 };
     const peers = await resolveSiblingBaseUrls();
     if (peers.length === 0) return { syncedPeers: 0 };
-    const payload = { podId, snapshot: engine.exportReplicaSnapshot() };
-    const results = await Promise.all(peers.map((peerUrl) => sendSignedPeerHttp(peerUrl, 'POST', payload, 1200)));
+    const payload = {
+      podId,
+      reason: String(meta.reason || 'peer_sync'),
+      forceUpstreamRefresh: Boolean(meta.forceUpstreamRefresh),
+      snapshot: engine.exportReplicaSnapshot()
+    };
+    const results = await Promise.all(peers.map((peerUrl) => sendSignedPeerHttp(peerUrl, 'POST', payload, 1500)));
     return {
       syncedPeers: results.filter(Boolean).length
     };
@@ -200,8 +206,16 @@ function createPeerStateReplicator(options = {}) {
         pulledPeers += 1;
       }
     }
+    if (pulledPeers > 0 && onPeerMerged) {
+      onPeerMerged({ reason: 'peer_anti_entropy', forceUpstreamRefresh: false });
+    }
 
-    const convergedPayload = { podId, snapshot: engine.exportReplicaSnapshot() };
+    const convergedPayload = {
+      podId,
+      reason: 'peer_anti_entropy',
+      forceUpstreamRefresh: false,
+      snapshot: engine.exportReplicaSnapshot()
+    };
     const pushed = await Promise.all(
       peers.map((peerUrl) => sendSignedPeerHttp(peerUrl, 'POST', convergedPayload, 1500))
     );

@@ -518,7 +518,10 @@ li {
 }
 
 .sidebar-evolutions-scroll {
+  list-style: none;
+  padding-inline-start: 0;
   margin-block-start: 0.5rem;
+  margin-block-end: 0;
   display: flex;
   flex-direction: column;
   gap: 0.42rem;

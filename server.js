@@ -22,7 +22,10 @@ const {
 const { createNousgentVoiceSynthesizer } = require('./server/voice-synthesizer.js');
 const { createLocalHaloClient } = require('./server/local-halo-client.js');
 const { createPeerStateReplicator } = require('./server/peer-state-replicator.js');
-const { createEvolutionsStreamHub } = require('./server/evolutions-stream-hub.js');
+const {
+  buildRecentEvolutionsFeed,
+  createEvolutionsStreamHub
+} = require('./server/evolutions-stream-hub.js');
 const {
   buildOembedPayload,
   createHtmlMetadataRenderer
@@ -45,15 +48,21 @@ const engine = nousgent.createNousgentEngine({ stateDir: STATE_DIR });
 const liveClient = createLiveEcosystemClient(process.env);
 const voiceSynth = createNousgentVoiceSynthesizer({ env: process.env, stateDir: STATE_DIR, repoRoot: __dirname });
 const haloClient = createLocalHaloClient(process.env);
+const evolutionsHub = createEvolutionsStreamHub({ engine, liveClient });
 const peerReplicator = createPeerStateReplicator({
   engine,
   env: process.env,
+  onPeerMerged: (meta = {}) => {
+    evolutionsHub.notifyEvolutionChanged(meta.reason || 'peer_anti_entropy', {
+      forceUpstreamRefresh: Boolean(meta.forceUpstreamRefresh),
+      onlyIfChanged: true
+    });
+  },
   getLocalPort: () => {
     const addr = boundServerRef && boundServerRef.address && boundServerRef.address();
     return addr && typeof addr === 'object' && addr.port ? addr.port : PORT;
   }
 });
-const evolutionsHub = createEvolutionsStreamHub({ engine, liveClient });
 void voiceSynth.warmupSession();
 
 const renderHtmlWithSeo = createHtmlMetadataRenderer({
@@ -594,11 +603,15 @@ async function handleMcpRpc(body) {
     else if (name === 'nousgent_simulate_bisect') data = engine.simulateBisect(args);
     else if (name === 'nousgent_enlist_rig') {
       data = engine.enlistRig(args);
-      await peerReplicator.broadcastLocalMutation();
+      await peerReplicator.broadcastLocalMutation({ reason: 'mcp_enlist_rig' });
+      evolutionsHub.notifyEvolutionChanged('mcp_enlist_rig');
     } else if (name === 'nousgent_list_missions') data = { missions: engine.listMissions() };
     else if (name === 'nousgent_submit_clear_sign') {
       data = engine.submitClearSignVote(args);
-      if (data.ok) await peerReplicator.broadcastLocalMutation();
+      if (data.ok) {
+        await peerReplicator.broadcastLocalMutation({ reason: 'mcp_two_key_sign' });
+        evolutionsHub.notifyEvolutionChanged('mcp_two_key_sign');
+      }
     } else if (name === 'nousgent_get_plane_telemetry') data = engine.meshStore.getPlaneTelemetry();
     else if (name === 'nousgent_ask_persona') {
       data = await runAskWithLiveOrgans(args);
@@ -606,15 +619,22 @@ async function handleMcpRpc(body) {
         data.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' ||
         data.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
       ) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({ reason: 'mcp_quest_logged' });
+        evolutionsHub.notifyEvolutionChanged('mcp_quest_logged');
       }
     } else if (name === 'nousgent_local_agent_infer') data = (await runGuardedLocalAgentInference(args)).payload;
     else if (name === 'nousgent_create_dao_proposal') {
       data = engine.createDaoProposal(args);
-      if (data.ok) await peerReplicator.broadcastLocalMutation();
+      if (data.ok) {
+        await peerReplicator.broadcastLocalMutation({ reason: 'mcp_dao_proposal' });
+        evolutionsHub.notifyEvolutionChanged('mcp_dao_proposal');
+      }
     } else if (name === 'nousgent_cast_dao_vote') {
       data = engine.castDaoVote(args);
-      if (data.ok) await peerReplicator.broadcastLocalMutation();
+      if (data.ok) {
+        await peerReplicator.broadcastLocalMutation({ reason: 'mcp_dao_vote' });
+        evolutionsHub.notifyEvolutionChanged('mcp_dao_vote');
+      }
     } else if (name === 'nousgent_specialization_and_harness_audit') {
       data = engine.auditSpecializationAndHarness(args);
     }
@@ -699,7 +719,11 @@ const server = http.createServer(async (req, res) => {
       }
       const parsed = rawBody ? JSON.parse(rawBody) : {};
       const merged = engine.mergeReplicaSnapshot(parsed.snapshot || {});
-      evolutionsHub.notifyEvolutionChanged('peer_sync');
+      const syncReason = String(parsed.reason || 'peer_sync');
+      evolutionsHub.notifyEvolutionChanged(syncReason, {
+        forceUpstreamRefresh: Boolean(parsed.forceUpstreamRefresh),
+        onlyIfChanged: syncReason === 'peer_anti_entropy'
+      });
       sendJson(res, 200, { ok: true, podId: peerReplicator.podId, merged }, pathname, 'm2m_ia');
       return;
     }
@@ -886,11 +910,20 @@ const server = http.createServer(async (req, res) => {
         liveEco.rsiLeaderboardBase,
         missionStatus.leaderboard.recentRigs
       );
+      const recentEvolutions = buildRecentEvolutionsFeed({
+        recentCapsules: liveEco.dbrain?.recentCapsules || [],
+        missions: missionStatus.missions,
+        blindSpotQuests: missionStatus.blindSpotQuests,
+        rejectedEdits: missionStatus.rejectedEdits,
+        esSeedPulses: missionStatus.esSeedPulses,
+        limit: 10
+      });
       sendJson(
         res,
         200,
         {
           ...missionStatus,
+          recentEvolutions,
           rsiLeaderboard,
           daoSingletonId: nousgent.DAO_SINGLETON_ID,
           halo: haloClient.getPublicRuntimeSummary(),
@@ -931,7 +964,7 @@ const server = http.createServer(async (req, res) => {
         askOut.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' ||
         askOut.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
       ) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({ reason: 'quest_logged' });
         evolutionsHub.notifyEvolutionChanged('quest_logged');
       }
       sendJson(res, 200, askOut, pathname, activePlane);
@@ -958,7 +991,8 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/nodes/enlist' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const enlisted = engine.enlistRig(body);
-      await peerReplicator.broadcastLocalMutation();
+      await peerReplicator.broadcastLocalMutation({ reason: 'node_enlisted' });
+      evolutionsHub.notifyEvolutionChanged('node_enlisted');
       sendJson(res, 201, enlisted, pathname, activePlane);
       return;
     }
@@ -989,7 +1023,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const out = engine.createDaoProposal(body);
       if (out.ok) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({ reason: 'dao_proposal' });
         evolutionsHub.notifyEvolutionChanged('dao_proposal');
       }
       const statusCode = out.ok ? 201 : out.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ? 403 : 400;
@@ -1001,7 +1035,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const out = engine.castDaoVote(body);
       if (out.ok) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({ reason: 'dao_vote' });
         evolutionsHub.notifyEvolutionChanged('dao_vote');
       }
       const statusCode = out.ok
@@ -1091,7 +1125,7 @@ const server = http.createServer(async (req, res) => {
           proposerDid: body.proposerDid
         });
         if (promoted.ok) {
-          await peerReplicator.broadcastLocalMutation();
+          await peerReplicator.broadcastLocalMutation({ reason: 'evolve_promote' });
           evolutionsHub.notifyEvolutionChanged('evolve_promote');
         }
         sendJson(res, promoted.ok ? 200 : 404, promoted, pathname, activePlane);
@@ -1107,7 +1141,7 @@ const server = http.createServer(async (req, res) => {
         proposerDid: body?.proposerDid
       });
       if (created.ok) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({ reason: 'evolve_promote' });
         evolutionsHub.notifyEvolutionChanged('evolve_promote');
       }
       sendJson(res, created.ok ? 201 : 400, created, pathname, activePlane);
@@ -1128,7 +1162,7 @@ const server = http.createServer(async (req, res) => {
               ? 422
               : 400;
         if (evalOut.code === 'SOFT_HURT_REJECTED') {
-          await peerReplicator.broadcastLocalMutation();
+          await peerReplicator.broadcastLocalMutation({ reason: 'soft_hurt_rejected' });
           evolutionsHub.notifyEvolutionChanged('soft_hurt_rejected');
         }
         sendJson(res, status, evalOut, pathname, activePlane);
@@ -1164,7 +1198,7 @@ const server = http.createServer(async (req, res) => {
               ? 422
               : 400;
         if (evalOut.code === 'SOFT_HURT_REJECTED') {
-          await peerReplicator.broadcastLocalMutation();
+          await peerReplicator.broadcastLocalMutation({ reason: 'soft_hurt_rejected' });
           evolutionsHub.notifyEvolutionChanged('soft_hurt_rejected');
         }
         sendJson(res, status, evalOut, pathname, activePlane);
@@ -1183,7 +1217,7 @@ const server = http.createServer(async (req, res) => {
           proposerDid: evalOut.authorDid
         });
         if (proposal.ok) {
-          await peerReplicator.broadcastLocalMutation();
+          await peerReplicator.broadcastLocalMutation({ reason: 'teach_alignment_proposal' });
           evolutionsHub.notifyEvolutionChanged('teach_alignment_proposal');
         }
         sendJson(
@@ -1211,7 +1245,10 @@ const server = http.createServer(async (req, res) => {
         generation: Number(liveEco.dbrain.primaryGeneration || 1) + 1,
         merkleRoot: minted.merkleRoot
       });
-      await peerReplicator.broadcastLocalMutation();
+      await peerReplicator.broadcastLocalMutation({
+        reason: 'teach_minted',
+        forceUpstreamRefresh: true
+      });
       evolutionsHub.notifyEvolutionChanged('teach_minted', { forceUpstreamRefresh: true });
       sendJson(
         res,
@@ -1234,7 +1271,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const out = engine.submitClearSignVote(body);
       if (out.ok) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({ reason: 'two_key_sign' });
         evolutionsHub.notifyEvolutionChanged('two_key_sign');
       }
       const statusCode = out.ok ? 200 : out.code === 'SUBHARNESS_TIER2_SPEND_DENIED' ? 403 : 400;
@@ -1262,7 +1299,13 @@ const server = http.createServer(async (req, res) => {
         }
       }
       if (acceptedRejectedEdits > 0 || acceptedEsSeedPulses > 0) {
-        await peerReplicator.broadcastLocalMutation();
+        await peerReplicator.broadcastLocalMutation({
+          reason: 'morphic_pulse',
+          forceUpstreamRefresh: acceptedEsSeedPulses > 0
+        });
+        evolutionsHub.notifyEvolutionChanged('morphic_pulse', {
+          forceUpstreamRefresh: acceptedEsSeedPulses > 0
+        });
       }
       const liveEco = await liveClient.getLiveSnapshot();
       const status = engine.getMissionStatus(liveEco);

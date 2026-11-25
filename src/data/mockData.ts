@@ -46,6 +46,8 @@ export interface SwarmMissionItem {
   readonly quorumTarget: number;
   readonly quorumPct: number;
   readonly status: string;
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
   readonly clearSignUr: string;
   readonly dao?: DaoMissionGovernance;
 }

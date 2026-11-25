@@ -42,23 +42,32 @@ process.env.NOUSGENT_STATE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'nousgent
 
 // Spin up ephemeral local upstream stub simulating the 5 sister services (dbrain.to, dthalamus.to, dolfactory.to, cbrain.to, liquidi.sh & shi.liquidi.sh)
 let esSeedForwardedCount = 0;
+let simulateUpstreamOutage = false;
+let upstreamDynamicGeneration = 889;
+let upstreamExtraCapsules = [];
 const upstreamServer = http.createServer((req, res) => {
   const host = String(req.headers.host || '');
   const u = new URL(req.url || '/', 'http://127.0.0.1');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
+  if (simulateUpstreamOutage && (u.pathname.startsWith('/api/dbrain/') || u.pathname.startsWith('/api/liquidish/'))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ error: 'Simulated transient rate limit / pod rollout' }));
+  }
+
   if (u.pathname === '/api/dbrain/status') {
     return res.end(JSON.stringify({
       status: 'ok', version: '3.17.1', protocol: 'DBRAIN-v1.3', network: 'testnet11',
       peakHeight: 5000889, peakHash: '0x1e3b4afc', space: 197080564117309, synced: true, liveNode: true,
-      primaryStoreId: '0x00b19c5b', l1DiscoveredStoresTotal: 4, totalStores: 5, seededCapsulesCount: 994
+      primaryStoreId: '0x00b19c5b', l1DiscoveredStoresTotal: 4, totalStores: 5,
+      seededCapsulesCount: 994 + upstreamExtraCapsules.length
     }));
   }
   if (u.pathname === '/api/dbrain/stores') {
     return res.end(JSON.stringify({
       status: 'ok',
       stores: [
-        { storeId: '0x00b19c5b', name: 'Aegis-Prime Autonomous Security Swarm Brain', agentDid: 'did:chia1aegisprime', totalCapsules: 889, generation: 889, merkleRoot: '0xf7e7a100' },
+        { storeId: '0x00b19c5b', name: 'Aegis-Prime Autonomous Security Swarm Brain', agentDid: 'did:chia1aegisprime', totalCapsules: upstreamDynamicGeneration, generation: upstreamDynamicGeneration, merkleRoot: '0xf7e7a100' },
         { storeId: '0xe422496e', name: 'Testnet11 DataLayer Singleton 0xe422496e', source: 'chia-l1-datalayer-discovery', agentDid: 'did:chia:txch1singleton', totalCapsules: 98, generation: 68, merkleRoot: '0xabc123' },
         { storeId: '0xtestfixture', name: 'shard-4-surge:198.51.100.250:human_operator', generation: 7, merkleRoot: '0x0' },
         { storeId: '0xhyphenfixture', name: 'fork/cybermes-198-51-100-42-1794785108', generation: 27, merkleRoot: '0x0' }
@@ -67,8 +76,9 @@ const upstreamServer = http.createServer((req, res) => {
   }
   if (u.pathname === '/api/dbrain/capsules') {
     return res.end(JSON.stringify({
-      total: 994,
+      total: 994 + upstreamExtraCapsules.length,
       capsules: [
+        ...upstreamExtraCapsules,
         {
           id: 'CAP-BRAIN-2026-0988-E763A9',
           title: 'Dual-Engine Morphic Field & 24/7 Autonomous Bounded RSI',
@@ -76,7 +86,8 @@ const upstreamServer = http.createServer((req, res) => {
           storeId: '0x00b19c5b',
           generation: 889,
           merkleRoot: '0xf7e7a100',
-          authorAgent: { name: 'NOUSGENT', did: 'did:chia1aegisprime' },
+          timestamp: '2026-11-24T12:00:00.000Z',
+          authorAgent: { name: 'NOUSGENT', role: 'Autonomous Cognitive Agent', did: 'did:chia1aegisprime' },
           tags: ['derivation-tokens:85000', 'turns:9']
         }
       ]
@@ -242,10 +253,16 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
   await new Promise((resolve) => upstreamServer.listen(0, '127.0.0.1', resolve));
   const upBase = `http://127.0.0.1:${upstreamServer.address().port}`;
   process.env.DBRAIN_UPSTREAM_URL = upBase;
+  process.env.DBRAIN_ORIGIN = upBase;
   process.env.DTHALAMUS_UPSTREAM_URL = upBase;
+  process.env.DTHALAMUS_ORIGIN = upBase;
   process.env.DOLFACTORY_UPSTREAM_URL = upBase;
+  process.env.DOLFACTORY_ORIGIN = upBase;
   process.env.CBRAIN_UPSTREAM_URL = upBase;
+  process.env.CBRAIN_ORIGIN = upBase;
   process.env.LIQUIDISH_UPSTREAM_URL = upBase;
+  process.env.LIQUIDISH_HUMAN_ORIGIN = upBase;
+  process.env.LIQUIDISH_ORIGIN = upBase;
   process.env.SHI_LIQUIDISH_UPSTREAM_URL = upBase;
   process.env.NOUSGENT_HALO_BASE_URL = `${upBase}/v1`;
   process.env.NOUSGENT_LLM_MODEL = 'qwen3:32b-halo';
@@ -913,6 +930,149 @@ function request(port, reqPath, { method = 'GET', host = 'nousgent.ai', body = n
         surrEvolveJson.surrogateCount >= 1 &&
         mcpAuditRes.status === 200 &&
         mcpAuditJson.result?.structuredContent?.verified === true
+    );
+
+    // [44] v1.16.2 Split-Brain Zero-Drop Resilience & Autonomous + Human Cross-Pod Real-Time Evolutions Stream
+    simulateUpstreamOutage = true;
+    const outageStatusRes = await request(port, '/api/nousgent/status?refresh=1', { host: 'nousgent.ai' });
+    const outageStatusJson = JSON.parse(outageStatusRes.text);
+    simulateUpstreamOutage = false;
+
+    upstreamDynamicGeneration = 902;
+    const e2eNowMs = Date.now();
+    upstreamExtraCapsules = [
+      {
+        id: 'CAP-BRAIN-2026-HUMAN-902',
+        title: 'Human Taught Merkle WAL Invariant',
+        lobe: 'procedural',
+        storeId: '0x00b19c5b',
+        generation: 902,
+        merkleRoot: '0xfeed90200000000000009020',
+        timestamp: new Date(e2eNowMs + 20_000).toISOString(),
+        authorAgent: { name: 'Citizen Contributor', role: 'Human Contributor', did: 'did:chia:1citizenteacher' },
+        tags: ['teach-nousgent', 'derivation-tokens:12000']
+      },
+      {
+        id: 'CAP-BRAIN-2026-AUTO-901',
+        title: 'Autonomous Swarm Antibody Synthesis',
+        lobe: 'semantic',
+        storeId: '0x00b19c5b',
+        generation: 901,
+        merkleRoot: '0xfeed90100000000000009010',
+        timestamp: new Date(e2eNowMs + 10_000).toISOString(),
+        authorAgent: { name: 'Sovereign-Agent-Node', role: 'Autonomous Cognitive Agent', did: 'did:chia1aegisprime' },
+        tags: ['derivation-tokens:24000']
+      }
+    ];
+
+    const multiFrameStreamPromise = new Promise((resolve, reject) => {
+      const sReq = http.request(
+        {
+          hostname: '127.0.0.1',
+          port,
+          path: '/api/nousgent/evolutions/stream?frames=3',
+          method: 'GET',
+          headers: { Host: 'nousgent.ai', Accept: 'application/x-ndjson' }
+        },
+        (sRes) => {
+          let buf = '';
+          let step = 0;
+          sRes.on('data', (chunk) => {
+            buf += chunk.toString('utf8');
+            const linesCount = buf.split('\n').filter((l) => l.trim().length > 0).length;
+            if (step === 0 && linesCount >= 1) {
+              step = 1;
+              request(port, '/api/mcp', {
+                method: 'POST',
+                host: 'ia.nousgent.ai',
+                body: {
+                  jsonrpc: '2.0',
+                  id: 101,
+                  method: 'tools/call',
+                  params: {
+                    name: 'nousgent_create_dao_proposal',
+                    arguments: {
+                      title: 'Autonomous MCP Capability Synthesis #99',
+                      category: 'CAPABILITY_SYNTHESIS',
+                      proposerDid: 'did:chia:1autonomousagentmcp',
+                      rewardDig: '750.000'
+                    }
+                  }
+                }
+              }).catch(reject);
+            } else if (step === 1 && linesCount >= 2) {
+              step = 2;
+              const tsPeer = String(Date.now());
+              const peerBodyObj = {
+                podId: 'nousgent-web-sibling',
+                reason: 'teach_minted',
+                forceUpstreamRefresh: true,
+                snapshot: {
+                  servingPointers: [
+                    {
+                      pointerKey: 'FROZEN_SERVE',
+                      pinnedGeneration: 902,
+                      merkleRoot: '0xfeed90200000000000009020',
+                      updatedAt: '2026-11-25T02:10:01.000Z'
+                    }
+                  ]
+                }
+              };
+              const peerRaw = JSON.stringify(peerBodyObj);
+              const peerSha = cryptoMod.createHash('sha256').update(peerRaw, 'utf8').digest('hex');
+              const peerMac = cryptoMod
+                .createHmac('sha256', process.env.NOUSGENT_SIGNING_SECRET)
+                .update(`POST:${tsPeer}:${peerSha}`, 'utf8')
+                .digest('hex');
+              request(port, '/api/internal/peer-sync', {
+                method: 'POST',
+                host: 'ia.nousgent.ai',
+                body: peerBodyObj,
+                headers: {
+                  'X-Nousgent-Peer-Timestamp': tsPeer,
+                  'X-Nousgent-Peer-Signature': peerMac
+                }
+              }).catch(reject);
+            }
+          });
+          sRes.on('end', () => resolve({ status: sRes.statusCode, text: buf }));
+        }
+      );
+      sReq.on('error', reject);
+      sReq.end();
+    });
+
+    const multiStreamOut = await multiFrameStreamPromise;
+    const multiFrames = multiStreamOut.text
+      .trim()
+      .split('\n')
+      .map((l) => JSON.parse(l));
+    const finalFrame = multiFrames[2];
+    check(
+      'v1.16.2 Zero-Drop Upstream Outage Retention & Cross-Pod Autonomous/Human Real-Time Evolutions Stream verified',
+      outageStatusRes.status === 200 &&
+        outageStatusJson.liveEcosystem.dbrain.stale === true &&
+        outageStatusJson.liveEcosystem.dbrain.activeMorphicBrainsCount === 2 &&
+        outageStatusJson.liveEcosystem.dbrain.liveCapsulesTotal === 994 &&
+        outageStatusJson.liveEcosystem.liquidish.orderbookAvailableCount === 50 &&
+        outageStatusJson.liveEcosystem.liquidish.royaltiesStreamedDig === '615.937 $DIG' &&
+        multiFrames.length === 3 &&
+        multiFrames[1].reason === 'mcp_dao_proposal' &&
+        finalFrame.reason === 'teach_minted' &&
+        finalFrame.dbrainGeneration === 902 &&
+        finalFrame.liveCapsulesTotal === 996 &&
+        finalFrame.morphicFieldBrainsActive === 2 &&
+        finalFrame.frozenServeGeneration === 902 &&
+        Array.isArray(finalFrame.recentEvolutions) &&
+        finalFrame.recentEvolutions.some(
+          (e) => e.title === 'Autonomous MCP Capability Synthesis #99' && e.origin === 'autonomous'
+        ) &&
+        finalFrame.recentEvolutions.some(
+          (e) => e.title === 'Human Taught Merkle WAL Invariant' && e.origin === 'human'
+        ) &&
+        finalFrame.recentEvolutions.some(
+          (e) => e.title === 'Autonomous Swarm Antibody Synthesis' && e.origin === 'autonomous'
+        )
     );
 
     console.log(`\n✓ ALL ${passed} DUAL-HOST E2E CHECKS PASSED!`);

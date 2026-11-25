@@ -15,7 +15,9 @@ export interface LiveRecentCapsuleItem {
   readonly title: string;
   readonly summary?: string;
   readonly lobe: string;
+  readonly origin?: 'human' | 'autonomous';
   readonly authorName?: string;
+  readonly authorRole?: string;
   readonly tags?: readonly string[];
   readonly specializations?: readonly string[];
   readonly timestamp?: string;
@@ -24,6 +26,21 @@ export interface LiveRecentCapsuleItem {
   readonly merkleRoot: string;
   readonly priceDig: string | null;
   readonly capsuleUrl: string;
+}
+
+export interface EvolutionFeedItem {
+  readonly key: string;
+  readonly kind?: string;
+  readonly origin?: 'human' | 'autonomous';
+  readonly badge: string;
+  readonly badgeTone: 'pistachio' | 'jade' | 'bronze';
+  readonly kindLabel: string;
+  readonly title: string;
+  readonly details: string;
+  readonly metaLine: string;
+  readonly timestamp?: string;
+  readonly internalHref?: string;
+  readonly externalHref?: string;
 }
 
 export interface BlindSpotQuestItem {
@@ -214,6 +231,7 @@ export interface MissionSnapshot {
   readonly rejectedEdits: readonly RejectedEditItem[];
   readonly esSeedPulsesCount: number;
   readonly frozenServeGeneration: number;
+  readonly recentEvolutions: readonly EvolutionFeedItem[];
   readonly evolutionsStreamConnected: boolean;
   readonly evolutionsStreamSeq: number;
 }
@@ -311,6 +329,7 @@ const INITIAL_SNAPSHOT: MissionSnapshot = {
   rejectedEdits: [],
   esSeedPulsesCount: 0,
   frozenServeGeneration: 1,
+  recentEvolutions: [],
   evolutionsStreamConnected: false,
   evolutionsStreamSeq: 0
 };
@@ -380,97 +399,158 @@ export function useNousgentMission() {
       const dolf = eco.dolfactory || {};
       const liq = eco.liquidish || {};
 
-      setSnapshot((prev) => ({
-        loading: false,
-        liveConnected: Number(eco.organsReachableCount || 0) > 0,
-        fetchedAt: String(eco.fetchedAt || ''),
-        organsReachableCount: Number(eco.organsReachableCount || 0),
-        bariScorePct: Number(d.bari?.bariScorePct || 0),
-        catastrophicForgettingPct: Number(d.bari?.catastrophicForgettingPct || 0),
-        swarmConsensusPct: Number(d.bari?.swarmConsensusPct || 0),
-        enlistedNodesCount: Number(d.bari?.enlistedNodesCount || 0),
+      setSnapshot((prev) => {
+        const dbOk = Boolean(db.reachable);
+        const dtOk = Boolean(dt.reachable);
+        const dolfOk = Boolean(dolf.reachable);
+        const liqOk = Boolean(liq.reachable || liq.shiReachable);
+        const incomingReachable = Number(eco.organsReachableCount || 0);
+        const incomingBrains = Number(db.activeMorphicBrainsCount || 0);
+        const incomingCapsTotal = Number(db.liveCapsulesTotal || 0);
+        const incomingGen = Number(db.primaryGeneration || 0);
+        const incomingOrderbook = Number(liq.orderbookAvailableCount || 0);
 
-        dbrainReachable: Boolean(db.reachable),
-        dbrainVersion: String(db.version || ''),
-        dbrainNetwork: String(db.network || ''),
-        dbrainPeakHeight: Number(db.peakHeight || 0),
-        dbrainNetspaceLabel: String(db.netspaceLabel || '0 TiB'),
-        dbrainSynced: Boolean(db.synced),
-        dbrainGeneration: Number(db.primaryGeneration || 0),
-        morphicFieldBrainsActive: Number(db.activeMorphicBrainsCount || 0),
-        l1DiscoveredStoresTotal: Number(db.l1DiscoveredStoresTotal || 0),
-        liveCapsulesTotal: Number(db.liveCapsulesTotal || 0),
-        verifiedDataLayerRoot: String(db.verifiedMerkleRoot || d.leaderboard?.verifiedDataLayerRoot || ''),
-        activeStores: Array.isArray(db.activeStores) ? db.activeStores : [],
-        recentCapsules: Array.isArray(db.recentCapsules) ? db.recentCapsules : [],
+        return {
+          loading: false,
+          liveConnected: incomingReachable > 0 || prev.liveConnected,
+          fetchedAt: String(eco.fetchedAt || prev.fetchedAt || ''),
+          organsReachableCount:
+            incomingReachable > 0 ? incomingReachable : prev.liveConnected ? prev.organsReachableCount : 0,
+          bariScorePct: Number(d.bari?.bariScorePct || prev.bariScorePct || 0),
+          catastrophicForgettingPct: Number(d.bari?.catastrophicForgettingPct || 0),
+          swarmConsensusPct: Number(d.bari?.swarmConsensusPct || prev.swarmConsensusPct || 0),
+          enlistedNodesCount: Number(d.bari?.enlistedNodesCount ?? prev.enlistedNodesCount ?? 0),
 
-        dthalamusReachable: Boolean(dt.reachable),
-        dthalamusVersion: String(dt.version || ''),
-        dthalamusPolicyHash: String(dt.policyHash || ''),
-        dthalamusActiveLeases: Number(dt.activeLeasesCount || 0),
-        dthalamusAntibodies: Number(dt.activeAntibodiesCount || 0),
-        dthalamusInspections: Number(dt.totalInspections || 0),
-        dthalamusBlocked: Number(dt.blockedCount || 0),
-        dthalamusRatchetPassed: Boolean(dt.ratchetPassed),
+          dbrainReachable: dbOk || prev.dbrainReachable,
+          dbrainVersion: String(db.version || prev.dbrainVersion || ''),
+          dbrainNetwork: String(db.network || prev.dbrainNetwork || ''),
+          dbrainPeakHeight: Number(db.peakHeight || prev.dbrainPeakHeight || 0),
+          dbrainNetspaceLabel:
+            db.netspaceLabel && db.netspaceLabel !== '0 TiB'
+              ? String(db.netspaceLabel)
+              : prev.dbrainNetspaceLabel,
+          dbrainSynced: dbOk ? Boolean(db.synced) : prev.dbrainSynced,
+          dbrainGeneration: incomingGen > 0 ? Math.max(prev.dbrainGeneration, incomingGen) : prev.dbrainGeneration,
+          morphicFieldBrainsActive:
+            incomingBrains > 0 ? incomingBrains : dbOk ? 0 : prev.morphicFieldBrainsActive,
+          l1DiscoveredStoresTotal:
+            Number(db.l1DiscoveredStoresTotal || 0) > 0
+              ? Number(db.l1DiscoveredStoresTotal)
+              : prev.l1DiscoveredStoresTotal,
+          liveCapsulesTotal:
+            incomingCapsTotal > 0 ? Math.max(prev.liveCapsulesTotal, incomingCapsTotal) : prev.liveCapsulesTotal,
+          verifiedDataLayerRoot: String(
+            db.verifiedMerkleRoot || d.leaderboard?.verifiedDataLayerRoot || prev.verifiedDataLayerRoot || ''
+          ),
+          activeStores:
+            Array.isArray(db.activeStores) && db.activeStores.length > 0
+              ? db.activeStores
+              : prev.activeStores,
+          recentCapsules:
+            Array.isArray(db.recentCapsules) && db.recentCapsules.length > 0
+              ? db.recentCapsules
+              : prev.recentCapsules,
 
-        dolfactoryReachable: Boolean(dolf.reachable),
-        dolfactoryVersion: String(dolf.version || ''),
-        dolfactoryReceptors: Number(dolf.totalReceptors || 0),
-        dolfactoryImprintedOdors: Number(dolf.imprintedOdorsCount || 0),
-        dolfactoryTotalSniffs: Number(dolf.totalSniffs || 0),
+          dthalamusReachable: dtOk || prev.dthalamusReachable,
+          dthalamusVersion: String(dt.version || prev.dthalamusVersion || ''),
+          dthalamusPolicyHash: String(dt.policyHash || prev.dthalamusPolicyHash || ''),
+          dthalamusActiveLeases: dtOk ? Number(dt.activeLeasesCount || 0) : prev.dthalamusActiveLeases,
+          dthalamusAntibodies: dtOk ? Number(dt.activeAntibodiesCount || 0) : prev.dthalamusAntibodies,
+          dthalamusInspections: dtOk ? Number(dt.totalInspections || 0) : prev.dthalamusInspections,
+          dthalamusBlocked: dtOk ? Number(dt.blockedCount || 0) : prev.dthalamusBlocked,
+          dthalamusRatchetPassed: dtOk ? Boolean(dt.ratchetPassed) : prev.dthalamusRatchetPassed,
 
-        liquidishReachable: Boolean(liq.reachable),
-        shiReachable: Boolean(liq.shiReachable),
-        liquidishVersion: String(liq.version || ''),
-        liquidishLiveCapsulesListed: Number(liq.liveCapsulesListed || 0),
-        liquidishOrderbookCount: Number(liq.orderbookAvailableCount || 0),
-        liquidishSettledSwaps: Number(liq.settledSwapsCount || 0),
-        royaltiesStreamedDig: String(liq.royaltiesStreamedDig || '0.000 $DIG'),
-        shiM2mRequestsCount: Number(liq.shiM2mRequestsCount || 0),
-        shiHumanRequestsCount: Number(liq.shiHumanRequestsCount || 0),
-        shiM2mTrafficSharePct: Number(liq.shiM2mTrafficSharePct || 0),
+          dolfactoryReachable: dolfOk || prev.dolfactoryReachable,
+          dolfactoryVersion: String(dolf.version || prev.dolfactoryVersion || ''),
+          dolfactoryReceptors:
+            Number(dolf.totalReceptors || 0) > 0 ? Number(dolf.totalReceptors) : prev.dolfactoryReceptors,
+          dolfactoryImprintedOdors: dolfOk
+            ? Number(dolf.imprintedOdorsCount || 0)
+            : prev.dolfactoryImprintedOdors,
+          dolfactoryTotalSniffs: dolfOk ? Number(dolf.totalSniffs || 0) : prev.dolfactoryTotalSniffs,
 
-        maskOpacityPct:
-          d.uiConfig && Number.isFinite(Number(d.uiConfig.maskOpacityPct))
-            ? Math.max(0, Math.min(100, Math.round(Number(d.uiConfig.maskOpacityPct))))
-            : readInitialMaskOpacityPct(),
-        voiceEnabled: d.uiConfig?.voiceEnabled !== undefined ? Boolean(d.uiConfig.voiceEnabled) : true,
-        voiceModel: String(d.uiConfig?.voiceModel || 'kokoro-82m-q8'),
-        localHaloConfigured: Boolean(d.halo?.anyConfigured),
-        localHaloModel: String(d.halo?.personaQa?.model || 'qwen3:32b'),
+          liquidishReachable: Boolean(liq.reachable) || prev.liquidishReachable,
+          shiReachable: Boolean(liq.shiReachable) || prev.shiReachable,
+          liquidishVersion: String(liq.version || prev.liquidishVersion || ''),
+          liquidishLiveCapsulesListed:
+            Number(liq.liveCapsulesListed || 0) > 0
+              ? Number(liq.liveCapsulesListed)
+              : prev.liquidishLiveCapsulesListed,
+          liquidishOrderbookCount:
+            incomingOrderbook > 0 ? incomingOrderbook : prev.liquidishOrderbookCount,
+          liquidishSettledSwaps: liqOk
+            ? Number(liq.settledSwapsCount || 0)
+            : prev.liquidishSettledSwaps,
+          royaltiesStreamedDig:
+            liq.royaltiesStreamedDig && liq.royaltiesStreamedDig !== '0.000 $DIG'
+              ? String(liq.royaltiesStreamedDig)
+              : prev.royaltiesStreamedDig,
+          shiM2mRequestsCount:
+            Number(liq.shiM2mRequestsCount || 0) > 0
+              ? Number(liq.shiM2mRequestsCount)
+              : prev.shiM2mRequestsCount,
+          shiHumanRequestsCount:
+            Number(liq.shiHumanRequestsCount || 0) > 0
+              ? Number(liq.shiHumanRequestsCount)
+              : prev.shiHumanRequestsCount,
+          shiM2mTrafficSharePct:
+            Number(liq.shiM2mTrafficSharePct || 0) > 0
+              ? Number(liq.shiM2mTrafficSharePct)
+              : prev.shiM2mTrafficSharePct,
 
-        humanRequests: Number(d.planes?.humanRequests || 0),
-        m2mRequests: Number(d.planes?.m2mRequests || 0),
-        m2mSharePct: Number(d.planes?.m2mSharePct || 0),
-        organs: Array.isArray(d.bari?.organs) ? d.bari.organs : FALLBACK_ORGANS,
-        stateHubs: Array.isArray(d.leaderboard?.stateHubs) ? d.leaderboard.stateHubs : [],
-        enlistedRigs: Array.isArray(d.leaderboard?.recentRigs) ? d.leaderboard.recentRigs : [],
-        communityLeaderboard: Array.isArray(d.rsiLeaderboard?.communityLeaderboard)
-          ? d.rsiLeaderboard.communityLeaderboard
-          : [],
-        didLeaderboard: Array.isArray(d.rsiLeaderboard?.didLeaderboard)
-          ? d.rsiLeaderboard.didLeaderboard
-          : [],
-        rsiLeaderboardSummary: {
-          activeCommunitiesCount: Number(d.rsiLeaderboard?.summary?.activeCommunitiesCount || 0),
-          distinctDidsCount: Number(d.rsiLeaderboard?.summary?.distinctDidsCount || 0),
-          distinctAgentHandlesCount: Number(d.rsiLeaderboard?.summary?.distinctAgentHandlesCount || 0),
-          totalVerifiedCapsules: Number(d.rsiLeaderboard?.summary?.totalVerifiedCapsules || 0),
-          totalListedCapsules: Number(d.rsiLeaderboard?.summary?.totalListedCapsules || 0),
-          totalListedValueDig: Number(d.rsiLeaderboard?.summary?.totalListedValueDig || 0),
-          sampledDerivationTokens: Number(d.rsiLeaderboard?.summary?.sampledDerivationTokens || 0)
-        },
-        missions: Array.isArray(d.missions) ? d.missions : [],
-        blindSpotQuests: Array.isArray(d.blindSpotQuests) ? d.blindSpotQuests : [],
-        autonomousCandidateQueue: Array.isArray(liq.autonomousCandidateQueue)
-          ? liq.autonomousCandidateQueue
-          : [],
-        rejectedEdits: Array.isArray(d.rejectedEdits) ? d.rejectedEdits : [],
-        esSeedPulsesCount: Array.isArray(d.esSeedPulses) ? d.esSeedPulses.length : 0,
-        frozenServeGeneration: Number(d.frozenServe?.pinnedGeneration || db.primaryGeneration || 1),
-        evolutionsStreamConnected: prev.evolutionsStreamConnected,
-        evolutionsStreamSeq: prev.evolutionsStreamSeq
-      }));
+          maskOpacityPct:
+            d.uiConfig && Number.isFinite(Number(d.uiConfig.maskOpacityPct))
+              ? Math.max(0, Math.min(100, Math.round(Number(d.uiConfig.maskOpacityPct))))
+              : readInitialMaskOpacityPct(),
+          voiceEnabled: d.uiConfig?.voiceEnabled !== undefined ? Boolean(d.uiConfig.voiceEnabled) : true,
+          voiceModel: String(d.uiConfig?.voiceModel || 'kokoro-82m-q8'),
+          localHaloConfigured: Boolean(d.halo?.anyConfigured),
+          localHaloModel: String(d.halo?.personaQa?.model || 'qwen3:32b'),
+
+          humanRequests: Number(d.planes?.humanRequests || 0),
+          m2mRequests: Number(d.planes?.m2mRequests || 0),
+          m2mSharePct: Number(d.planes?.m2mSharePct || 0),
+          organs: Array.isArray(d.bari?.organs) ? d.bari.organs : FALLBACK_ORGANS,
+          stateHubs: Array.isArray(d.leaderboard?.stateHubs) ? d.leaderboard.stateHubs : prev.stateHubs,
+          enlistedRigs: Array.isArray(d.leaderboard?.recentRigs) ? d.leaderboard.recentRigs : prev.enlistedRigs,
+          communityLeaderboard:
+            Array.isArray(d.rsiLeaderboard?.communityLeaderboard) &&
+            d.rsiLeaderboard.communityLeaderboard.length > 0
+              ? d.rsiLeaderboard.communityLeaderboard
+              : prev.communityLeaderboard,
+          didLeaderboard:
+            Array.isArray(d.rsiLeaderboard?.didLeaderboard) && d.rsiLeaderboard.didLeaderboard.length > 0
+              ? d.rsiLeaderboard.didLeaderboard
+              : prev.didLeaderboard,
+          rsiLeaderboardSummary:
+            Number(d.rsiLeaderboard?.summary?.activeCommunitiesCount || 0) > 0
+              ? {
+                  activeCommunitiesCount: Number(d.rsiLeaderboard?.summary?.activeCommunitiesCount || 0),
+                  distinctDidsCount: Number(d.rsiLeaderboard?.summary?.distinctDidsCount || 0),
+                  distinctAgentHandlesCount: Number(d.rsiLeaderboard?.summary?.distinctAgentHandlesCount || 0),
+                  totalVerifiedCapsules: Number(d.rsiLeaderboard?.summary?.totalVerifiedCapsules || 0),
+                  totalListedCapsules: Number(d.rsiLeaderboard?.summary?.totalListedCapsules || 0),
+                  totalListedValueDig: Number(d.rsiLeaderboard?.summary?.totalListedValueDig || 0),
+                  sampledDerivationTokens: Number(d.rsiLeaderboard?.summary?.sampledDerivationTokens || 0)
+                }
+              : prev.rsiLeaderboardSummary,
+          missions: Array.isArray(d.missions) ? d.missions : prev.missions,
+          blindSpotQuests: Array.isArray(d.blindSpotQuests) ? d.blindSpotQuests : prev.blindSpotQuests,
+          autonomousCandidateQueue:
+            Array.isArray(liq.autonomousCandidateQueue) && liq.autonomousCandidateQueue.length > 0
+              ? liq.autonomousCandidateQueue
+              : prev.autonomousCandidateQueue,
+          rejectedEdits: Array.isArray(d.rejectedEdits) ? d.rejectedEdits : prev.rejectedEdits,
+          esSeedPulsesCount: Array.isArray(d.esSeedPulses) ? d.esSeedPulses.length : prev.esSeedPulsesCount,
+          frozenServeGeneration: Number(d.frozenServe?.pinnedGeneration || incomingGen || prev.frozenServeGeneration || 1),
+          recentEvolutions:
+            Array.isArray(d.recentEvolutions) && d.recentEvolutions.length > 0
+              ? d.recentEvolutions
+              : prev.recentEvolutions,
+          evolutionsStreamConnected: prev.evolutionsStreamConnected,
+          evolutionsStreamSeq: prev.evolutionsStreamSeq
+        };
+      });
     } catch {
       if (seq === requestSeqRef.current) {
         setSnapshot((prev) => ({ ...prev, loading: false }));
@@ -510,19 +590,79 @@ export function useNousgentMission() {
           setSnapshot((prev) => ({
             ...prev,
             loading: false,
+            liveConnected: Number(frame.organsReachableCount) > 0 || prev.liveConnected,
             evolutionsStreamConnected: true,
             evolutionsStreamSeq: Number(frame.seq || prev.evolutionsStreamSeq + 1),
+            bariScorePct:
+              Number(frame.bariScorePct) > 0 ? Number(frame.bariScorePct) : prev.bariScorePct,
+            organsReachableCount:
+              Number(frame.organsReachableCount) > 0
+                ? Number(frame.organsReachableCount)
+                : prev.organsReachableCount,
             dbrainGeneration:
-              Number(frame.dbrainGeneration) > 0 ? Number(frame.dbrainGeneration) : prev.dbrainGeneration,
+              Number(frame.dbrainGeneration) > 0
+                ? Math.max(prev.dbrainGeneration, Number(frame.dbrainGeneration))
+                : prev.dbrainGeneration,
+            morphicFieldBrainsActive:
+              Number(frame.morphicFieldBrainsActive) > 0
+                ? Number(frame.morphicFieldBrainsActive)
+                : prev.morphicFieldBrainsActive,
+            l1DiscoveredStoresTotal:
+              Number(frame.l1DiscoveredStoresTotal) > 0
+                ? Number(frame.l1DiscoveredStoresTotal)
+                : prev.l1DiscoveredStoresTotal,
             liveCapsulesTotal:
               Number.isFinite(Number(frame.liveCapsulesTotal)) && Number(frame.liveCapsulesTotal) > 0
-                ? Number(frame.liveCapsulesTotal)
+                ? Math.max(prev.liveCapsulesTotal, Number(frame.liveCapsulesTotal))
                 : prev.liveCapsulesTotal,
             verifiedDataLayerRoot: frame.verifiedDataLayerRoot
               ? String(frame.verifiedDataLayerRoot)
               : prev.verifiedDataLayerRoot,
-            recentCapsules: Array.isArray(frame.recentCapsules) ? frame.recentCapsules : prev.recentCapsules,
-            missions: Array.isArray(frame.missions) ? frame.missions : prev.missions
+            dthalamusActiveLeases:
+              Number.isFinite(Number(frame.dthalamusActiveLeases)) && Number(frame.dthalamusActiveLeases) > 0
+                ? Number(frame.dthalamusActiveLeases)
+                : prev.dthalamusActiveLeases,
+            dolfactoryReceptors:
+              Number(frame.dolfactoryReceptors) > 0
+                ? Number(frame.dolfactoryReceptors)
+                : prev.dolfactoryReceptors,
+            liquidishOrderbookCount:
+              Number(frame.liquidishOrderbookCount) > 0
+                ? Number(frame.liquidishOrderbookCount)
+                : prev.liquidishOrderbookCount,
+            liquidishLiveCapsulesListed:
+              Number(frame.liquidishLiveCapsulesListed) > 0
+                ? Number(frame.liquidishLiveCapsulesListed)
+                : prev.liquidishLiveCapsulesListed,
+            liquidishSettledSwaps:
+              Number.isFinite(Number(frame.liquidishSettledSwaps))
+                ? Number(frame.liquidishSettledSwaps)
+                : prev.liquidishSettledSwaps,
+            royaltiesStreamedDig:
+              frame.royaltiesStreamedDig && frame.royaltiesStreamedDig !== '0.000 $DIG'
+                ? String(frame.royaltiesStreamedDig)
+                : prev.royaltiesStreamedDig,
+            frozenServeGeneration:
+              Number(frame.frozenServeGeneration) > 0
+                ? Math.max(prev.frozenServeGeneration, Number(frame.frozenServeGeneration))
+                : prev.frozenServeGeneration,
+            esSeedPulsesCount:
+              Number.isFinite(Number(frame.esSeedPulsesCount))
+                ? Number(frame.esSeedPulsesCount)
+                : prev.esSeedPulsesCount,
+            recentCapsules:
+              Array.isArray(frame.recentCapsules) && frame.recentCapsules.length > 0
+                ? frame.recentCapsules
+                : prev.recentCapsules,
+            missions: Array.isArray(frame.missions) ? frame.missions : prev.missions,
+            blindSpotQuests: Array.isArray(frame.blindSpotQuests)
+              ? frame.blindSpotQuests
+              : prev.blindSpotQuests,
+            rejectedEdits: Array.isArray(frame.rejectedEdits) ? frame.rejectedEdits : prev.rejectedEdits,
+            recentEvolutions:
+              Array.isArray(frame.recentEvolutions) && frame.recentEvolutions.length > 0
+                ? frame.recentEvolutions
+                : prev.recentEvolutions
           }));
         } else if (frame.type === 'heartbeat') {
           setSnapshot((prev) => ({

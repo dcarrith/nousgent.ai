@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { MissionSnapshot } from '../hooks/useNousgentMission';
+import { EvolutionFeedItem, MissionSnapshot } from '../hooks/useNousgentMission';
 
 export interface CleanroomLayoutProps {
   readonly snapshot: MissionSnapshot;
@@ -80,13 +80,17 @@ function formatGovernanceStatus(status: string): { readonly label: string; reado
 }
 
 function buildSidebarEvolutions(snapshot: MissionSnapshot): readonly SidebarEvolutionEntry[] {
-  const entries: SidebarEvolutionEntry[] = [];
+  if (snapshot.recentEvolutions && snapshot.recentEvolutions.length > 0) {
+    return snapshot.recentEvolutions as readonly SidebarEvolutionEntry[];
+  }
+
+  const candidates: Array<SidebarEvolutionEntry & { readonly sortMs: number }> = [];
   const seenTitles = new Set<string>();
 
   for (const cap of snapshot.recentCapsules) {
-    const norm = cap.title.trim().toLowerCase();
-    if (!norm || seenTitles.has(norm)) continue;
-    seenTitles.add(norm);
+    const isHuman =
+      cap.origin === 'human' ||
+      Boolean(cap.tags?.some((t) => t.toLowerCase() === 'teach-nousgent'));
     const lobeLabel = cap.lobe ? cap.lobe.charAt(0).toUpperCase() + cap.lobe.slice(1) : 'Semantic';
     const rootShort =
       cap.merkleRoot && cap.merkleRoot.length > 14
@@ -96,37 +100,53 @@ function buildSidebarEvolutions(snapshot: MissionSnapshot): readonly SidebarEvol
       cap.summary && cap.summary.trim().length > 0
         ? cap.summary
         : `Verified ${lobeLabel.toLowerCase()} memory capsule anchored into NOUSGENT's append-only Second Brain.`;
-    entries.push({
+    const parsedTs = cap.timestamp ? Date.parse(cap.timestamp) : Number.NaN;
+    candidates.push({
       key: `cap-${cap.id}`,
       badge: cap.generation > 0 ? `Gen #${cap.generation}` : 'Minted',
-      badgeTone: 'pistachio',
-      kindLabel: `${lobeLabel} Lobe`,
+      badgeTone: isHuman ? 'jade' : 'pistachio',
+      kindLabel: `${isHuman ? 'Human' : 'Auto'} · ${lobeLabel}`,
       title: cap.title,
       details: detailText,
       metaLine: `${cap.authorName || 'Community Node'}${cap.priceDig ? ` · ${cap.priceDig}` : ''} · ${rootShort}`,
-      externalHref: cap.capsuleUrl
+      externalHref: cap.capsuleUrl,
+      sortMs: Number.isFinite(parsedTs) ? parsedTs : 1_767_225_600_000 + cap.generation * 1000
     });
-    if (entries.length >= 5) break;
   }
 
-  let missionAdded = 0;
-  for (const m of snapshot.missions) {
-    const norm = m.title.trim().toLowerCase();
-    if (!norm || seenTitles.has(norm)) continue;
-    seenTitles.add(norm);
+  const sortedMissions = [...snapshot.missions].sort((a, b) => {
+    const aMs = Date.parse(a.updatedAt || a.createdAt || '') || 0;
+    const bMs = Date.parse(b.updatedAt || b.createdAt || '') || 0;
+    return bMs - aMs || b.missionId.localeCompare(a.missionId);
+  });
+
+  for (const m of sortedMissions) {
     const st = formatGovernanceStatus(m.status);
-    entries.push({
+    const proposer = m.dao?.proposerDid || '';
+    const isAuto = m.quorumSignatures === 0 && /(?:nousgent|aegis|swarm|agent|mcp)/i.test(proposer);
+    const parsedTs = Date.parse(m.updatedAt || m.createdAt || '');
+    candidates.push({
       key: `mission-${m.missionId}`,
       badge: st.label,
       badgeTone: st.tone,
-      kindLabel: `${m.quorumSignatures}/${m.quorumTarget} Keys`,
+      kindLabel: `${isAuto ? 'Auto' : 'Human'} · ${m.quorumSignatures}/${m.quorumTarget} Keys`,
       title: m.title,
-      details: m.summary || 'Community-proposed capability upgrade queued for voting and two-key human sign-off.',
+      details: m.summary || 'Capability upgrade queued for voting and two-key human sign-off.',
       metaLine: `${m.missionId} · ${m.dao?.votesForDig || '0.000'} For · ${m.rewardDig} $DIG`,
-      internalHref: `/missions?mission=${encodeURIComponent(m.missionId)}`
+      internalHref: `/missions?mission=${encodeURIComponent(m.missionId)}`,
+      sortMs: Number.isFinite(parsedTs) ? parsedTs : 0
     });
-    missionAdded += 1;
-    if (missionAdded >= 3) break;
+  }
+
+  candidates.sort((a, b) => b.sortMs - a.sortMs);
+
+  const entries: SidebarEvolutionEntry[] = [];
+  for (const item of candidates) {
+    const norm = item.title.trim().toLowerCase();
+    if (!norm || seenTitles.has(norm)) continue;
+    seenTitles.add(norm);
+    entries.push(item);
+    if (entries.length >= 10) break;
   }
 
   return entries;
@@ -346,61 +366,62 @@ export function CleanroomLayout({
                 </span>
               </summary>
 
-              <div className="sidebar-evolutions-scroll" aria-label="Nousgent Recent Evolutions">
-                {sidebarEvolutions.length > 0 ? (
-                  sidebarEvolutions.map((ev, idx) => (
-                    <details
-                      key={ev.key}
-                      className="sidebar-evolution-item"
-                      ref={(el) => {
-                        if (el && idx === 0 && !initializedFirstEvolutionRef.current) {
-                          initializedFirstEvolutionRef.current = true;
-                          el.open = true;
-                        }
-                      }}
-                    >
-                      <summary className="sidebar-evolution-summary">
-                        <span className="sidebar-evolution-summary-body">
-                          <span className="sidebar-evolution-topline">
-                            <span className={`sidebar-evolution-badge ${ev.badgeTone}`}>
-                              {ev.badge}
+              {sidebarEvolutions.length > 0 ? (
+                <ol className="sidebar-evolutions-scroll" role="list">
+                  {sidebarEvolutions.map((ev: EvolutionFeedItem | SidebarEvolutionEntry, idx) => (
+                    <li key={ev.key} style={{ minInlineSize: 0 }}>
+                      <details
+                        className="sidebar-evolution-item"
+                        ref={(el) => {
+                          if (el && idx === 0 && !initializedFirstEvolutionRef.current) {
+                            initializedFirstEvolutionRef.current = true;
+                            el.open = true;
+                          }
+                        }}
+                      >
+                        <summary className="sidebar-evolution-summary">
+                          <span className="sidebar-evolution-summary-body">
+                            <span className="sidebar-evolution-topline">
+                              <span className={`sidebar-evolution-badge ${ev.badgeTone}`}>
+                                {ev.badge}
+                              </span>
+                              <span className="mono-xs text-muted sidebar-evolution-kind">
+                                {ev.kindLabel}
+                              </span>
                             </span>
-                            <span className="mono-xs text-muted sidebar-evolution-kind">
-                              {ev.kindLabel}
-                            </span>
+                            <span className="sidebar-evolution-title">{ev.title}</span>
                           </span>
-                          <span className="sidebar-evolution-title">{ev.title}</span>
-                        </span>
-                      </summary>
+                        </summary>
 
-                      <div className="sidebar-evolution-details">
-                        <p className="sidebar-evolution-desc">{ev.details}</p>
-                        <div className="mono-xs text-muted sidebar-evolution-meta">
-                          {ev.metaLine}
+                        <div className="sidebar-evolution-details">
+                          <p className="sidebar-evolution-desc">{ev.details}</p>
+                          <div className="mono-xs text-muted sidebar-evolution-meta">
+                            {ev.metaLine}
+                          </div>
+                          {ev.internalHref ? (
+                            <Link to={ev.internalHref} className="mono-xs text-jade sidebar-evolution-link">
+                              Review Action<span className="visually-hidden"> for {ev.title}</span> →
+                            </Link>
+                          ) : ev.externalHref ? (
+                            <a
+                              href={ev.externalHref}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mono-xs text-jade sidebar-evolution-link"
+                            >
+                              Inspect .dig Capsule<span className="visually-hidden"> for {ev.title}</span> ↗
+                            </a>
+                          ) : null}
                         </div>
-                        {ev.internalHref ? (
-                          <Link to={ev.internalHref} className="mono-xs text-jade sidebar-evolution-link">
-                            Review in Signing →
-                          </Link>
-                        ) : ev.externalHref ? (
-                          <a
-                            href={ev.externalHref}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mono-xs text-jade sidebar-evolution-link"
-                          >
-                            Inspect .dig Capsule ↗
-                          </a>
-                        ) : null}
-                      </div>
-                    </details>
-                  ))
-                ) : (
-                  <div className="mono-xs text-muted" style={{ padding: '0.45rem 0.25rem', fontSize: '10.5px' }}>
-                    {snapshot.loading ? 'Syncing evolution history…' : 'No evolutions recorded yet.'}
-                  </div>
-                )}
-              </div>
+                      </details>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <div className="mono-xs text-muted" style={{ padding: '0.45rem 0.25rem', fontSize: '10.5px' }}>
+                  {snapshot.loading ? 'Syncing evolution history…' : 'No evolutions recorded yet.'}
+                </div>
+              )}
             </details>
           </div>
 

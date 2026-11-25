@@ -21,6 +21,32 @@ const { detectSpecializations } = require('../lib/modules/pod-bay-redteam.js');
 const RFC5737_TEST_FIXTURE_RE = /(?:198[.-]51[.-]100[.-]|203[.-]0[.-]113[.-]|192[.-]0[.-]2[.-])/;
 const INTERNAL_UI_RUNBOOK_RE = /\b(morphattributes|morphtargetinfluences|facebookexternalhit|renderorder)\b/i;
 
+function isHumanTeachCapsule(capsule) {
+  const tags = Array.isArray(capsule?.tags) ? capsule.tags.map((t) => String(t).toLowerCase()) : [];
+  if (tags.includes('teach-nousgent') || tags.some((t) => t.startsWith('human-'))) {
+    return true;
+  }
+  const role = String(capsule?.authorAgent?.role || '').toLowerCase();
+  return role.includes('human') || role.includes('citizen');
+}
+
+function sumLobeCounts(lobeCounts) {
+  if (!lobeCounts || typeof lobeCounts !== 'object') return null;
+  const sum =
+    Number(lobeCounts.episodic || 0) +
+    Number(lobeCounts.semantic || 0) +
+    Number(lobeCounts.procedural || 0) +
+    Number(lobeCounts.working || 0) +
+    Number(lobeCounts.alignment || 0);
+  return Number.isFinite(sum) && sum >= 0 ? sum : null;
+}
+
+function inferStoreSource(store) {
+  if (store?.source) return String(store.source);
+  const name = String(store?.name || '');
+  return /datalayer singleton/i.test(name) ? 'chia-l1-datalayer-discovery' : 'dbrain-merkle-wal';
+}
+
 function parseCapsuleTelemetryTags(tags) {
   let derivationTokens = 0;
   let turns = 0;
@@ -127,12 +153,15 @@ function buildEcosystemLeaderboards({ realSovereignStores = [], rawCapsules = []
   const storeItems = realSovereignStores.map((s) => {
     const storeId = String(s.storeId || '');
     const name = String(s.name || 'Sovereign Brain Store');
-    const source = String(s.source || 'dbrain-merkle-wal');
+    const source = inferStoreSource(s);
     const generation = Math.max(0, Number(s.generation || 0));
+    const lobeSum = sumLobeCounts(s.lobeCounts);
     const verifiedCapsules =
       s.totalCapsules !== undefined && s.totalCapsules !== null
         ? Math.max(0, Number(s.totalCapsules))
-        : Number(sampledCapsulesByStore.get(storeId) || 0);
+        : lobeSum !== null
+          ? lobeSum
+          : Number(sampledCapsulesByStore.get(storeId) || 0);
     const obStats = orderbookByStore.get(storeId) || { count: 0, valueDig: 0, derivationTokens: 0 };
     const listedValueDig = Number(obStats.valueDig.toFixed(3));
 
@@ -340,17 +369,27 @@ function trimTrailingSlash(url) {
   return String(url || '').trim().replace(/\/+$/, '');
 }
 
-function buildCandidateTargets(clusterEnvUrl, publicOrigin, hostHeader = '') {
+function buildCandidateTargets(clusterEnvUrl, publicOrigin, hostHeader = '', options = {}) {
   const candidates = [];
+  const cleanLeader = trimTrailingSlash(options.leaderUrl || '');
   const cleanCluster = trimTrailingSlash(clusterEnvUrl);
   const cleanPublic = trimTrailingSlash(publicOrigin);
-  if (cleanCluster) {
+  const isInClusterDns = cleanCluster.includes('.svc.cluster.local');
+  const allowPublicFallback = Boolean(options.allowPublicFallback);
+
+  if (cleanLeader) {
+    candidates.push({
+      baseUrl: cleanLeader,
+      headers: hostHeader ? { Host: hostHeader } : {}
+    });
+  }
+  if (cleanCluster && cleanCluster !== cleanLeader) {
     candidates.push({
       baseUrl: cleanCluster,
       headers: hostHeader ? { Host: hostHeader } : {}
     });
   }
-  if (cleanPublic && cleanPublic !== cleanCluster) {
+  if (cleanPublic && cleanPublic !== cleanCluster && (!isInClusterDns || allowPublicFallback)) {
     candidates.push({
       baseUrl: cleanPublic,
       headers: {}
@@ -365,7 +404,7 @@ function singleHttpJsonRequest(baseUrl, pathAndQuery, { method = 'GET', headers 
     const transport = parsed.protocol === 'https:' ? https : http;
     const reqHeaders = {
       Accept: 'application/json',
-      'Accept-Encoding': 'identity',
+      'Accept-Encoding': 'gzip, deflate',
       ...(bodyStr !== undefined
         ? {
             'Content-Type': 'application/json',
@@ -446,38 +485,134 @@ function formatNetspaceLabel(spaceBytes) {
   return `${tib.toFixed(1)} TiB`;
 }
 
+function projectRecentCapsules(rawCapsules, { priceByCapId, primaryStoreId = '', primaryStore = null, limit = 10 } = {}) {
+  const seenRecentTitles = new Set();
+  const recentCapsules = [];
+  for (const c of rawCapsules) {
+    if (!c) continue;
+    const title = String(c.title || c.key || 'Untitled Capsule').trim();
+    const normTitle = title.toLowerCase();
+    if (seenRecentTitles.has(normTitle)) continue;
+    seenRecentTitles.add(normTitle);
+    const market = priceByCapId ? priceByCapId.get(String(c.id)) : undefined;
+    const priceDig = market?.priceDig !== undefined ? `${Number(market.priceDig).toFixed(3)} $DIG` : null;
+    const rawDetail = String(c.summary || market?.summary || c.content || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const summary = rawDetail.length > 220 ? `${rawDetail.slice(0, 217).trimEnd()}…` : rawDetail;
+    const humanTeach = isHumanTeachCapsule(c);
+    recentCapsules.push({
+      id: String(c.id || ''),
+      title,
+      summary,
+      lobe: String(c.lobe || 'semantic'),
+      origin: humanTeach ? 'human' : 'autonomous',
+      authorName: String(c.authorAgent?.name || market?.creatorName || (humanTeach ? 'Citizen Contributor' : 'Community Node')),
+      authorRole: String(c.authorAgent?.role || (humanTeach ? 'Human Contributor' : 'Autonomous Agent')),
+      tags: Array.isArray(c.tags) ? c.tags.slice(0, 6).map((t) => String(t)) : [],
+      specializations: detectSpecializations({
+        title,
+        summary,
+        content: c.content,
+        tags: c.tags,
+        specializations: c.specializations
+      }),
+      timestamp: String(c.timestamp || c.createdAt || ''),
+      storeId: String(c.storeId || primaryStoreId || ''),
+      generation: Number(c.generation || primaryStore?.generation || 0),
+      merkleRoot: String(c.merkleRoot || primaryStore?.merkleRoot || ''),
+      priceDig,
+      capsuleUrl: `https://dbrain.to/dig/${encodeURIComponent(String(c.id || ''))}.json`
+    });
+    if (recentCapsules.length >= limit) break;
+  }
+  return recentCapsules;
+}
+
 function createLiveEcosystemClient(env = process.env) {
   const offlineTest = env.NOUSGENT_OFFLINE_TEST === '1';
+  const allowPublicFallback = env.NOUSGENT_ALLOW_PUBLIC_FALLBACK === '1';
+  const dbrainClusterUrl = trimTrailingSlash(env.DBRAIN_UPSTREAM_URL || '');
+  const dbrainLeaderUrl =
+    env.DBRAIN_LEADER_URL !== undefined
+      ? trimTrailingSlash(env.DBRAIN_LEADER_URL)
+      : dbrainClusterUrl.includes('dbrain-web.dbrain.svc.cluster.local')
+        ? 'http://dbrain-web-0.dbrain-web-headless.dbrain.svc.cluster.local:3000'
+        : '';
 
   const targets = {
     dbrain: offlineTest
       ? []
-      : buildCandidateTargets(env.DBRAIN_UPSTREAM_URL, env.DBRAIN_ORIGIN || 'https://dbrain.to'),
+      : buildCandidateTargets(env.DBRAIN_UPSTREAM_URL, env.DBRAIN_ORIGIN || 'https://dbrain.to', '', {
+          leaderUrl: dbrainLeaderUrl,
+          allowPublicFallback
+        }),
     dthalamus: offlineTest
       ? []
-      : buildCandidateTargets(env.DTHALAMUS_UPSTREAM_URL, env.DTHALAMUS_ORIGIN || 'https://dthalamus.to'),
+      : buildCandidateTargets(env.DTHALAMUS_UPSTREAM_URL, env.DTHALAMUS_ORIGIN || 'https://dthalamus.to', '', {
+          allowPublicFallback
+        }),
     dolfactory: offlineTest
       ? []
-      : buildCandidateTargets(env.DOLFACTORY_UPSTREAM_URL, env.DOLFACTORY_ORIGIN || 'https://dolfactory.to'),
+      : buildCandidateTargets(env.DOLFACTORY_UPSTREAM_URL, env.DOLFACTORY_ORIGIN || 'https://dolfactory.to', '', {
+          allowPublicFallback
+        }),
     cbrain: offlineTest
       ? []
-      : buildCandidateTargets(env.CBRAIN_UPSTREAM_URL, env.CBRAIN_ORIGIN || 'https://cbrain.to'),
+      : buildCandidateTargets(env.CBRAIN_UPSTREAM_URL, env.CBRAIN_ORIGIN || 'https://cbrain.to', '', {
+          allowPublicFallback
+        }),
     liquidish: offlineTest
       ? []
-      : buildCandidateTargets(env.LIQUIDISH_UPSTREAM_URL, 'https://liquidi.sh', 'liquidi.sh'),
+      : buildCandidateTargets(
+          env.LIQUIDISH_UPSTREAM_URL,
+          env.LIQUIDISH_HUMAN_ORIGIN || 'https://liquidi.sh',
+          'liquidi.sh',
+          { allowPublicFallback }
+        ),
     shi: offlineTest
       ? []
       : buildCandidateTargets(
           env.SHI_LIQUIDISH_UPSTREAM_URL || env.LIQUIDISH_UPSTREAM_URL,
           env.LIQUIDISH_ORIGIN || 'https://shi.liquidi.sh',
-          'shi.liquidi.sh'
+          'shi.liquidi.sh',
+          { allowPublicFallback }
         )
   };
 
   let cachedSnapshot = null;
   let cachedAtMs = 0;
+  let cachedPriceByCapId = new Map();
   let inflightPromise = null;
-  const cacheTtlMs = Number(env.NOUSGENT_UPSTREAM_CACHE_MS || 5000);
+  let fastEvolutionsInflight = null;
+  const cacheTtlMs = Number(env.NOUSGENT_UPSTREAM_CACHE_MS || 8000);
+  const staleGraceMs = Number(env.NOUSGENT_STALE_GRACE_MS || 600000);
+  const monotonicFloorMs = Number(env.NOUSGENT_MONOTONIC_FLOOR_MS || 120000);
+  const lastGoodProbes = new Map();
+  let bestDbrainSnapshot = null;
+
+  function resolveProbe(key, res, nowMs) {
+    if (res && res.ok && res.data !== null && res.data !== undefined) {
+      lastGoodProbes.set(key, {
+        data: res.data,
+        latencyMs: res.latencyMs,
+        sourceBaseUrl: res.sourceBaseUrl,
+        savedAtMs: nowMs
+      });
+      return { ...res, stale: false };
+    }
+    const prev = lastGoodProbes.get(key);
+    if (prev && nowMs - prev.savedAtMs <= staleGraceMs) {
+      return {
+        ok: true,
+        stale: true,
+        data: prev.data,
+        latencyMs: prev.latencyMs,
+        sourceBaseUrl: prev.sourceBaseUrl
+      };
+    }
+    return { ...res, stale: false };
+  }
 
   function invalidateCache() {
     cachedAtMs = 0;
@@ -485,30 +620,42 @@ function createLiveEcosystemClient(env = process.env) {
 
   async function pullFreshSnapshot() {
     const [
-      dbrainStatusRes,
-      dbrainStoresRes,
-      dbrainCapsulesRes,
-      dthalamusStatusRes,
-      dolfactoryStatusRes,
-      dolfactoryHarnessRes,
-      cbrainChronRes,
-      liquidishStateRes,
-      liquidishOrderbookRes,
-      shiTelemetryRes
+      rawDbrainStatus,
+      rawDbrainStores,
+      rawDbrainCapsules,
+      rawDthalamusStatus,
+      rawDolfactoryStatus,
+      rawDolfactoryHarness,
+      rawCbrainChron,
+      rawLiquidishState,
+      rawLiquidishOrderbook,
+      rawShiTelemetry
     ] = await Promise.all([
-      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/status', { timeoutMs: 2000 }),
-      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/stores', { timeoutMs: 2000 }),
-      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=100', { timeoutMs: 2200 }),
-      fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/status', { timeoutMs: 1800 }),
-      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status', { timeoutMs: 1800 }),
-      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/harness/guard', { timeoutMs: 1800 }),
-      fetchJsonWithFallback(targets.cbrain, '/api/cbrain/chronology', { timeoutMs: 1800 }),
-      fetchJsonWithFallback(targets.liquidish, '/api/liquidish/state', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/status', { timeoutMs: 2200 }),
+      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/stores?view=hero&sort=all', { timeoutMs: 2500 }),
+      fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=60', { timeoutMs: 2800 }),
+      fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/status', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/harness/guard', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.cbrain, '/api/cbrain/chronology', { timeoutMs: 2000 }),
+      fetchJsonWithFallback(targets.liquidish, '/api/liquidish/state', { timeoutMs: 4500 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/orderbook?projection=compact', {
-        timeoutMs: 3200
+        timeoutMs: 4500
       }),
-      fetchJsonWithFallback(targets.shi, '/api/liquidish/shi-telemetry?host=shi.liquidi.sh', { timeoutMs: 1800 })
+      fetchJsonWithFallback(targets.shi, '/api/liquidish/shi-telemetry?host=shi.liquidi.sh', { timeoutMs: 2200 })
     ]);
+
+    const nowMs = Date.now();
+    const dbrainStatusRes = resolveProbe('dbrainStatus', rawDbrainStatus, nowMs);
+    const dbrainStoresRes = resolveProbe('dbrainStores', rawDbrainStores, nowMs);
+    const dbrainCapsulesRes = resolveProbe('dbrainCapsules', rawDbrainCapsules, nowMs);
+    const dthalamusStatusRes = resolveProbe('dthalamusStatus', rawDthalamusStatus, nowMs);
+    const dolfactoryStatusRes = resolveProbe('dolfactoryStatus', rawDolfactoryStatus, nowMs);
+    const dolfactoryHarnessRes = resolveProbe('dolfactoryHarness', rawDolfactoryHarness, nowMs);
+    const cbrainChronRes = resolveProbe('cbrainChron', rawCbrainChron, nowMs);
+    const liquidishStateRes = resolveProbe('liquidishState', rawLiquidishState, nowMs);
+    const liquidishOrderbookRes = resolveProbe('liquidishOrderbook', rawLiquidishOrderbook, nowMs);
+    const shiTelemetryRes = resolveProbe('shiTelemetry', rawShiTelemetry, nowMs);
 
     const dbStat = dbrainStatusRes.data || {};
     const allStores = Array.isArray(dbrainStoresRes.data?.stores) ? dbrainStoresRes.data.stores : [];
@@ -529,44 +676,17 @@ function createLiveEcosystemClient(env = process.env) {
         priceByCapId.set(String(item.dbrainCapsuleId), item);
       }
     }
-
-    const seenRecentTitles = new Set();
-    const recentCapsules = [];
-    for (const c of rawCapsules) {
-      if (!c) continue;
-      const title = String(c.title || c.key || 'Untitled Capsule').trim();
-      const normTitle = title.toLowerCase();
-      if (seenRecentTitles.has(normTitle)) continue;
-      seenRecentTitles.add(normTitle);
-      const market = priceByCapId.get(String(c.id));
-      const priceDig = market?.priceDig !== undefined ? `${Number(market.priceDig).toFixed(3)} $DIG` : null;
-      const rawDetail = String(c.summary || market?.summary || c.content || '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      const summary = rawDetail.length > 220 ? `${rawDetail.slice(0, 217).trimEnd()}…` : rawDetail;
-      recentCapsules.push({
-        id: String(c.id || ''),
-        title,
-        summary,
-        lobe: String(c.lobe || 'semantic'),
-        authorName: String(c.authorAgent?.name || market?.creatorName || 'Community Node'),
-        tags: Array.isArray(c.tags) ? c.tags.slice(0, 4).map((t) => String(t)) : [],
-        specializations: detectSpecializations({
-          title,
-          summary,
-          content: c.content,
-          tags: c.tags,
-          specializations: c.specializations
-        }),
-        timestamp: String(c.timestamp || c.createdAt || ''),
-        storeId: String(c.storeId || dbStat.primaryStoreId || ''),
-        generation: Number(c.generation || primaryStore?.generation || 0),
-        merkleRoot: String(c.merkleRoot || primaryStore?.merkleRoot || ''),
-        priceDig,
-        capsuleUrl: `https://dbrain.to/dig/${encodeURIComponent(String(c.id || ''))}.json`
-      });
-      if (recentCapsules.length >= 10) break;
+    if (priceByCapId.size > 0) {
+      cachedPriceByCapId = priceByCapId;
     }
+
+    const effectivePriceMap = priceByCapId.size > 0 ? priceByCapId : cachedPriceByCapId;
+    const recentCapsules = projectRecentCapsules(rawCapsules, {
+      priceByCapId: effectivePriceMap,
+      primaryStoreId: dbStat.primaryStoreId,
+      primaryStore,
+      limit: 10
+    });
 
     const dtStat = dthalamusStatusRes.data || {};
     const dolfStat = dolfactoryStatusRes.data || {};
@@ -575,7 +695,59 @@ function createLiveEcosystemClient(env = process.env) {
     const liqStat = liquidishStateRes.data || {};
     const shiStat = shiTelemetryRes.data || {};
 
-    const liveCapsulesTotal = Number(dbrainCapsulesRes.data?.total ?? dbStat.seededCapsulesCount ?? 0);
+    let liveCapsulesTotal = Number(dbrainCapsulesRes.data?.total ?? dbStat.seededCapsulesCount ?? 0);
+    let primaryGeneration = Number(primaryStore?.generation || rawCapsules[0]?.generation || 0);
+    let verifiedMerkleRoot = String(primaryStore?.merkleRoot || rawCapsules[0]?.merkleRoot || '');
+    let activeMorphicBrainsCount = realSovereignStores.length;
+    let activeStores = realSovereignStores.slice(0, 8).map((s) => ({
+      storeId: String(s.storeId || ''),
+      name: String(s.name || ''),
+      source: inferStoreSource(s),
+      generation: Number(s.generation || 0),
+      merkleRoot: String(s.merkleRoot || ''),
+      lastUpdatedBlock: Number(s.lastUpdatedBlock || 0)
+    }));
+    let finalRecentCapsules = recentCapsules;
+
+    // Monotonic leader/replica guard: prevent backward generation/capsule/store dips when falling back to a lagging replica
+    const curStoreId = String(dbStat.primaryStoreId || '');
+    if (
+      bestDbrainSnapshot &&
+      (!curStoreId || !bestDbrainSnapshot.primaryStoreId || curStoreId === bestDbrainSnapshot.primaryStoreId) &&
+      nowMs - bestDbrainSnapshot.savedAtMs <= monotonicFloorMs
+    ) {
+      if (primaryGeneration < bestDbrainSnapshot.primaryGeneration) {
+        primaryGeneration = bestDbrainSnapshot.primaryGeneration;
+        verifiedMerkleRoot = bestDbrainSnapshot.verifiedMerkleRoot || verifiedMerkleRoot;
+      }
+      if (liveCapsulesTotal < bestDbrainSnapshot.liveCapsulesTotal) {
+        liveCapsulesTotal = bestDbrainSnapshot.liveCapsulesTotal;
+      }
+      if (activeMorphicBrainsCount === 0 && bestDbrainSnapshot.activeMorphicBrainsCount > 0) {
+        activeMorphicBrainsCount = bestDbrainSnapshot.activeMorphicBrainsCount;
+        activeStores = bestDbrainSnapshot.activeStores;
+      }
+      if (
+        finalRecentCapsules.length === 0 ||
+        (bestDbrainSnapshot.recentCapsules[0]?.generation || 0) > (finalRecentCapsules[0]?.generation || 0)
+      ) {
+        finalRecentCapsules = bestDbrainSnapshot.recentCapsules;
+      }
+    }
+
+    if (dbrainStatusRes.ok && (activeMorphicBrainsCount > 0 || liveCapsulesTotal > 0 || primaryGeneration > 0)) {
+      bestDbrainSnapshot = {
+        primaryStoreId: curStoreId,
+        primaryGeneration,
+        liveCapsulesTotal,
+        verifiedMerkleRoot,
+        activeMorphicBrainsCount,
+        activeStores,
+        recentCapsules: finalRecentCapsules,
+        savedAtMs: nowMs
+      };
+    }
+
     const rsiLeaderboardBase = buildEcosystemLeaderboards({
       realSovereignStores,
       rawCapsules,
@@ -585,6 +757,7 @@ function createLiveEcosystemClient(env = process.env) {
 
     const dbrainLive = {
       reachable: dbrainStatusRes.ok,
+      stale: Boolean(dbrainStatusRes.stale || dbrainStoresRes.stale || dbrainCapsulesRes.stale),
       origin: 'https://dbrain.to',
       latencyMs: dbrainStatusRes.latencyMs,
       version: String(dbStat.version || ''),
@@ -596,22 +769,15 @@ function createLiveEcosystemClient(env = process.env) {
       netspaceLabel: formatNetspaceLabel(dbStat.space),
       synced: Boolean(dbStat.synced),
       liveNode: Boolean(dbStat.liveNode),
-      primaryStoreId: String(dbStat.primaryStoreId || ''),
-      primaryGeneration: Number(primaryStore?.generation || 0),
-      verifiedMerkleRoot: String(primaryStore?.merkleRoot || ''),
+      primaryStoreId: curStoreId,
+      primaryGeneration,
+      verifiedMerkleRoot,
       l1DiscoveredStoresTotal: Number(dbStat.l1DiscoveredStoresTotal || 0),
-      activeMorphicBrainsCount: realSovereignStores.length,
-      rawRuntimeStoresTotal: Number(dbStat.totalStores || allStores.length || 0),
+      activeMorphicBrainsCount,
+      rawRuntimeStoresTotal: Number(dbStat.totalStores || dbrainStoresRes.data?.total || allStores.length || 0),
       liveCapsulesTotal,
-      activeStores: realSovereignStores.slice(0, 8).map((s) => ({
-        storeId: String(s.storeId || ''),
-        name: String(s.name || ''),
-        source: String(s.source || 'dbrain-merkle-wal'),
-        generation: Number(s.generation || 0),
-        merkleRoot: String(s.merkleRoot || ''),
-        lastUpdatedBlock: Number(s.lastUpdatedBlock || 0)
-      })),
-      recentCapsules
+      activeStores,
+      recentCapsules: finalRecentCapsules
     };
 
     const dthalamusLive = {
@@ -793,6 +959,85 @@ function createLiveEcosystemClient(env = process.env) {
         });
     }
     return inflightPromise;
+  }
+
+  async function refreshDbrainEvolutions({ forceFullRefresh = false } = {}) {
+    const now = Date.now();
+    if (forceFullRefresh || !cachedSnapshot || now - cachedAtMs >= cacheTtlMs * 2) {
+      return getLiveSnapshot({ forceRefresh: true });
+    }
+    if (offlineTest) {
+      return cachedSnapshot;
+    }
+    if (!fastEvolutionsInflight) {
+      fastEvolutionsInflight = Promise.all([
+        fetchJsonWithFallback(targets.dbrain, '/api/dbrain/status', { timeoutMs: 1800 }),
+        fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=25', { timeoutMs: 2200 })
+      ])
+        .then(([rawStatus, rawCaps]) => {
+          const tsNow = Date.now();
+          const stRes = resolveProbe('dbrainStatus', rawStatus, tsNow);
+          const capRes = resolveProbe('dbrainCapsules', rawCaps, tsNow);
+          if (!stRes.ok && !capRes.ok) {
+            return cachedSnapshot;
+          }
+          const dbStat = stRes.data || {};
+          const rawCapsules = Array.isArray(capRes.data?.capsules) ? capRes.data.capsules : [];
+          const prevDb = cachedSnapshot.dbrain;
+          const nextRecent =
+            rawCapsules.length > 0
+              ? projectRecentCapsules(rawCapsules, {
+                  priceByCapId: cachedPriceByCapId,
+                  primaryStoreId: dbStat.primaryStoreId || prevDb.primaryStoreId,
+                  primaryStore: prevDb.activeStores[0] || null,
+                  limit: 10
+                })
+              : prevDb.recentCapsules;
+          const candidateGen = Math.max(
+            Number(prevDb.primaryGeneration || 0),
+            Number(nextRecent[0]?.generation || 0)
+          );
+          const candidateTotal = Math.max(
+            Number(prevDb.liveCapsulesTotal || 0),
+            Number(capRes.data?.total ?? dbStat.seededCapsulesCount ?? 0)
+          );
+          const candidateRoot = String(nextRecent[0]?.merkleRoot || prevDb.verifiedMerkleRoot || '');
+          const updatedDbrain = {
+            ...prevDb,
+            reachable: true,
+            stale: Boolean(stRes.stale || capRes.stale),
+            peakHeight: Number(dbStat.peakHeight || prevDb.peakHeight || 0),
+            l1DiscoveredStoresTotal: Number(dbStat.l1DiscoveredStoresTotal || prevDb.l1DiscoveredStoresTotal || 0),
+            primaryGeneration: candidateGen,
+            liveCapsulesTotal: candidateTotal,
+            verifiedMerkleRoot: candidateRoot,
+            recentCapsules:
+              (nextRecent[0]?.generation || 0) >= (prevDb.recentCapsules[0]?.generation || 0)
+                ? nextRecent
+                : prevDb.recentCapsules
+          };
+          bestDbrainSnapshot = {
+            primaryStoreId: updatedDbrain.primaryStoreId,
+            primaryGeneration: updatedDbrain.primaryGeneration,
+            liveCapsulesTotal: updatedDbrain.liveCapsulesTotal,
+            verifiedMerkleRoot: updatedDbrain.verifiedMerkleRoot,
+            activeMorphicBrainsCount: updatedDbrain.activeMorphicBrainsCount,
+            activeStores: updatedDbrain.activeStores,
+            recentCapsules: updatedDbrain.recentCapsules,
+            savedAtMs: tsNow
+          };
+          cachedSnapshot = {
+            ...cachedSnapshot,
+            fetchedAt: new Date().toISOString(),
+            dbrain: updatedDbrain
+          };
+          return cachedSnapshot;
+        })
+        .finally(() => {
+          fastEvolutionsInflight = null;
+        });
+    }
+    return fastEvolutionsInflight;
   }
 
   async function runLiveOrganPromptPipeline(promptText) {
@@ -977,6 +1222,7 @@ function createLiveEcosystemClient(env = process.env) {
 
   return Object.freeze({
     getLiveSnapshot,
+    refreshDbrainEvolutions,
     runLiveOrganPromptPipeline,
     quoteTeachCapsule,
     mintTeachCapsule,
