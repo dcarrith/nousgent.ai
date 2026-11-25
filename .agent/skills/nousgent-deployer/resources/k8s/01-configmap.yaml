@@ -5,11 +5,11 @@ metadata:
   namespace: dbrain
   labels:
     app.kubernetes.io/name: nousgent
-    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/version: "1.16.1"
 data:
   NODE_ENV: "production"
   PORT: "3000"
-  APP_VERSION: "1.16.0"
+  APP_VERSION: "1.16.1"
   CANONICAL_ORIGIN: "https://nousgent.ai"
   M2M_ORIGIN: "https://ia.nousgent.ai"
   NOUSGENT_STATE_DIR: "/var/lib/nousgent"
@@ -33,7 +33,7 @@ data:
   NOUSGENT_LLM_URL: ""
   NOUSGENT_LLM_MODEL: "qwen3:32b"
   NOUSGENT_LLM_TIMEOUT_MS: "12000"
-  NOUSGENT_LLM_MAX_TOKENS: "320"
+  NOUSGENT_LLM_MAX_OUTPUT: "320"
   NOUSGENT_RSI_AGENT_LLM_URL: ""
   NOUSGENT_RSI_AGENT_MODEL: "qwen3:32b"
   NOUSGENT_EMBEDDING_URL: ""

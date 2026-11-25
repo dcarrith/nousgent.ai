@@ -95,12 +95,17 @@ const upstreamServer = http.createServer((req, res) => {
     return res.end(JSON.stringify({ status: 'evaluated', gate: { blocked: false } }));
   }
   if (u.pathname === '/api/dolfactory/status') {
-    assert.equal(u.searchParams.get('compositional'), 'true');
     return res.end(JSON.stringify({
       status: 'ok', version: '1.6.0', protocol: 'DOLFACTORY-v1.0',
-      receptorStats: { totalReceptors: 11, inlineIpsReceptors: 9, shadowIdsReceptors: 2 },
+      receptorStats: { totalReceptors: 8, inlineIpsReceptors: 7, shadowIdsReceptors: 1 },
+      collectiveReceptorStats: { totalReceptors: 10 },
       imprintedOdors: [{ odorId: 'ODOR-1' }],
       telemetry: { totalSniffs: 5, auditChain: { headHash: '0x67db924b' } }
+    }));
+  }
+  if (u.pathname === '/api/dolfactory/harness/guard') {
+    return res.end(JSON.stringify({
+      status: 'ok', protocol: 'DBRAIN-HARNESS-CG-v1.0', totalReceptorsWhenEnabled: 11
     }));
   }
   if (u.pathname === '/api/dbrain/learning/es/seed') {

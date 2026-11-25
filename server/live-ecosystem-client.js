@@ -490,6 +490,7 @@ function createLiveEcosystemClient(env = process.env) {
       dbrainCapsulesRes,
       dthalamusStatusRes,
       dolfactoryStatusRes,
+      dolfactoryHarnessRes,
       cbrainChronRes,
       liquidishStateRes,
       liquidishOrderbookRes,
@@ -499,7 +500,8 @@ function createLiveEcosystemClient(env = process.env) {
       fetchJsonWithFallback(targets.dbrain, '/api/dbrain/stores', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.dbrain, '/api/dbrain/capsules?limit=100', { timeoutMs: 2200 }),
       fetchJsonWithFallback(targets.dthalamus, '/api/dthalamus/status', { timeoutMs: 1800 }),
-      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status?compositional=true', { timeoutMs: 1800 }),
+      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/status', { timeoutMs: 1800 }),
+      fetchJsonWithFallback(targets.dolfactory, '/api/dolfactory/harness/guard', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.cbrain, '/api/cbrain/chronology', { timeoutMs: 1800 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/state', { timeoutMs: 2000 }),
       fetchJsonWithFallback(targets.liquidish, '/api/liquidish/orderbook?projection=compact', {
@@ -568,6 +570,7 @@ function createLiveEcosystemClient(env = process.env) {
 
     const dtStat = dthalamusStatusRes.data || {};
     const dolfStat = dolfactoryStatusRes.data || {};
+    const dolfHarness = dolfactoryHarnessRes.data || {};
     const cbStat = cbrainChronRes.data || {};
     const liqStat = liquidishStateRes.data || {};
     const shiStat = shiTelemetryRes.data || {};
@@ -635,7 +638,11 @@ function createLiveEcosystemClient(env = process.env) {
       latencyMs: dolfactoryStatusRes.latencyMs,
       version: String(dolfStat.version || ''),
       protocol: String(dolfStat.protocol || ''),
-      totalReceptors: Number(dolfStat.receptorStats?.totalReceptors ?? dolfStat.receptors?.length ?? 0),
+      totalReceptors: Math.max(
+        Number(dolfHarness.totalReceptorsWhenEnabled || 0),
+        Number(dolfStat.collectiveReceptorStats?.totalReceptors || 0),
+        Number(dolfStat.receptorStats?.totalReceptors ?? dolfStat.receptors?.length ?? 0)
+      ),
       inlineIpsReceptors: Number(dolfStat.receptorStats?.inlineIpsReceptors || 0),
       shadowIdsReceptors: Number(dolfStat.receptorStats?.shadowIdsReceptors || 0),
       imprintedOdorsCount: Number(dolfStat.imprintedOdors?.length || 0),

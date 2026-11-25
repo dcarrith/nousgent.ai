@@ -142,7 +142,10 @@ function createLocalHaloClient(env = process.env) {
         (env.NOUSGENT_HALO_VOICE_BASE_URL ? joinEndpoint(env.NOUSGENT_HALO_VOICE_BASE_URL, '/audio/speech') : '')
     );
     const timeoutMs = Math.max(500, Math.min(60000, Number(env.NOUSGENT_LLM_TIMEOUT_MS || 12000)));
-    const maxTokens = Math.max(64, Math.min(2048, Number(env.NOUSGENT_LLM_MAX_TOKENS || 320)));
+    const maxTokens = Math.max(
+      64,
+      Math.min(2048, Number(env.NOUSGENT_LLM_MAX_OUTPUT || env.NOUSGENT_LLM_MAX_TOKENS || 320))
+    );
 
     return Object.freeze({
       hardwareProfile: 'amd-ryzen-ai-halo',
