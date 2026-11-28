@@ -75,24 +75,30 @@ const renderHtmlWithSeo = createHtmlMetadataRenderer({
 
 const recentAlertDeliveries = [];
 
-// Default-ON per-IP HMAC-bucketed rate limiter (NoMoreSlop Layer 2 Rule #1)
+// Default-ON per-IP HMAC-bucketed rate limiter + explicit TRUST_PROXY XFF guard (NoMoreSlop Layer 2)
 const RATE_LIMIT_SALT = crypto.randomBytes(16);
 const rateBuckets = new Map();
 const MAX_RATE_BUCKETS = 10_000;
-const TRUST_PROXY = process.env.NOUSGENT_TRUST_PROXY === '1' || process.env.NODE_ENV === 'production';
+const TRUST_PROXY =
+  process.env.NOUSGENT_TRUST_PROXY === '1' || process.env.NOUSGENT_TRUST_PROXY === 'true';
 const RATE_LIMIT_WINDOW_MS = Math.max(1000, Number(process.env.NOUSGENT_RATE_LIMIT_WINDOW_MS || 60_000));
 const RATE_LIMIT_MCP_MAX = Math.max(10, Number(process.env.NOUSGENT_RATE_LIMIT_MCP_MAX || 180));
 const RATE_LIMIT_API_POST_MAX = Math.max(10, Number(process.env.NOUSGENT_RATE_LIMIT_POST_MAX || 120));
 let rateLimitedBlocksTotal = 0;
 
-function resolveClientIp(req) {
-  if (TRUST_PROXY) {
+function resolveClientIp(req, trustProxy = TRUST_PROXY) {
+  if (trustProxy && req && req.headers) {
     const xff = req.headers['x-forwarded-for'];
-    if (typeof xff === 'string' && xff.length > 0) {
-      return xff.split(',')[0].trim();
+    if (typeof xff === 'string' && xff.trim().length > 0) {
+      return xff.split(',')[0].trim().slice(0, 96);
+    }
+    const xReal = req.headers['x-real-ip'];
+    if (typeof xReal === 'string' && xReal.trim().length > 0) {
+      return xReal.trim().slice(0, 96);
     }
   }
-  return (req.socket && req.socket.remoteAddress) || 'unknown';
+  const socketIp = (req && req.socket && req.socket.remoteAddress) || '127.0.0.1';
+  return String(socketIp).trim().slice(0, 96);
 }
 
 function isRateLimited(req, bucket, limit, windowMs = RATE_LIMIT_WINDOW_MS) {
@@ -411,47 +417,49 @@ async function readJsonBody(req, maxBytes = 262144) {
 
 async function runAskWithLiveOrgans(body = {}) {
   const promptText = String(body.prompt || '');
+  let basePayload;
   if (Array.isArray(body.recalledCapsules)) {
     const ecosystem = await liveClient.getLiveSnapshot();
-    const basePayload = {
+    basePayload = {
       ...body,
+      localCapsules: Array.isArray(body.localCapsules)
+        ? body.localCapsules
+        : ecosystem.dbrain.recentCapsules || [],
+      orderbookCandidates: Array.isArray(body.orderbookCandidates)
+        ? body.orderbookCandidates
+        : ecosystem.liquidish.autonomousCandidateQueue || [],
       liveGeneration: ecosystem.dbrain.primaryGeneration,
       liveMerkleRoot: ecosystem.dbrain.verifiedMerkleRoot
     };
-    const prelim = engine.mindArena.askPersona(basePayload);
-    if (prelim.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' && haloClient.getConfig().personaQa.configured) {
-      const haloOut = await haloClient.queryFrontierFallback(promptText, body.recalledCapsules);
-      if (haloOut.ok && haloOut.text) {
-        return engine.askNousgent({
-          ...basePayload,
-          localHaloAnswer: { text: haloOut.text, model: haloOut.model, latencyMs: haloOut.latencyMs }
-        });
+  } else {
+    const livePipe = await liveClient.runLiveOrganPromptPipeline(promptText);
+    const autoQuoteDig =
+      livePipe.liquidishAutoQuote?.quote?.priceDig !== undefined
+        ? Number(livePipe.liquidishAutoQuote.quote.priceDig).toFixed(3)
+        : undefined;
+    basePayload = {
+      ...body,
+      recalledCapsules: livePipe.recalledCapsules,
+      localCapsules: Array.isArray(body.localCapsules)
+        ? body.localCapsules
+        : livePipe.ecosystem.dbrain.recentCapsules || [],
+      orderbookCandidates: Array.isArray(body.orderbookCandidates)
+        ? body.orderbookCandidates
+        : livePipe.ecosystem.liquidish.autonomousCandidateQueue || [],
+      liveGeneration: livePipe.ecosystem.dbrain.primaryGeneration,
+      liveMerkleRoot: livePipe.ecosystem.dbrain.verifiedMerkleRoot,
+      liveAutoPriceDig: autoQuoteDig,
+      liveLatencies: {
+        dolfactoryMs: livePipe.dolfactoryLiveSniff?.latencyMs,
+        dthalamusMs: livePipe.dthalamusLiveGate?.latencyMs,
+        dbrainMs: livePipe.dbrainRecallLatencyMs ?? livePipe.ecosystem.dbrain.latencyMs,
+        liquidishMs: livePipe.liquidishAutoQuote?.latencyMs ?? livePipe.ecosystem.liquidish.latencyMs
       }
-    }
-    return engine.askNousgent(basePayload);
+    };
   }
-
-  const livePipe = await liveClient.runLiveOrganPromptPipeline(promptText);
-  const autoQuoteDig =
-    livePipe.liquidishAutoQuote?.quote?.priceDig !== undefined
-      ? Number(livePipe.liquidishAutoQuote.quote.priceDig).toFixed(3)
-      : undefined;
-  const basePayload = {
-    ...body,
-    recalledCapsules: livePipe.recalledCapsules,
-    liveGeneration: livePipe.ecosystem.dbrain.primaryGeneration,
-    liveMerkleRoot: livePipe.ecosystem.dbrain.verifiedMerkleRoot,
-    liveAutoPriceDig: autoQuoteDig,
-    liveLatencies: {
-      dolfactoryMs: livePipe.dolfactoryLiveSniff?.latencyMs,
-      dthalamusMs: livePipe.dthalamusLiveGate?.latencyMs,
-      dbrainMs: livePipe.dbrainRecallLatencyMs ?? livePipe.ecosystem.dbrain.latencyMs,
-      liquidishMs: livePipe.liquidishAutoQuote?.latencyMs ?? livePipe.ecosystem.liquidish.latencyMs
-    }
-  };
   const prelim = engine.mindArena.askPersona(basePayload);
   if (prelim.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' && haloClient.getConfig().personaQa.configured) {
-    const haloOut = await haloClient.queryFrontierFallback(promptText, livePipe.recalledCapsules);
+    const haloOut = await haloClient.queryFrontierFallback(promptText, basePayload.recalledCapsules);
     if (haloOut.ok && haloOut.text) {
       return engine.askNousgent({
         ...basePayload,
@@ -565,7 +573,10 @@ const MCP_TOOLS = Object.freeze([
       type: 'object',
       properties: {
         prompt: { type: 'string' },
-        mode: { type: 'string', enum: ['airlock', 'paradox', 'plume', 'subharness'] },
+        mode: {
+          type: 'string',
+          enum: ['airlock', 'paradox', 'plume', 'subharness', 'trojan_skill', 'epistemic_spoof']
+        },
         subcallDepth: { type: 'number' },
         requestedSubcalls: { type: 'number' },
         rootEpisodePlumeId: { type: 'string' }
@@ -693,14 +704,22 @@ const MCP_TOOLS = Object.freeze([
   },
   {
     name: 'nousgent_specialization_and_harness_audit',
-    description: 'Audit 3-organ cortical specialization (DBRAIN-SPECIALIZATION-v1.0: 32+32 dual-BigInt masks & OR-SPEC-01..08), GUARD + SIM, DBRAIN-ES-AT-SCALE-v1.0 (89B ESS1 & DAN-v1.1 cohort Z-scores), DBRAIN-HARNESS-CG-v1.0 (OR-011 sponge, prefix-safe LID tail folding & child leases), and DBRAIN-MCP-SKILLS-v1.0 (SEP-2640 skills, OR-012 & Ring-0 skill firewall).',
+    description: 'Audit 3-organ cortical specialization (DBRAIN-SPECIALIZATION-v1.0: 32+32 dual-BigInt masks & OR-SPEC-01..08), GUARD + SIM, DBRAIN-ES-AT-SCALE-v1.0 (89B ESS1 & DAN-v1.1 cohort Z-scores), DBRAIN-HARNESS-CG-v1.0 (OR-011 sponge, prefix-safe LID tail folding & child leases), DBRAIN-MCP-SKILLS-v1.0 (SEP-2640 skills, OR-012 & Ring-0 skill firewall), and DBRAIN-EPISTEMIC-ONTOLOGY-v1.0 (4-way SPO modalities, OR-002 spoof IPS & 3-stage provenance).',
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     inputSchema: {
       type: 'object',
       properties: {
         action: {
           type: 'string',
-          enum: ['all', 'specialization', 'guard_sim', 'es_at_scale', 'compositional_harness', 'mcp_skills']
+          enum: [
+            'all',
+            'specialization',
+            'guard_sim',
+            'es_at_scale',
+            'compositional_harness',
+            'mcp_skills',
+            'epistemic_ontology'
+          ]
         },
         specialization: { type: 'string' },
         targetSpecialization: { type: 'string' },
@@ -724,6 +743,27 @@ const MCP_TOOLS = Object.freeze([
         text: { type: 'string' },
         verifyDigests: { type: 'boolean' },
         screenBodies: { type: 'boolean' }
+      }
+    }
+  },
+  {
+    name: 'nousgent_epistemic_ontology_and_provenance',
+    description: 'Evaluate DBRAIN-EPISTEMIC-ONTOLOGY-v1.0 pre-flight query coverage with liquidi.sh Orderbook recommendations (mode="coverage"), bounded two-tier entity/predicate reconciliation (mode="reconcile"), or Ring-0 3-stage episode provenance grading with >= REFERENCED $DIG royalty floor (mode="provenance").',
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mode: { type: 'string', enum: ['coverage', 'reconcile', 'provenance'] },
+        query: { type: 'string' },
+        symbols: { type: 'array', items: { type: 'string' } },
+        entity: { type: 'object' },
+        existingEntities: { type: 'array', items: { type: 'object' } },
+        triples: { type: 'array', items: { type: 'object' } },
+        recalledCapsules: { type: 'array', items: { type: 'object' } },
+        touchedFiles: { type: 'array', items: { type: 'string' } },
+        referencedSymbols: { type: 'array', items: { type: 'string' } },
+        sensorVerified: { type: 'boolean' },
+        exitCode: { type: 'number' }
       }
     }
   }
@@ -870,10 +910,7 @@ async function handleMcpRpc(body, rpcContext = {}) {
     } else if (name === 'nousgent_get_plane_telemetry') data = engine.meshStore.getPlaneTelemetry();
     else if (name === 'nousgent_ask_persona') {
       data = await runAskWithLiveOrgans(args);
-      if (
-        data.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' ||
-        data.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
-      ) {
+      if (data.blindSpotLogged) {
         await peerReplicator.broadcastLocalMutation({ reason: 'mcp_quest_logged' });
         evolutionsHub.notifyEvolutionChanged('mcp_quest_logged');
       }
@@ -895,6 +932,23 @@ async function handleMcpRpc(body, rpcContext = {}) {
     } else if (name === 'nousgent_verify_skill_resource') {
       const capsules = args.uri ? await resolveCapsulesForSkillUri(args.uri) : [];
       data = engine.verifySkillResource({ ...args, capsules });
+    } else if (name === 'nousgent_epistemic_ontology_and_provenance') {
+      const mode = String(args.mode || 'provenance').trim().toLowerCase();
+      if (mode === 'coverage') {
+        const liveEco = await liveClient.getLiveSnapshot();
+        data = engine.evaluateQueryCoverage({
+          query: args.query,
+          symbols: args.symbols,
+          capsules: Array.isArray(args.capsules) ? args.capsules : liveEco.dbrain.recentCapsules || [],
+          orderbookCandidates: Array.isArray(args.orderbookCandidates)
+            ? args.orderbookCandidates
+            : liveEco.liquidish.autonomousCandidateQueue || []
+        });
+      } else if (mode === 'reconcile') {
+        data = engine.reconcileOntology(args);
+      } else {
+        data = engine.gradeEpisodeProvenance(args);
+      }
     }
     else {
       return {
@@ -1009,7 +1063,12 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === 'POST' && pathname.startsWith('/api/')) {
+    const isMutatingMethod =
+      req.method === 'POST' ||
+      req.method === 'PUT' ||
+      req.method === 'PATCH' ||
+      req.method === 'DELETE';
+    if (isMutatingMethod && pathname.startsWith('/api/')) {
       const isMcpRoute = pathname === '/api/mcp';
       const bucketName = isMcpRoute ? 'mcp-rpc' : 'api-post';
       const bucketLimit = isMcpRoute ? RATE_LIMIT_MCP_MAX : RATE_LIMIT_API_POST_MAX;
@@ -1110,7 +1169,14 @@ const server = http.createServer(async (req, res) => {
             esAtScale: 'DBRAIN-ES-AT-SCALE-v1.0',
             cohortDopamine: 'DTHALAMUS-DAN-v1.1',
             compositionalHarness: 'DBRAIN-HARNESS-CG-v1.0',
-            mcpSkills: nousgent.DBRAIN_MCP_SKILLS_PROTOCOL
+            mcpSkills: nousgent.DBRAIN_MCP_SKILLS_PROTOCOL,
+            epistemicOntology: nousgent.DBRAIN_EPISTEMIC_ONTOLOGY_PROTOCOL,
+            provenanceRoyaltyFloor: 'REFERENCED'
+          },
+          transports: {
+            ontologyCoverageEndpoint: `${M2M_ORIGIN}/api/dbrain/ontology/coverage`,
+            ontologyReconcileEndpoint: `${M2M_ORIGIN}/api/dbrain/ontology/reconcile`,
+            dthalamusProvenanceGradeEndpoint: `${M2M_ORIGIN}/api/dthalamus/provenance/grade`
           },
           sisterOrgans: [
             'https://dolfactory.to',
@@ -1177,15 +1243,16 @@ const server = http.createServer(async (req, res) => {
         `- Dedicated Autonomous A2A / M2M Swarm Plane: ${M2M_ORIGIN} (plane="m2m_ia")`,
         `- MCP 2024-11-05 / 2025-03-26 / 2026-07-28 + SEP-2640 Skills Endpoint: ${M2M_ORIGIN}/api/mcp`,
         `- SEP-2640 Skill Catalog & Firewall Diagnostics: ${M2M_ORIGIN}/api/nousgent/mcp/skills & ${M2M_ORIGIN}/api/nousgent/mcp/skills-firewall`,
+        `- Epistemic Ontology Coverage, Reconciliation & 3-Stage Provenance: ${M2M_ORIGIN}/api/dbrain/ontology/coverage, ${M2M_ORIGIN}/api/dbrain/ontology/reconcile & ${M2M_ORIGIN}/api/dthalamus/provenance/grade`,
         `- Unbuffered NDJSON Telemetry Stream: ${M2M_ORIGIN}/api/nousgent/stream`,
         `- 1-Command Citizen Installer: curl -fsSL ${CANONICAL_ORIGIN}/enlist.sh | sh -s -- --chip=0043`,
         '',
         '## 5-Organ Orthogonal Bus',
-        '1. https://dolfactory.to — Cranial Nerve I Pre-Thalamic IPS (12 ORs), VNO Skill Pinning & 2,048-KC Fly-LSH Immunity',
-        '2. https://dthalamus.to — Ring-0 Reference Monitor, SEP-2640 Skill Firewall, Prefix-Safe LID & Two-Key CHIP-0043 Gate',
-        '3. https://dbrain.to — 5-Lobe Chia Merkle Cortex, SEP-2640 Skills Catalog, 89B ESS1 Sleep ES & Surrogate Replay',
-        '4. https://cbrain.to — Live 4D WebGL/wasm32 Connectome Observatory & Compositional Dissectors',
-        '5. https://shi.liquidi.sh — $DIG CAT2 (10^3 Mojos) Exchange, Sub-Harness Spend Guard & 60/25/10/5% Royalties',
+        '1. https://dolfactory.to — Cranial Nerve I Pre-Thalamic IPS (12 ORs + OR-002 Epistemic Spoof), VNO Skill Pinning & 2,048-KC Fly-LSH Immunity',
+        '2. https://dthalamus.to — Ring-0 Reference Monitor, Biba Modality Clamp, 3-Stage Provenance, SEP-2640 Skill Firewall & Two-Key CHIP-0043 Gate',
+        '3. https://dbrain.to — 5-Lobe Chia Merkle Cortex, DBRAIN-EPISTEMIC-ONTOLOGY-v1.0, Pre-Flight Coverage, SEP-2640 Skills & 89B ESS1 Sleep ES',
+        '4. https://cbrain.to — Live 4D WebGL/wasm32 Connectome Observatory & Epistemic/Compositional Dissectors',
+        '5. https://shi.liquidi.sh — $DIG CAT2 (10^3 Mojos) Exchange, >= REFERENCED Provenance Royalty Floor & 60/25/10/5% Royalties',
         ''
       ].join('\n');
       setSecurityHeaders(res, pathname, activePlane);
@@ -1252,10 +1319,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/nousgent/ask' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const askOut = await runAskWithLiveOrgans(body);
-      if (
-        askOut.answerMode === 'UNCHARTED_BLIND_SPOT_QUEST' ||
-        askOut.answerMode === 'LOCAL_HALO_FRONTIER_SYNTHESIS'
-      ) {
+      if (askOut.blindSpotLogged) {
         await peerReplicator.broadcastLocalMutation({ reason: 'quest_logged' });
         evolutionsHub.notifyEvolutionChanged('quest_logged');
       }
@@ -1393,6 +1457,62 @@ const server = http.createServer(async (req, res) => {
         pathname,
         activePlane
       );
+      return;
+    }
+
+    if (
+      (pathname === '/api/dbrain/ontology/coverage' || pathname === '/api/nousgent/ontology/coverage') &&
+      (req.method === 'GET' || req.method === 'POST')
+    ) {
+      const body = req.method === 'POST' ? await readJsonBody(req) : {};
+      const liveEco = await liveClient.getLiveSnapshot();
+      const query = String(body.query ?? parsedUrl.searchParams.get('q') ?? parsedUrl.searchParams.get('query') ?? '');
+      const rawSymbols = Array.isArray(body.symbols)
+        ? body.symbols
+        : (parsedUrl.searchParams.get('symbols') || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+      const coverage = engine.evaluateQueryCoverage({
+        query,
+        symbols: rawSymbols,
+        capsules: Array.isArray(body.capsules) ? body.capsules : liveEco.dbrain.recentCapsules || [],
+        orderbookCandidates: Array.isArray(body.orderbookCandidates)
+          ? body.orderbookCandidates
+          : liveEco.liquidish.autonomousCandidateQueue || []
+      });
+      sendJson(res, 200, coverage, pathname, activePlane);
+      return;
+    }
+
+    if (
+      (pathname === '/api/dbrain/ontology/reconcile' || pathname === '/api/nousgent/ontology/reconcile') &&
+      req.method === 'POST'
+    ) {
+      const body = await readJsonBody(req);
+      sendJson(res, 200, engine.reconcileOntology(body), pathname, activePlane);
+      return;
+    }
+
+    if (
+      (pathname === '/api/dthalamus/provenance/grade' || pathname === '/api/nousgent/provenance/grade') &&
+      (req.method === 'GET' || req.method === 'POST')
+    ) {
+      if (req.method === 'GET') {
+        sendJson(
+          res,
+          200,
+          {
+            status: 'ok',
+            ...engine.getEpistemicStats()
+          },
+          pathname,
+          activePlane
+        );
+        return;
+      }
+      const body = await readJsonBody(req);
+      sendJson(res, 200, engine.gradeEpisodeProvenance(body), pathname, activePlane);
       return;
     }
 
@@ -1925,4 +2045,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, engine, peerReplicator, evolutionsHub };
+module.exports = { server, engine, peerReplicator, evolutionsHub, resolveClientIp };

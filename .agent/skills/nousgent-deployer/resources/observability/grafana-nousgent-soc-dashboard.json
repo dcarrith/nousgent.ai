@@ -1198,7 +1198,7 @@
     {
       "id": 20,
       "type": "bargauge",
-      "title": "Bounded DRSI Flywheel (Quests, Soft-HURT Vetoes, ESS1 Seeds & Antibodies)",
+      "title": "Bounded DRSI Flywheel, Epistemic Coverage & 3-Stage Provenance",
       "description": "",
       "datasource": {
         "type": "prometheus",
@@ -1225,9 +1225,36 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "expr": "sum(nousgent_ontology_coverage_checks_total)",
+          "legendFormat": "Ontology Coverage Checks",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "expr": "sum(nousgent_provenance_gradings_total)",
+          "legendFormat": "3-Stage Provenance Gradings",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "expr": "sum(nousgent_biba_epistemic_demotions_total)",
+          "legendFormat": "Biba Epistemic Demotions",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "expr": "max(nousgent_rejected_edits_total)",
           "legendFormat": "Soft-HURT Blocked Edits",
-          "refId": "B"
+          "refId": "E"
         },
         {
           "datasource": {
@@ -1236,7 +1263,7 @@
           },
           "expr": "sum(nousgent_es_seed_pulses_total)",
           "legendFormat": "89B ESS1 Seed Pulses",
-          "refId": "C"
+          "refId": "F"
         },
         {
           "datasource": {
@@ -1245,7 +1272,7 @@
           },
           "expr": "sum(nousgent_surrogate_episodes_total)",
           "legendFormat": "Surrogate Replay Episodes",
-          "refId": "D"
+          "refId": "G"
         },
         {
           "datasource": {
@@ -1254,7 +1281,7 @@
           },
           "expr": "max(nousgent_verified_antibodies_total)",
           "legendFormat": "Cross-Organ Antibodies",
-          "refId": "E"
+          "refId": "H"
         }
       ],
       "fieldConfig": {

@@ -1390,7 +1390,7 @@
     {
       "id": 23,
       "type": "bargauge",
-      "title": "2,048-KC Synapses, 89B ESS1 Sleep ES, Surrogate Replay & SEP-2640 Reads",
+      "title": "2,048-KC Synapses, Epistemic SPO Postings, 89B ESS1 ES & SEP-2640 Reads",
       "description": "",
       "datasource": {
         "type": "prometheus",
@@ -1417,9 +1417,18 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "expr": "max(dbrain_spo_path_postings{job=~\"dbrain.*\"})",
+          "legendFormat": "Epistemic SPO Postings",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "expr": "max(dbrain_plasticity_labile_capsules{job=~\"dbrain.*\"})",
           "legendFormat": "Labile Capsules",
-          "refId": "B"
+          "refId": "C"
         },
         {
           "datasource": {
@@ -1428,7 +1437,7 @@
           },
           "expr": "max(dbrain_es_active_policies{job=~\"dbrain.*\"})",
           "legendFormat": "12D ES Policies",
-          "refId": "C"
+          "refId": "D"
         },
         {
           "datasource": {
@@ -1437,7 +1446,7 @@
           },
           "expr": "sum(dbrain_es_seed_pulses_applied_total{job=~\"dbrain.*\"})",
           "legendFormat": "89B ESS1 Applied",
-          "refId": "D"
+          "refId": "E"
         },
         {
           "datasource": {
@@ -1446,7 +1455,7 @@
           },
           "expr": "sum(dbrain_surrogate_episodes_synthesized_total{job=~\"dbrain.*\"})",
           "legendFormat": "Surrogate Episodes",
-          "refId": "E"
+          "refId": "F"
         },
         {
           "datasource": {
@@ -1455,7 +1464,7 @@
           },
           "expr": "sum(dbrain_mcp_skill_reads_total{job=~\"dbrain.*\"})",
           "legendFormat": "SEP-2640 Skill Reads",
-          "refId": "F"
+          "refId": "G"
         }
       ],
       "fieldConfig": {

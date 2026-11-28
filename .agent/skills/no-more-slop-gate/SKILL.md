@@ -23,7 +23,7 @@ Run applicable scanners against touched directories before concluding a feature:
 
 2. **Dead Code, Unused Exports & Architecture Drift (`fallow` & `knip`)**:
    ```bash
-   fallow --no-color
+   NO_COLOR=1 fallow
    knip --no-progress
    ```
    - Zero unreferenced helper files, dead exports, unused TypeScript interfaces, or stray dependencies left behind by iterative edits.

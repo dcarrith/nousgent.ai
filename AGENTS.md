@@ -22,7 +22,7 @@ Run both layers of the NoMoreSlop Pre-Ship Quality Gate before finalizing multi-
 
 1. **Layer 1 — Deterministic CLI Scanners**:
    - `impeccable detect --json src/` (WCAG AA contrast, nested card kits, tracked-out ALL-CAPS eyebrow clutter, touch targets)
-   - `fallow --no-color` and `knip --no-progress` (dead files, unused exports, stray dependencies)
+   - `NO_COLOR=1 fallow` and `knip --no-progress` (dead files, unused exports, stray dependencies)
    - `jscpd --min-lines 12 --min-tokens 90 <touched-paths>` (copy/paste structural clone detection)
    - `git status --short && git ls-files | grep -E '\.env$|\.env\.' || true` (`.env` and secret hygiene)
 2. **Layer 2 — Logic, Protocol & Security Review**:

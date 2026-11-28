@@ -100,45 +100,45 @@ export const FALLBACK_ORGANS: readonly OrganBusItem[] = [
     slot: '01 // SENSORY',
     domain: 'Olfactory',
     url: 'https://dolfactory.to',
-    packageName: '@dolfactory/core@1.6.0',
+    packageName: '@dolfactory/core@1.7.0',
     status: 'NOMINAL',
     latencyMs: 0.14,
-    role: 'Pre-thalamic IPS (12 ORs), VNO skill pinning, and 2,048-KC Fly-LSH immunity'
+    role: 'Pre-thalamic IPS (12 ORs + OR-002 epistemic spoof), VNO pinning, and 2,048-KC Fly-LSH'
   },
   {
     slot: '02 // RELAY',
     domain: 'Thalamus',
     url: 'https://dthalamus.to',
-    packageName: '@dthalamus/core@1.10.0',
+    packageName: '@dthalamus/core@1.11.0',
     status: 'FILTERED',
     latencyMs: 0.09,
-    role: 'Ring-0 reference monitor, SEP-2640 skill firewall, and Biba policy gate'
+    role: 'Ring-0 reference monitor, Biba modality clamp, 3-stage provenance, and SEP-2640 firewall'
   },
   {
     slot: '03 // CORTEX',
     domain: 'Cortex',
     url: 'https://dbrain.to',
-    packageName: '@dbrain/core@3.23.0',
+    packageName: '@dbrain/core@3.24.1',
     status: 'BOUNDED',
     latencyMs: 0.045,
-    role: '5-lobe Chia Merkle WAL, SEP-2640 skills catalog, and O(log N) bisect'
+    role: '5-lobe Chia Merkle WAL, 4-way epistemic SPO ontology, pre-flight coverage, and bisect'
   },
   {
     slot: '04 // CONNECTOME',
     domain: 'Connectome',
     url: 'https://cbrain.to',
-    packageName: '@cbrain/core@3.23.0',
+    packageName: '@cbrain/core@3.24.0',
     status: 'VERIFIED',
     latencyMs: 0.18,
-    role: '3D WebGL connectome, Kenyon synapse firing, and forensic dissectors'
+    role: '3D WebGL connectome, Kenyon synapse firing, and epistemic/provenance dissectors'
   },
   {
     slot: '05 // EXCHANGE',
     domain: 'Exchange',
     url: 'https://liquidi.sh',
-    packageName: 'liquidi.sh@3.23.0',
+    packageName: 'liquidi.sh@3.24.0',
     status: 'SYNCED',
     latencyMs: 0.42,
-    role: '$DIG CAT2 market and 60/25/10/5% citation royalties'
+    role: '$DIG CAT2 market, >= REFERENCED provenance royalty floor, and 60/25/10/5% royalties'
   }
 ];

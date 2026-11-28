@@ -1162,10 +1162,23 @@ function createLiveEcosystemClient(env = process.env) {
     derivationTokens,
     simLineage,
     dentateFacets,
-    specializations
+    specializations,
+    spoTriples,
+    tags
   }) {
     if (offlineTest) return { ok: false, error: 'Offline mode' };
     const specList = Array.isArray(specializations) ? specializations : [];
+    const extraTags = Array.isArray(tags) ? tags : [];
+    const mergedTags = Array.from(
+      new Set([
+        'teach-nousgent',
+        `author-did:${authorDid}`,
+        `derivation-tokens:${derivationTokens}`,
+        'turns:1',
+        ...specList,
+        ...extraTags
+      ])
+    );
     const res = await fetchJsonWithFallback(targets.dbrain, '/api/mcp', {
       method: 'POST',
       body: {
@@ -1182,13 +1195,8 @@ function createLiveEcosystemClient(env = process.env) {
             ...(simLineage ? { simLineage } : {}),
             ...(dentateFacets ? { dentateFacets } : {}),
             ...(specList.length > 0 ? { specializations: specList } : {}),
-            tags: [
-              'teach-nousgent',
-              `author-did:${authorDid}`,
-              `derivation-tokens:${derivationTokens}`,
-              'turns:1',
-              ...specList
-            ]
+            ...(Array.isArray(spoTriples) && spoTriples.length > 0 ? { spoTriples } : {}),
+            tags: mergedTags
           }
         }
       },

@@ -784,7 +784,7 @@
     {
       "id": 14,
       "type": "timeseries",
-      "title": "Ed25519 DAN-v1.1 Dopaminergic RPE Envelopes & Biba PAM Vetoes",
+      "title": "Ed25519 DAN-v1.1 Dopaminergic RPE, Biba Modality Demotions & Provenance Gradings",
       "description": "",
       "datasource": {
         "type": "prometheus",
@@ -814,6 +814,24 @@
           "expr": "sum(increase(dthalamus_biba_pam_vetoes_total{job=~\"dthalamus.*\"}[15m]))",
           "legendFormat": "Biba PAM Vetoes",
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "expr": "sum(dthalamus_biba_epistemic_demotions_total{job=~\"dthalamus.*\"})",
+          "legendFormat": "Biba Epistemic Demotions",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "expr": "sum(dthalamus_provenance_gradings_total{job=~\"dthalamus.*\"})",
+          "legendFormat": "3-Stage Provenance Gradings",
+          "refId": "D"
         }
       ],
       "fieldConfig": {

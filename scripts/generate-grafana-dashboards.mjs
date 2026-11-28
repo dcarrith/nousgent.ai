@@ -476,10 +476,12 @@ function buildDthalamusDashboard() {
     {
       w: 9,
       type: 'timeseries',
-      title: 'Ed25519 DAN-v1.1 Dopaminergic RPE Envelopes & Biba PAM Vetoes',
+      title: 'Ed25519 DAN-v1.1 Dopaminergic RPE, Biba Modality Demotions & Provenance Gradings',
       targets: [
         { expr: 'sum by (channel) (increase(dthalamus_dopamine_rpe_events_total{job=~"dthalamus.*"}[15m]))', legend: '{{channel}}' },
-        { expr: 'sum(increase(dthalamus_biba_pam_vetoes_total{job=~"dthalamus.*"}[15m]))', legend: 'Biba PAM Vetoes' }
+        { expr: 'sum(increase(dthalamus_biba_pam_vetoes_total{job=~"dthalamus.*"}[15m]))', legend: 'Biba PAM Vetoes' },
+        { expr: 'sum(dthalamus_biba_epistemic_demotions_total{job=~"dthalamus.*"})', legend: 'Biba Epistemic Demotions' },
+        { expr: 'sum(dthalamus_provenance_gradings_total{job=~"dthalamus.*"})', legend: '3-Stage Provenance Gradings' }
       ]
     },
     {
@@ -761,9 +763,10 @@ function buildDbrainDashboard() {
     {
       w: 7,
       type: 'bargauge',
-      title: '2,048-KC Synapses, 89B ESS1 Sleep ES, Surrogate Replay & SEP-2640 Reads',
+      title: '2,048-KC Synapses, Epistemic SPO Postings, 89B ESS1 ES & SEP-2640 Reads',
       targets: [
         { expr: 'max(dbrain_kc_active_synapses{job=~"dbrain.*"})', legend: '2,048-KC Active Synapses' },
+        { expr: 'max(dbrain_spo_path_postings{job=~"dbrain.*"})', legend: 'Epistemic SPO Postings' },
         { expr: 'max(dbrain_plasticity_labile_capsules{job=~"dbrain.*"})', legend: 'Labile Capsules' },
         { expr: 'max(dbrain_es_active_policies{job=~"dbrain.*"})', legend: '12D ES Policies' },
         { expr: 'sum(dbrain_es_seed_pulses_applied_total{job=~"dbrain.*"})', legend: '89B ESS1 Applied' },
@@ -919,11 +922,13 @@ function buildLiquidishDashboard() {
     {
       w: 8,
       type: 'timeseries',
-      title: 'Zero-I/O Surrogate Episodes, Subtree ES Transfers & SEP-2640 Reads',
+      title: 'Zero-I/O Surrogate Episodes, Provenance Gradings, SEP-2640 Reads & HTTP 429',
       targets: [
         { expr: 'max(dbrain_surrogate_episodes_synthesized_total{job=~"liquidish.*"})', legend: 'Surrogate Episodes' },
         { expr: 'max(dbrain_es_subtree_transfers_total{job=~"liquidish.*"})', legend: 'Subtree ES Transfers' },
+        { expr: 'max(dthalamus_provenance_gradings_total{job=~"liquidish.*"})', legend: 'Provenance Gradings' },
         { expr: 'max(liquidish_mcp_skill_reads_total{job=~"liquidish.*"})', legend: 'SEP-2640 Skill Reads' },
+        { expr: 'max(liquidish_http_rate_limited_total{job=~"liquidish.*"})', legend: 'HTTP 429 Blocks' },
         { expr: 'max(cbrain_dthalamus_tokens_saved_total{job=~"liquidish.*"})', legend: 'Spill Tokens Saved' }
       ]
     }
@@ -1110,9 +1115,12 @@ function buildNousgentDashboard() {
     {
       w: 8,
       type: 'bargauge',
-      title: 'Bounded DRSI Flywheel (Quests, Soft-HURT Vetoes, ESS1 Seeds & Antibodies)',
+      title: 'Bounded DRSI Flywheel, Epistemic Coverage & 3-Stage Provenance',
       targets: [
         { expr: 'max(nousgent_blind_spot_quests_total)', legend: 'Open Blind-Spot Quests' },
+        { expr: 'sum(nousgent_ontology_coverage_checks_total)', legend: 'Ontology Coverage Checks' },
+        { expr: 'sum(nousgent_provenance_gradings_total)', legend: '3-Stage Provenance Gradings' },
+        { expr: 'sum(nousgent_biba_epistemic_demotions_total)', legend: 'Biba Epistemic Demotions' },
         { expr: 'max(nousgent_rejected_edits_total)', legend: 'Soft-HURT Blocked Edits' },
         { expr: 'sum(nousgent_es_seed_pulses_total)', legend: '89B ESS1 Seed Pulses' },
         { expr: 'sum(nousgent_surrogate_episodes_total)', legend: 'Surrogate Replay Episodes' },

@@ -950,7 +950,7 @@
     {
       "id": 16,
       "type": "timeseries",
-      "title": "Zero-I/O Surrogate Episodes, Subtree ES Transfers & SEP-2640 Reads",
+      "title": "Zero-I/O Surrogate Episodes, Provenance Gradings, SEP-2640 Reads & HTTP 429",
       "description": "",
       "datasource": {
         "type": "prometheus",
@@ -986,9 +986,27 @@
             "type": "prometheus",
             "uid": "DS_PROMETHEUS"
           },
+          "expr": "max(dthalamus_provenance_gradings_total{job=~\"liquidish.*\"})",
+          "legendFormat": "Provenance Gradings",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
           "expr": "max(liquidish_mcp_skill_reads_total{job=~\"liquidish.*\"})",
           "legendFormat": "SEP-2640 Skill Reads",
-          "refId": "C"
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "DS_PROMETHEUS"
+          },
+          "expr": "max(liquidish_http_rate_limited_total{job=~\"liquidish.*\"})",
+          "legendFormat": "HTTP 429 Blocks",
+          "refId": "E"
         },
         {
           "datasource": {
@@ -997,7 +1015,7 @@
           },
           "expr": "max(cbrain_dthalamus_tokens_saved_total{job=~\"liquidish.*\"})",
           "legendFormat": "Spill Tokens Saved",
-          "refId": "D"
+          "refId": "F"
         }
       ],
       "fieldConfig": {

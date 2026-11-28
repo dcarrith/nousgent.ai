@@ -2,8 +2,8 @@
   "schemaVersion": "1.0.0",
   "package": {
     "name": "@dbrain/core",
-    "version": "3.23.0",
-    "engineBanner": "@dbrain/core v3.23.0",
+    "version": "3.24.1",
+    "engineBanner": "@dbrain/core v3.24.1",
     "protocol": "DBRAIN-v1.3",
     "mcpProtocolVersion": "2024-11-05",
     "license": "Apache-2.0",
@@ -11,14 +11,14 @@
   },
   "stats": {
     "acyclicVerified": true,
-    "totalDependencyEdges": 154,
+    "totalDependencyEdges": 156,
     "totalJsModules": 51,
-    "totalUniqueJsSymbols": 360,
+    "totalUniqueJsSymbols": 371,
     "totalRustModules": 7,
     "totalRustItems": 54,
     "totalMcpTools": 8,
     "totalCliCommands": 13,
-    "totalHttpEndpoints": 36
+    "totalHttpEndpoints": 39
   },
   "pillars": [
     {
@@ -3226,8 +3226,8 @@
           "filePath": "lib/pillars/pillar03/cortical-ontology-contracts.js",
           "title": "Merkle-Pinned `10/10/10` Typed Cortical Ontologies & Zero-LLM Entity Resolution",
           "purpose": "Untyped knowledge graphs degrade into predicate soup (`RELATES_TO`, duplicate `\"PostgresWalAdapter\"` / `\"the Postgres WAL adapter\"` nodes, and invalid `(Person -> DEPENDS_ON -> Commit)` edges) that break multi-hop `CA3` triad completion. This sub-module enforces Merkle-pinned `10/10/10` cortical schemas (`<= 10` entity types, `<= 10` edge types, `<= 10` typed fields per type, and explicit `(sourceType -> targetType)` endpoint rules) plus zero-LLM `BQ-1024` + identifier-slug entity alias canonicalization.",
-          "lineCount": 547,
-          "ownSymbolCount": 4,
+          "lineCount": 968,
+          "ownSymbolCount": 10,
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js"
         },
         {
@@ -3551,13 +3551,49 @@
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/semantic-embeddings.js#L472"
         },
         {
+          "name": "DBRAIN_EPISTEMIC_ONTOLOGY_PROTOCOL",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const DBRAIN_EPISTEMIC_ONTOLOGY_PROTOCOL",
+          "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
+          "line": 50,
+          "lineCount": 968,
+          "summary": "Canonical `DBRAIN-EPISTEMIC-ONTOLOGY-v1.0` protocol identifier.",
+          "description": "Canonical protocol version identifier for `DBRAIN-EPISTEMIC-ONTOLOGY-v1.0`.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": "const proto = DBRAIN_EPISTEMIC_ONTOLOGY_PROTOCOL; // 'DBRAIN-EPISTEMIC-ONTOLOGY-v1.0'",
+          "valueType": "string",
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L50"
+        },
+        {
+          "name": "VALID_SPO_MODALITIES",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const VALID_SPO_MODALITIES",
+          "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
+          "line": 61,
+          "lineCount": 968,
+          "summary": "Allowed SPO epistemic modalities (`asserted`, `measured`, `target`, `proposed`, `request`, `retracted`).",
+          "description": "Frozen list of valid Subject-Predicate-Object (`SPO`) epistemic modalities.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": "const ok = VALID_SPO_MODALITIES.includes('target'); // true",
+          "valueType": "ReadonlyArray<string>",
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L61"
+        },
+        {
           "name": "DEFAULT_CORTICAL_ONTOLOGY_CONTRACT",
           "kind": "constant",
           "isAsync": false,
           "signature": "const DEFAULT_CORTICAL_ONTOLOGY_CONTRACT",
           "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
-          "line": 206,
-          "lineCount": 547,
+          "line": 314,
+          "lineCount": 968,
           "summary": "Default `10/10/10` Cortical Ontology Contract (`advisory` mode).",
           "description": "Default sovereign engineering & governance `10/10/10` Cortical Ontology Contract (`6` EntityTypes, `6` EdgeTypes, `<= 4` typed fields per type).",
           "params": [],
@@ -3566,7 +3602,36 @@
           "example": "const count = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT.entityTypes.length; // 6",
           "valueType": "Object",
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L206"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L314"
+        },
+        {
+          "name": "normalizeEntityCanonicalSlug",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function normalizeEntityCanonicalSlug(rawName)",
+          "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
+          "line": 159,
+          "lineCount": 968,
+          "summary": "Normalizes an entity name into a deterministic lowercase snake_case slug.",
+          "description": "Normalizes a CamelCase, snake_case, or prose entity mention into a lowercase snake_case canonical slug with generic Determiner/Class stop-words stripped.",
+          "params": [
+            {
+              "name": "rawName",
+              "type": "string",
+              "optional": false,
+              "defaultValue": null,
+              "description": "Raw entity mention."
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Canonical snake_case slug (`'unnamed_entity'` when blank)."
+          },
+          "complexity": "O(L) over `rawName.length`.",
+          "example": "const slug = normalizeEntityCanonicalSlug('the PostgresWalAdapter module'); // 'postgres_wal_adapter'",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L159"
         },
         {
           "name": "defineCorticalOntologyContract",
@@ -3574,8 +3639,8 @@
           "isAsync": false,
           "signature": "function defineCorticalOntologyContract(spec = {})",
           "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
-          "line": 103,
-          "lineCount": 547,
+          "line": 199,
+          "lineCount": 968,
           "summary": "Compiles and Merkle-hashes a validated `10/10/10` Cortical Ontology Contract.",
           "description": "Validates, normalizes, and freezes a declarative `10/10/10` Cortical Ontology Contract (`<= 10` entity types, `<= 10` edge types, `<= 10` typed fields per type, and explicit `(source -> target)` domain/range endpoint constraints), computing its deterministic `0x`-prefixed SHA-256 `ontologyHash`.",
           "params": [
@@ -3595,7 +3660,7 @@
           "example": "const ont = defineCorticalOntologyContract({\n  name: 'repo-ops',\n  entityTypes: [{ name: 'Service', fields: [{ name: 'status', type: 'enum', allowedValues: ['active', 'degraded'] }] }],\n  edgeTypes: [{ name: 'DEPENDS_ON', allowedEndpoints: [{ source: 'Service', target: 'Service' }] }]\n});",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L103"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L199"
         },
         {
           "name": "validateCapsuleAgainstOntology",
@@ -3603,8 +3668,8 @@
           "isAsync": false,
           "signature": "function validateCapsuleAgainstOntology({ capsule = {}, ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT, mode } = {})",
           "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
-          "line": 352,
-          "lineCount": 547,
+          "line": 460,
+          "lineCount": 968,
           "summary": "Validates capsule entities and SPO edges against a `10/10/10` ontology contract.",
           "description": "Validates a capsule's `entities[]` and `spoTriples[]` against a Merkle-pinned `10/10/10` Cortical Ontology Contract in either `advisory` mode (auto-typing legacy triples without breaking existing callers) or `strict` Canary Gate mode (blocking untyped predicates, invalid field types, and illegal `(source -> target)` endpoint combinations).",
           "params": [
@@ -3645,18 +3710,83 @@
           "example": "const check = validateCapsuleAgainstOntology({\n  capsule: { spoTriples: [{ subject: 'AuthGateway', predicate: 'RELATES_TO', object: 'Policy1' }] },\n  mode: 'strict'\n}); // check.valid === false",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L352"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L460"
+        },
+        {
+          "name": "inferSpoEpistemicModality",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function inferSpoEpistemicModality(tripleOrValue = {}, options = {})",
+          "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
+          "line": 601,
+          "lineCount": 968,
+          "summary": "Infers normalized SPO epistemic modality with Biba taint demotion and bound-goal detection.",
+          "description": "Infers and normalizes the epistemic modality (`'asserted'`, `'measured'`, `'target'`, `'proposed'`, `'request'`, `'retracted'`) of an SPO triple or raw value string, enforcing Biba epistemic demotion (`UNTRUSTED_EXTERNAL` -> `'proposed'`) and deterministic bound-prefix goal detection (`'< 60ms'`, `'below 180ms'`, `'at most 5%'`, `'target: 99.9%'` -> `'target'`).",
+          "params": [
+            {
+              "name": "tripleOrValue",
+              "type": "Object|string",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Candidate SPO triple object or raw object/value string."
+            },
+            {
+              "name": "options",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Provenance context (`{ bibaTainted?: boolean, trustedHostOracle?: boolean }`)."
+            }
+          ],
+          "returns": {
+            "type": "string",
+            "description": "Canonical modality in `VALID_SPO_MODALITIES`."
+          },
+          "complexity": "O(L) over value string prefix length (`O(1)` bounded prefixes).",
+          "example": "const mod = inferSpoEpistemicModality({ object: 'below 60ms' }); // 'target'",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L601"
+        },
+        {
+          "name": "isUnrealisedSpoModality",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function isUnrealisedSpoModality(modality = 'asserted')",
+          "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
+          "line": 637,
+          "lineCount": 968,
+          "summary": "Checks whether an SPO modality is unrealised (`target`, `proposed`, `request`).",
+          "description": "Returns `true` when `modality` represents an unrealised claim (`'target'`, `'proposed'`, or `'request'`) that must never close active measured/asserted bi-temporal SPO edges.",
+          "params": [
+            {
+              "name": "modality",
+              "type": "string",
+              "optional": true,
+              "defaultValue": "'asserted'",
+              "description": "Normalized or raw modality token."
+            }
+          ],
+          "returns": {
+            "type": "boolean",
+            "description": "`true` for unrealised modalities."
+          },
+          "complexity": "O(1).",
+          "example": "const u = isUnrealisedSpoModality('proposed'); // true",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L637"
         },
         {
           "name": "resolveCanonicalEntityAlias",
           "kind": "function",
           "isAsync": false,
-          "signature": "function resolveCanonicalEntityAlias({ entity = { name: '', type: 'Service' }, existingEntities = [], similarityThreshold = 0.84 } = {})",
+          "signature": "function resolveCanonicalEntityAlias({ entity = { name: '', type: 'Service' }, existingEntities = [], similarityThreshold = 0.84, entityDegrees = null } = {})",
           "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
-          "line": 485,
-          "lineCount": 547,
-          "summary": "Canonicalizes entity aliases within the same `EntityType` via slug + `BQ-1024` similarity.",
-          "description": "Resolves a candidate entity mention against existing typed entities in the same `entityType` using zero-LLM identifier-slug canonicalization plus `BQ-1024` SimHash Hamming similarity (`>= similarityThreshold`), preventing surface-form alias fragmentation across multi-hop `CA3` recall.",
+          "line": 714,
+          "lineCount": 968,
+          "summary": "Canonicalizes entity aliases within the same `EntityType` with multi-word containment and discriminator guards.",
+          "description": "Resolves a candidate entity mention against existing typed entities in the same `entityType` using zero-LLM identifier-slug canonicalization, multi-word subset containment (`sharesMultiWordEntityName`), numeric/version/window divergence vetoes, `PROTECTED_ENTITY_TYPES` guards, `BQ-1024` SimHash similarity (`>= similarityThreshold`), and degree + specificity canonical tie-breaking.",
           "params": [
             {
               "name": "params",
@@ -3684,18 +3814,75 @@
               "type": "number",
               "optional": true,
               "defaultValue": "0.84",
-              "description": "Minimum `BQ-1024` / token similarity to merge aliases."
+              "description": "Minimum `BQ-1024` similarity to merge multi-word aliases."
+            },
+            {
+              "name": "params.entityDegrees",
+              "type": "Record<string, number>|null",
+              "optional": true,
+              "defaultValue": "null",
+              "description": "Optional graph degree map keyed by entity name or slug."
             }
           ],
           "returns": {
             "type": "{ canonicalId: string, canonicalName: string, entityType: string, matchedExisting: boolean, similarityScore: number, aliases: string[] }",
             "description": "Canonicalized entity record."
           },
-          "complexity": "O(K) over K existing entities of matching `entityType`.",
+          "complexity": "O(K log K) over matching entities among K existing entities.",
           "example": "const res = resolveCanonicalEntityAlias({\n  entity: { name: 'the Postgres WAL adapter', type: 'Module' },\n  existingEntities: [{ name: 'PostgresWalAdapter', type: 'Module' }]\n}); // res.matchedExisting === true",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L485"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L714"
+        },
+        {
+          "name": "reconcileSubjectPredicates",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function reconcileSubjectPredicates({ triples = [], ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT, provider = null } = {})",
+          "sourceFile": "lib/pillars/pillar03/cortical-ontology-contracts.js",
+          "line": 841,
+          "lineCount": 968,
+          "summary": "Reconciles synonymous SPO predicates per `subject` via Tier-A unit-guarded quantity families and optional Tier-B provider.",
+          "description": "Reconciles synonymous Subject-Predicate-Object (`SPO`) predicates and property keys strictly within each canonical `subject` using a two-tier pipeline: - **Tier-A (`< 0.1 ms`, `0` LLM):** Resolves explicit `ontology.edgeTypes[].aliases` plus built-in engineering quantity families (`QUOTA_CEILING`, `LATENCY_DURATION`, `COVERAGE_RATIO`, `THROUGHPUT_RATE`, `MEMORY_FOOTPRINT`) guarded by strict time-window (`/day != /min`), percentile (`p50 != p99`), stage (`render != queue`), and unit (`ms != bytes`) vetoes, keeping unrealised (`target`/`proposed`/`request`) claims separate from measured revisions. - **Tier-B (Optional `provider`):** Delegates remaining multi-key subjects to an injectable synchronous `provider.reconcileKeys({ subject, predicates })` hook.",
+          "params": [
+            {
+              "name": "params",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Reconciliation inputs."
+            },
+            {
+              "name": "params.triples",
+              "type": "Array<Object>",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Candidate SPO triples (`{ subject, predicate, object, modality? }`)."
+            },
+            {
+              "name": "params.ontology",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "DEFAULT_CORTICAL_ONTOLOGY_CONTRACT",
+              "description": "Active `10/10/10` ontology contract."
+            },
+            {
+              "name": "params.provider",
+              "type": "Object|null",
+              "optional": true,
+              "defaultValue": "null",
+              "description": "Optional Tier-B `{ reconcileKeys }` provider."
+            }
+          ],
+          "returns": {
+            "type": "{ protocol: string, mergedPredicateCount: number, tierBInvoked: boolean, canonicalMap: Record<string, string>, reconciledTriples: Array<Object> }",
+            "description": "Reconciled SPO triples with `canonicalPredicate` and `modality` attached."
+          },
+          "complexity": "O(T) over `triples.length` in Tier-A.",
+          "example": "const rec = reconcileSubjectPredicates({\n  triples: [\n    { subject: 'Api', predicate: 'DAILY_QUOTA', object: '3000/day' },\n    { subject: 'Api', predicate: 'RATE_LIMIT_PER_DAY', object: '4800/day' }\n  ]\n}); // rec.mergedPredicateCount === 1",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar03/cortical-ontology-contracts.js#L841"
         },
         {
           "name": "DBRAIN_SPECIALIZATION_PROTOCOL",
@@ -4979,7 +5166,7 @@
         "Sub-Linear Candidate Pruning: When `invertedIndex` is supplied, full 4-signal scoring evaluates at most `candidateLimit` top hit-weighted docs.",
         "Tombstone-Clean Delta Sync: `computeMerkleKvDiff` excludes reverted commits and binds exact `hash1` (`fromGeneration`) and `hash2` (`toGeneration`) roots."
       ],
-      "lineCount": 1096,
+      "lineCount": 1270,
       "subModules": [
         {
           "filePath": "lib/pillars/pillar04/ast-bm25f-ranker.js",
@@ -4993,8 +5180,8 @@
           "filePath": "lib/pillars/pillar04/context-templates.js",
           "title": "Zero-LLM Declarative Cortical Context Template Compiler (`%{entities}` / `%{edges}`)",
           "purpose": "Raw JSON memory dumps waste agent prompt tokens and bury typed graph relationships in noise, while calling an LLM to summarize context on every turn adds `300-800 ms` latency. This sub-module compiles declarative `%{entities ...}`, `%{edges ...}`, `%{antibodies ...}`, and `%{memories ...}` interpolation blocks directly from typed cortical capsules inside a strict token ceiling (`<= 512` tokens by default) with zero LLM invocations.",
-          "lineCount": 197,
-          "ownSymbolCount": 2,
+          "lineCount": 334,
+          "ownSymbolCount": 3,
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04/context-templates.js"
         },
         {
@@ -5013,8 +5200,8 @@
           "isAsync": false,
           "signature": "const DEFAULT_CORTICAL_BOOTSTRAP_TEMPLATE",
           "sourceFile": "lib/pillars/pillar04/context-templates.js",
-          "line": 34,
-          "lineCount": 197,
+          "line": 160,
+          "lineCount": 334,
           "summary": "Constant DEFAULT_CORTICAL_BOOTSTRAP_TEMPLATE.",
           "description": "Constant DEFAULT_CORTICAL_BOOTSTRAP_TEMPLATE.",
           "params": [],
@@ -5023,7 +5210,57 @@
           "example": null,
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04/context-templates.js#L34"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04/context-templates.js#L160"
+        },
+        {
+          "name": "compileEpistemicTimelineAndNote",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function compileEpistemicTimelineAndNote({ capsules = [], ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT, limit = 6 } = {})",
+          "sourceFile": "lib/pillars/pillar04/context-templates.js",
+          "line": 60,
+          "lineCount": 334,
+          "summary": "Compiles a compact chronological SPO timeline and epistemic conflict/modality note.",
+          "description": "Compiles a zero-LLM chronological SPO timeline (with precomputed `+N day(s)` interval deltas avoiding quadratic `precedes` bloat) and an epistemic note summarizing `CONTRADICTS`, `SUPERSEDES`, and unrealised (`target`/`proposed`/`request`) claims across `capsules`.",
+          "params": [
+            {
+              "name": "params",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Timeline and epistemic compilation inputs."
+            },
+            {
+              "name": "params.capsules",
+              "type": "Array<Object>",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Candidate or recalled capsules."
+            },
+            {
+              "name": "params.ontology",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "DEFAULT_CORTICAL_ONTOLOGY_CONTRACT",
+              "description": "Active `10/10/10` ontology."
+            },
+            {
+              "name": "params.limit",
+              "type": "number",
+              "optional": true,
+              "defaultValue": "6",
+              "description": "Maximum timeline entries rendered."
+            }
+          ],
+          "returns": {
+            "type": "{ timelineLines: string[], contradictionLines: string[], supersessionLines: string[], unrealisedLines: string[], epistemicNote: string }",
+            "description": "Compiled timeline lines and prompt-ready `epistemicNote`."
+          },
+          "complexity": "O(T log T) where `T` is total SPO triples across `capsules`.",
+          "example": "const note = compileEpistemicTimelineAndNote({\n  capsules: [{ generation: 1, timestamp: '2026-03-01T00:00:00Z', spoTriples: [{ subject: 'Api', predicate: 'QUOTA', object: '3000/day' }] }]\n});",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04/context-templates.js#L60"
         },
         {
           "name": "compileCorticalContextTemplate",
@@ -5031,8 +5268,8 @@
           "isAsync": false,
           "signature": "function compileCorticalContextTemplate({ template = DEFAULT_CORTICAL_BOOTSTRAP_TEMPLATE, capsules = [], antibodies = [], ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT, maxTokens = 512 } = {})",
           "sourceFile": "lib/pillars/pillar04/context-templates.js",
-          "line": 85,
-          "lineCount": 197,
+          "line": 211,
+          "lineCount": 334,
           "summary": "Renders `%{entities}`, `%{edges}`, `%{antibodies}`, and `%{memories}` context templates in `<= maxTokens`.",
           "description": "Compiles a declarative cortical context template (`%{entities ...}`, `%{edges ...}`, `%{antibodies ...}`, `%{memories ...}`) against active brain capsules and Ring-0 antibodies within a deterministic `maxTokens` budget.",
           "params": [
@@ -5087,7 +5324,7 @@
           "example": "const compiled = compileCorticalContextTemplate({\n  template: '%{edges types=[DEPENDS_ON] limit=3}',\n  capsules: [{ spoTriples: [{ subject: 'ApiServer', predicate: 'DEPENDS_ON', object: 'SqliteWal' }] }]\n});",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04/context-templates.js#L85"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04/context-templates.js#L211"
         },
         {
           "name": "DEFAULT_BM25F_FIELD_WEIGHTS",
@@ -5642,8 +5879,8 @@
           "isAsync": false,
           "signature": "function computeLshSignBucket(vec)",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 83,
-          "lineCount": 1096,
+          "line": 86,
+          "lineCount": 1270,
           "summary": "Packs the hyperplane sign bits of a dense float embedding into an integer LSH bucket bitmask.",
           "description": "Compresses a dense floating-point embedding vector into an integer hypercube bucket bitmask by setting bit `i` (`1 << i`) whenever `vec[i] >= 0`.",
           "params": [
@@ -5663,7 +5900,7 @@
           "example": "const bucket = computeLshSignBucket([0.5, -0.2, 0.1]); // 0b101 === 5",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L83"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L86"
         },
         {
           "name": "buildCognitiveInvertedIndex",
@@ -5671,8 +5908,8 @@
           "isAsync": false,
           "signature": "function buildCognitiveInvertedIndex(corpus = [])",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 105,
-          "lineCount": 1096,
+          "line": 108,
+          "lineCount": 1270,
           "summary": "Builds a hybrid inverted index over lexical tokens, AST code symbols, and LSH sign buckets.",
           "description": "Pre-indexes a corpus of software-engineering / cognitive tasks into three fast lookup structures: `tokenMap` (lexical >=3-char tokens -> doc indices), `symbolMap` (lowercased AST symbols -> doc indices), and `lshBuckets` (8-bit hyperplane sign bucket -> doc indices), plus cached lowercased text and 8D embeddings.",
           "params": [
@@ -5692,7 +5929,7 @@
           "example": "const idx = buildCognitiveInvertedIndex([{ title: 'Fix mask', summary: '...', repo: 'a/b', filePaths: [], symbols: ['handle_mask'], spoTriples: [] }]);",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L105"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L108"
         },
         {
           "name": "evaluateHybridRecallQuery",
@@ -5700,8 +5937,8 @@
           "isAsync": false,
           "signature": "function evaluateHybridRecallQuery({ query, repo = '', symbols = [], expectedParentMerkleRoot = null, goldTaskId = null, corpus = [], invertedIndex = null, candidateLimit = 24, includeHistorical = false, nowIso = null })",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 216,
-          "lineCount": 1096,
+          "line": 219,
+          "lineCount": 1270,
           "summary": "Evaluates sub-millisecond Hybrid 4-Signal Recall across lexical, semantic, AST, SPO, and Merkle signals.",
           "description": "Executes Hybrid 4-Signal Recall (`SWE-ContextBench` kernel): 1. Prunes candidates via `invertedIndex` postings (AST symbol match = `+5`, LSH sign-bucket collision = `+2`, lexical token match = `+1`) down to `candidateLimit`. 2. Computes Signal 1 (`lshSemantic`, 25%): normalized cosine similarity + repo affinity bonus. 3. Computes Signal 2 (`bm25Symbol`, 40%): query token coverage (45%) + AST symbol/path match ratio (55%). 4. Computes Signal 3 (`spoTripleGraph`, 20%): confidence-weighted Subject-Predicate-Object triple hits. 5. Computes Signal 4 (`merkleLineage`, 15%): cryptographic parent Merkle root match (`1.0` verified).",
           "params": [
@@ -5777,7 +6014,7 @@
           "example": "const res = evaluateHybridRecallQuery({ query: 'mask propagation', symbols: ['handle_mask'], invertedIndex: idx });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L216"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L219"
         },
         {
           "name": "computeMerkleKvDiff",
@@ -5785,8 +6022,8 @@
           "isAsync": false,
           "signature": "function computeMerkleKvDiff({ storeId, capsules = [], fromGeneration = 1, toGeneration = 2, fullContextBaselineBytes = 409600 })",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 476,
-          "lineCount": 1096,
+          "line": 500,
+          "lineCount": 1270,
           "summary": "Computes a Chia DataLayer `get_kv_diff` (`hash1 -> hash2`) delta sync payload between store generations.",
           "description": "Computes a Chia DataLayer `get_kv_diff` (`hash1 -> hash2`) incremental delta synchronization payload between `fromGeneration` and `toGeneration` for `storeId`, classifying active mutations as `'INSERT'` or `'MODIFY'` and quantifying bandwidth saved relative to resending the full agent context baseline.",
           "params": [
@@ -5841,7 +6078,7 @@
           "example": "const delta = computeMerkleKvDiff({ storeId: '0xstore1', capsules, fromGeneration: 1, toGeneration: 2 });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L476"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L500"
         },
         {
           "name": "ONTOLOGICAL_PREDICATE_WEIGHTS",
@@ -5849,8 +6086,8 @@
           "isAsync": false,
           "signature": "const ONTOLOGICAL_PREDICATE_WEIGHTS",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 530,
-          "lineCount": 1096,
+          "line": 554,
+          "lineCount": 1270,
           "summary": "Frozen ontological `SPO` predicate weight table (`0.55..1.00`).",
           "description": "Canonical predicate weight dictionary distinguishing taxonomic inheritance edges (`IS_A`, `SUBCLASS_OF`, `PART_OF`, `IMPLEMENTS`) and safety constraints (`FORBIDS`) from generic associative `LINKS_TO` edges during neocortical graph retrieval.",
           "params": [],
@@ -5859,7 +6096,7 @@
           "example": "const w = ONTOLOGICAL_PREDICATE_WEIGHTS.IS_A; // 1.0",
           "valueType": "Readonly<Record<string, number>>",
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L530"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L554"
         },
         {
           "name": "buildOntologicalTaxonomyClosure",
@@ -5867,8 +6104,8 @@
           "isAsync": false,
           "signature": "function buildOntologicalTaxonomyClosure(capsules = [])",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 558,
-          "lineCount": 1096,
+          "line": 582,
+          "lineCount": 1270,
           "summary": "Computes transitive `IS_A`/`PART_OF` ancestor closure and inherited `alignment` guardrails.",
           "description": "Builds a cycle-safe transitive `IS_A` / `PART_OF` ontological hierarchy closure across `capsules` (`maxHops = 5`) so querying a specific subtype automatically inherits architectural invariants and `alignment` guardrails attached to its parent superclasses without duplicating rules across subtypes.",
           "params": [
@@ -5888,7 +6125,7 @@
           "example": "const tax = buildOntologicalTaxonomyClosure(capsules);\nconst parents = tax.resolveAncestors('PostgresWalAdapter');",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L558"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L582"
         },
         {
           "name": "applyGabaLateralInhibition",
@@ -5896,8 +6133,8 @@
           "isAsync": false,
           "signature": "function applyGabaLateralInhibition(rankedItems = [], options = {})",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 651,
-          "lineCount": 1096,
+          "line": 675,
+          "lineCount": 1270,
           "summary": "Suppresses redundant same-lobe `BQ-1024` clones (`>= 0.85` Hamming similarity) to preserve top-K diversity.",
           "description": "Applies cortical `GABA` interneuron lateral inhibition across score-sorted recall candidates, suppressing near-duplicate clones within the same memory `lobe` whose `BQ-1024` Hamming similarity exceeds `similarityThreshold` (default `0.85`).",
           "params": [
@@ -5924,7 +6161,64 @@
           "example": "const res = applyGabaLateralInhibition(candidates, { similarityThreshold: 0.85 });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L651"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L675"
+        },
+        {
+          "name": "evaluateEpistemicQueryCoverage",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function evaluateEpistemicQueryCoverage({ query = '', symbols = [], capsules = [], ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT } = {})",
+          "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
+          "line": 1156,
+          "lineCount": 1270,
+          "summary": "Evaluates sub-millisecond pre-flight query concept coverage and `liquidi.sh` specialization hints.",
+          "description": "Evaluates pre-flight epistemic concept & AST-symbol coverage (`check_answerable` analog) in `< 0.15 ms` with zero LLM calls, partitioning query concepts into `coveredConcepts` vs. `uncoveredConcepts` and emitting `liquidi.sh` `spec:*` discovery hints when domain knowledge is missing locally.",
+          "params": [
+            {
+              "name": "params",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Coverage evaluation inputs."
+            },
+            {
+              "name": "params.query",
+              "type": "string",
+              "optional": true,
+              "defaultValue": "''",
+              "description": "Natural-language or technical query string."
+            },
+            {
+              "name": "params.symbols",
+              "type": "string[]",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Optional AST code identifiers or entity names."
+            },
+            {
+              "name": "params.capsules",
+              "type": "Array<Object>",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Active brain capsules to check against."
+            },
+            {
+              "name": "params.ontology",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "DEFAULT_CORTICAL_ONTOLOGY_CONTRACT",
+              "description": "Active `10/10/10` ontology contract."
+            }
+          ],
+          "returns": {
+            "type": "{ protocol: string, extractedConcepts: string[], coveredConcepts: string[], uncoveredConcepts: string[], coverageRatio: number, inferredMissingSpecializations: string[], recommendedNextStep: string }",
+            "description": "Deterministic epistemic coverage verdict and `liquidi.sh` discovery hints."
+          },
+          "complexity": "O(C * T) over active capsules `C` and query tokens `T` (`< 0.15 ms` typical).",
+          "example": "const cov = evaluateEpistemicQueryCoverage({\n  query: 'Compute dao_escrow tranche and return_on_ad_spend',\n  capsules: [{ title: 'dao_escrow SLA puzzle', content: 'Multi-tranche Chia escrow' }]\n}); // cov.coverageRatio < 1 && cov.uncoveredConcepts.includes('return_on_ad_spend')",
+          "valueType": null,
+          "reExported": false,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L1156"
         },
         {
           "name": "executeNeuroOntologicalRecall",
@@ -5932,8 +6226,8 @@
           "isAsync": false,
           "signature": "function executeNeuroOntologicalRecall({ query, capsules = [], repo = '', activeFile = '', network = '', branch = 'main', taskPhase = '', symbols = [], expectedParentMerkleRoot = null, plasticityByCapsuleId = {}, kcBoostsByCapsuleId = {}, topK = 10,",
           "sourceFile": "lib/pillars/pillar04-hybrid-recall.js",
-          "line": 711,
-          "lineCount": 1096,
+          "line": 735,
+          "lineCount": 1270,
           "summary": "Runs 6-mechanism Neuro-Ontological Recall with progressive token disclosure and cross-lobe triad completion.",
           "description": "Executes the complete 6-mechanism Human-Brain Neuro-Ontological Recall pipeline in sub-millisecond deterministic compute (`0` LLM calls, `100%` Merkle/WASM intact): 1. **Tulving Encoding Specificity & Entorhinal `placeGrid`** (`phaseMask` + repo/path/network/branch). 2. **Dentate Gyrus (`DG`) Pattern Separation** (penalizing `v1` vs `v2` or `testnet` vs `production` collisions). 3. **Typed `IS_A` / `PART_OF` Ontological Inheritance** (propagating superclass rules & `alignment` guardrails). 4. **Off-Leaf Hebbian Plasticity (`LTP`/`LTD` + ACT-R)** via `plasticityByCapsuleId` sidecar boost. 5. **`GABA` Lateral Inhibition + 3-Tier Cortical Progressive Disclosure** (`TIER_1_FULL_ENGRAM`, `TIER_2_CORTICAL_SUMMARY`, `TIER_3_MICRO_GIST`). 6. **`CA3` Autoassociative Cross-Lobe Triad Completion** (`{ semantic, procedural, alignment }`).",
           "params": [
@@ -5953,7 +6247,7 @@
           "example": "const res = executeNeuroOntologicalRecall({ query: 'Fix v2 production PostgresWalAdapter lock', capsules });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L711"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar04-hybrid-recall.js#L735"
         }
       ]
     },
@@ -5969,7 +6263,7 @@
         "Zero-Copy Subagent Isolation: `forkStoreZeroCopy` copies `0` capsule payload bytes, inheriting parent `merkleRoot` and `generation` via pointer.",
         "Canary-Gated Epistemic Merge: `mergeCognitiveBranches` refuses to mark `merged: true` unless `simulatedCanaryScore >= canaryThreshold` AND any conflicting `SPO` triples are resolved via `crdt-lww` or `quarantine`."
       ],
-      "lineCount": 1508,
+      "lineCount": 1709,
       "subModules": [],
       "symbols": [
         {
@@ -5978,8 +6272,8 @@
           "isAsync": false,
           "signature": "function computeVcsCommitSha({ storeId, generation, parentCommitSha = '0x0', merkleRoot, authorDid, message })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 86,
-          "lineCount": 1508,
+          "line": 91,
+          "lineCount": 1709,
           "summary": "Computes a deterministic `0x`-prefixed `DBRAIN-v1.3` SHA-256 commit digest.",
           "description": "Computes a deterministic `0x`-prefixed SHA-256 commit identifier binding the target `storeId`, monotonic `generation`, `parentCommitSha`, post-commit `merkleRoot`, `authorDid`, and commit `message` under the `'dbrain-commit-v1.3'` domain prefix.",
           "params": [
@@ -6041,7 +6335,7 @@
           "example": "const sha = computeVcsCommitSha({ storeId: '0x1', generation: 1, merkleRoot: '0x2', authorDid: 'did:chia:xch1...', message: 'init' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L86"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L91"
         },
         {
           "name": "buildDbrainV13CapsuleExtensions",
@@ -6049,8 +6343,8 @@
           "isAsync": false,
           "signature": "function buildDbrainV13CapsuleExtensions({ id, capsuleId, storeId, key, content, contentHash, merkleRoot = '0x0', commitSha = '0x0', authorDid = 'did:chia:txch1agent', signerSeed = null })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 119,
-          "lineCount": 1508,
+          "line": 124,
+          "lineCount": 1709,
           "summary": "Builds `DBRAIN-v1.3` `BPC1` factoradic, `CHIP-0028`/`CHIP-0043` Clear Sign, and hybrid PQC capsule extensions.",
           "description": "Synthesizes the three `DBRAIN-v1.3` cryptographic and index extensions attached to every newly committed capsule: 1. `bpcEnvelope` (`BPC1` `u128-factoradic-benes` packed byte metrics and leaf hash). 2. `clearSignature` (`CHIP-0028` `AGG_SIG_ME` digest, asymmetric `RFC-8032 Ed25519` attestation, 96-byte `BLS12-381 G2` commitment, 7-gate `CHIP-0043` verdict, and `ur:chia-clear-sign/v1.3` URI). 3. `pqcSignature` (Genuine asymmetric Hybrid `RFC-8391 / FIPS-205 WOTS+-SHA256` + `RFC-8032 Ed25519` private-key signature and public-key verification bundle).",
           "params": [
@@ -6140,7 +6434,7 @@
           "example": "const ext = buildDbrainV13CapsuleExtensions({ id: 'CAP-1', storeId: '0x1', key: 'k', content: 'hi', contentHash: '0x2', merkleRoot: '0x3', commitSha: '0x4' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L119"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L124"
         },
         {
           "name": "verifyCapsuleCryptographicEnvelope",
@@ -6148,8 +6442,8 @@
           "isAsync": false,
           "signature": "function verifyCapsuleCryptographicEnvelope(capsule)",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 208,
-          "lineCount": 1508,
+          "line": 213,
+          "lineCount": 1709,
           "summary": "Verifies a capsule's content digest and asymmetric `WOTS+-SHA256 + Ed25519` cryptographic envelope.",
           "description": "Verifies a committed `DBRAIN-v1.3` cognitive capsule's `contentHash`, classical `RFC-8032 Ed25519` signature, Post-Quantum `WOTS+-SHA256` (`w = 16`) signature, and dual-algorithm `hybridBindingHash` using only public keys.",
           "params": [
@@ -6169,7 +6463,7 @@
           "example": "const check = verifyCapsuleCryptographicEnvelope(minted.capsule); // { verified: true, ... }",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L208"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L213"
         },
         {
           "name": "mintCognitiveCapsule",
@@ -6177,8 +6471,8 @@
           "isAsync": false,
           "signature": "function mintCognitiveCapsule({ store, capsules, stores = [], lobe = 'semantic', key = '', title, summary = '', content, tags = [], spoTriples = [], authorDid = 'did:chia:txch1agent', signerSeed = null,",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 238,
-          "lineCount": 1508,
+          "line": 243,
+          "lineCount": 1709,
           "summary": "Mints a new cognitive capsule (`dbrain commit`), updates store Merkle HEAD, and emits a DataLayer changelist.",
           "description": "Mints and commits a new cognitive memory capsule (`dbrain commit`): validates required `title` and `content`, normalizes the target biological lobe, derives hex-encoded DataLayer KV pairs, appends the capsule, recomputes the store-wide SHA-256 Merkle root across fork lineage, seals `DBRAIN-v1.3` cryptographic extensions, advances `store.generation`, and emits a Chia DataLayer `changelist`.",
           "params": [
@@ -6282,7 +6576,7 @@
           "example": "const res = mintCognitiveCapsule({ store, capsules: [], title: 'Rule 1', content: 'Verify Merkle roots.' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L238"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L243"
         },
         {
           "name": "forkStoreZeroCopy",
@@ -6290,8 +6584,8 @@
           "isAsync": false,
           "signature": "function forkStoreZeroCopy({ sourceStore, branchName, newStoreIdHex, blockHeight = 4831505 })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 381,
-          "lineCount": 1508,
+          "line": 386,
+          "lineCount": 1709,
           "summary": "Executes an `O(1)` 0-byte Copy-on-Write branch fork (`dbrain fork`) inheriting parent Merkle state.",
           "description": "Creates an `O(1)` Copy-on-Write branch fork (`dbrain fork`) of `sourceStore`: duplicates zero capsule payloads (`copiedCapsuleCount: 0`, `copiedPayloadBytes: 0`), recording only lightweight lineage pointers (`forkedFromStoreId`, `forkedAtMerkleRoot`, `forkedAtGeneration`) so subagents can experiment safely in isolated sandboxes.",
           "params": [
@@ -6339,7 +6633,7 @@
           "example": "const branchStore = forkStoreZeroCopy({ sourceStore: mainStore, branchName: 'agent-exp', newStoreIdHex: 'bb'.repeat(32) });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L381"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L386"
         },
         {
           "name": "checkoutCognitiveSnapshot",
@@ -6347,8 +6641,8 @@
           "isAsync": false,
           "signature": "function checkoutCognitiveSnapshot({ store, capsules, stores = [], targetGeneration, query = '', lobe = '' })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 424,
-          "lineCount": 1508,
+          "line": 429,
+          "lineCount": 1709,
           "summary": "Reconstructs and cryptographically verifies a read-only historical store snapshot (`dbrain checkout`).",
           "description": "Reconstructs a read-only historical time-travel snapshot (`dbrain checkout`) of `store` at `targetGeneration`, verifying that the recomputed historical Merkle root matches any recorded checkpoint in `store.generations` and optionally filtering the snapshot by `lobe` and substring `query`.",
           "params": [
@@ -6410,7 +6704,7 @@
           "example": "const snap = checkoutCognitiveSnapshot({ store, capsules, targetGeneration: 2, lobe: 'semantic' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L424"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L429"
         },
         {
           "name": "revertCognitiveGeneration",
@@ -6418,8 +6712,8 @@
           "isAsync": false,
           "signature": "function revertCognitiveGeneration({ store, capsules, targetGeneration, reason = 'Rollback poisoned commit', dryRun = true })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 477,
-          "lineCount": 1508,
+          "line": 482,
+          "lineCount": 1709,
           "summary": "Tombstones a faulty generation via a non-destructive compensating commit (`dbrain revert`).",
           "description": "Appends a non-destructive compensating rollback commit (`dbrain revert`) that tombstones all active capsules minted at `targetGeneration`, computes the `restoredMerkleRoot` excluding the poisoned generation, and mutates `capsules` + `store` only when `dryRun` is `false`.",
           "params": [
@@ -6474,71 +6768,25 @@
           "example": "const rev = revertCognitiveGeneration({ store, capsules, targetGeneration: 3, dryRun: false });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L477"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L482"
         },
         {
           "name": "mergeCognitiveBranches",
           "kind": "function",
           "isAsync": false,
-          "signature": "function mergeCognitiveBranches({ baseCapsules = [], incomingCapsules = [], strategy = 'crdt-lww', canaryThreshold = 0.85, simulatedCanaryScore = 0.96, softHurtEvaluation = null })",
+          "signature": "function mergeCognitiveBranches({ baseCapsules = [], incomingCapsules = [], strategy = 'crdt-lww', canaryThreshold = 0.85, simulatedCanaryScore = 0.96, softHurtEvaluation = null, ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT, reconcileProvider = null })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 545,
-          "lineCount": 1508,
-          "summary": "Performs a 3-way `SPO` knowledge-graph merge (`dbrain merge`) behind a Cognitive Canary Gate.",
-          "description": "Executes a 3-way epistemic branch merge (`dbrain merge`): indexes base-branch Subject-Predicate-Object (`SPO`) triples by `subject::predicate`, detects contradicting `object` assertions in `incomingCapsules`, applies the chosen conflict resolution strategy (`'crdt-lww'`, `'quarantine'`, or `'manual'`), and gates final promotion behind the Cognitive Canary regression score threshold.",
-          "params": [
-            {
-              "name": "params",
-              "type": "Object",
-              "optional": false,
-              "defaultValue": null,
-              "description": "Epistemic branch merge parameters."
-            },
-            {
-              "name": "params.baseCapsules",
-              "type": "Array<Object>",
-              "optional": true,
-              "defaultValue": "[]",
-              "description": "Canonical target branch capsules (e.g., `main`)."
-            },
-            {
-              "name": "params.incomingCapsules",
-              "type": "Array<Object>",
-              "optional": true,
-              "defaultValue": "[]",
-              "description": "Subagent fork branch capsules proposed for merge."
-            },
-            {
-              "name": "params.strategy",
-              "type": "'crdt-lww'|'quarantine'|'manual'",
-              "optional": true,
-              "defaultValue": "'crdt-lww'",
-              "description": "Conflict resolution policy for contradicting `SPO` triples."
-            },
-            {
-              "name": "params.canaryThreshold",
-              "type": "number",
-              "optional": true,
-              "defaultValue": "0.85",
-              "description": "Minimum required Cognitive Canary benchmark score in `[0, 1]`."
-            },
-            {
-              "name": "params.simulatedCanaryScore",
-              "type": "number",
-              "optional": true,
-              "defaultValue": "0.96",
-              "description": "Observed Cognitive Canary evaluation score for the merged state."
-            }
-          ],
-          "returns": {
-            "type": "{operation: string, strategy: string, merged: boolean, spoConflictAnalysis: {conflictsDetected: number, autoResolved: boolean, conflicts: Array<Object>}, cognitiveCanaryGate: {passed: boolean, score: number, threshold: number}}",
-            "description": "Merge verdict, conflict resolution log, and Canary Gate audit."
-          },
-          "complexity": "O(B + I) time and O(B) space where B and I are total `SPO` triples in `baseCapsules` and `incomingCapsules`.",
-          "example": "const res = mergeCognitiveBranches({ baseCapsules, incomingCapsules, strategy: 'crdt-lww' });",
+          "line": 564,
+          "lineCount": 1709,
+          "summary": "mergeCognitiveBranches()",
+          "description": "mergeCognitiveBranches()",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L545"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L564"
         },
         {
           "name": "bisectCognitiveHistory",
@@ -6546,8 +6794,8 @@
           "isAsync": false,
           "signature": "function bisectCognitiveHistory({ generations = [], capsules = [], badPattern })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 637,
-          "lineCount": 1508,
+          "line": 708,
+          "lineCount": 1709,
           "summary": "Isolates the first poisoned generation and culprit capsule via `O(log N)` binary search (`dbrain bisect`).",
           "description": "Runs an `O(log N)` binary search (`dbrain bisect`) across sorted store `generations` to pinpoint the earliest generation and exact `culpritCapsule` whose active state introduced a hallucinated or poisoned `badPattern`.",
           "params": [
@@ -6588,7 +6836,7 @@
           "example": "const trace = bisectCognitiveHistory({ generations, capsules, badPattern: 'DROP TABLE' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L637"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L708"
         },
         {
           "name": "supersedeCognitiveCapsule",
@@ -6596,8 +6844,8 @@
           "isAsync": false,
           "signature": "function supersedeCognitiveCapsule({ store, capsules, stores = [], targetCapsuleId, title, summary = '', content, tags, spoTriples, validUntil = null, authorDid = 'did:chia:txch1agent', signerSeed = null",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 734,
-          "lineCount": 1508,
+          "line": 805,
+          "lineCount": 1709,
           "summary": "Supersedes a stale cognitive capsule with a linked replacement while preserving historical snapshots.",
           "description": "Supersedes an outdated cognitive capsule (`targetCapsuleId`) with an updated replacement capsule: marks the predecessor `supersededById` so default HEAD recall automatically hides stale facts (e.g., an old API endpoint or deprecated municipal fee) while preserving the predecessor in historical `dbrain checkout` snapshots, and emits a combined DataLayer `delete` + `insert` changelist.",
           "params": [
@@ -6701,7 +6949,7 @@
           "example": "const res = supersedeCognitiveCapsule({ store, capsules, targetCapsuleId: 'CAP-1', content: 'Updated v2 rule' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L734"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L805"
         },
         {
           "name": "eraseCognitiveCapsuleTombstone",
@@ -6709,8 +6957,8 @@
           "isAsync": false,
           "signature": "function eraseCognitiveCapsuleTombstone({ store, capsules, stores = [], targetCapsuleId, reason = 'GDPR Art. 17 Erasure / Key-Shredding', requestedByDid = 'did:chia:txch1guardian', signerSeed = null })",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 811,
-          "lineCount": 1508,
+          "line": 882,
+          "lineCount": 1709,
           "summary": "Cryptographically shreds a capsule's content/embeddings and emits a signed GDPR `DELETE` tombstone receipt.",
           "description": "Executes GDPR / Right-to-be-Forgotten cryptographic erasure (`DELETE` tombstone and key-shredding) on `targetCapsuleId`: physically zeroes/purges plaintext `content`, `summary`, `tags`, `spoTriples`, semantic embeddings, and key/signature payloads from memory, advances `store.generation` + recomputes `store.merkleRoot` without the erased leaf, signs an immutable `Ed25519` erasure receipt, and emits a Chia DataLayer `delete` changelist entry.",
           "params": [
@@ -6779,7 +7027,7 @@
           "example": "const erased = eraseCognitiveCapsuleTombstone({ store, capsules, targetCapsuleId: 'CAP-1' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L811"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L882"
         },
         {
           "name": "hydrateLegacyCapsuleSpoTriples",
@@ -6787,8 +7035,8 @@
           "isAsync": false,
           "signature": "function hydrateLegacyCapsuleSpoTriples(capsule = {})",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 972,
-          "lineCount": 1508,
+          "line": 1043,
+          "lineCount": 1709,
           "summary": "Synthesizes deterministic `SPO` triples from legacy prose, `[[wikilink]]`, or `Key:: Value` capsule fields.",
           "description": "Deterministically hydrates Subject-Predicate-Object (`SPO`) triples for legacy pre-`v1.20.5` cognitive capsules that were committed with prose (`title`, `summary`, `content`, `key`) or Obsidian `[[wikilinks]]` / Dataview `Key:: Value` attributes prior to explicit `spoTriples` schema adoption.",
           "params": [
@@ -6808,18 +7056,18 @@
           "example": "const triples = hydrateLegacyCapsuleSpoTriples({ id: 'CAP-1', key: 'dbrain:lobe:semantic:rule', title: 'Rule 1', content: 'Links to [[Auth]].' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L972"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1043"
         },
         {
           "name": "queryBiTemporalSpoGraph",
           "kind": "function",
           "isAsync": false,
-          "signature": "function queryBiTemporalSpoGraph({ capsules = [], subject = '', predicate = '', asOfValidTime = null, asOfTransactionTime = null, includeSuperseded = false, includeCanonicalDefaults = false } = {})",
+          "signature": "function queryBiTemporalSpoGraph({ capsules = [], subject = '', predicate = '', asOfValidTime = null, asOfTransactionTime = null, includeSuperseded = false, includeCanonicalDefaults = false, ontology = DEFAULT_CORTICAL_ONTOLOGY_CONTRACT, reconcileProvider = null } = {})",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 1046,
-          "lineCount": 1508,
-          "summary": "Queries the 4-coordinate Bi-Temporal `SPO` Edge Ledger at any `(asOfValidTime, asOfTransactionTime)` coordinate.",
-          "description": "Evaluates a 4-Coordinate Bi-Temporal (`tValidFrom`, `tValidTo`, `tTxRecorded`, `tTxSuperseded`) point-in-time query (`dbrain bitemporal`) across `SPO` knowledge-graph triples. Unlike single-axis timestamp filtering, Bi-Temporal `SPO` querying separates: 1. **Valid Time (`[tValidFrom, tValidTo)`)**: When a fact was true in the external world. 2. **Transaction Time (`[tTxRecorded, tTxSuperseded)`)**: When the agent cortex recorded or superseded that belief in the Merkle-DAG commit log. When a newer capsule updates an existing `(subject, predicate)` pair with a different `object`, the prior edge's `[tValidFrom, tValidTo)` and `[tTxRecorded, tTxSuperseded)` intervals are automatically closed (`HISTORICAL_SUPERSEDED`) rather than overwritten.",
+          "line": 1129,
+          "lineCount": 1709,
+          "summary": "Queries the 4-coordinate Bi-Temporal `SPO` Edge Ledger with 4-way epistemic lineage classification.",
+          "description": "Evaluates a 4-Coordinate Bi-Temporal (`tValidFrom`, `tValidTo`, `tTxRecorded`, `tTxSuperseded`) point-in-time query (`dbrain bitemporal`) across `SPO` knowledge-graph triples with `DBRAIN-EPISTEMIC-ONTOLOGY-v1.0` 4-way epistemic lineage classification (`UNREALISED`, `REFINES`, `CONTRADICTS`, `SUPERSEDES`) and subject-scoped predicate reconciliation.",
           "params": [
             {
               "name": "params",
@@ -6876,17 +7124,31 @@
               "optional": true,
               "defaultValue": "false",
               "description": "When `true` and `capsules` is non-empty, prepends `DEFAULT_BITEMPORAL_CAPSULES` to `capsules`."
+            },
+            {
+              "name": "params.ontology",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "DEFAULT_CORTICAL_ONTOLOGY_CONTRACT",
+              "description": "Ontology contract for predicate alias reconciliation."
+            },
+            {
+              "name": "params.reconcileProvider",
+              "type": "Object|null",
+              "optional": true,
+              "defaultValue": "null",
+              "description": "Optional Tier-B predicate reconciliation provider."
             }
           ],
           "returns": {
             "type": "Object",
-            "description": "Bi-temporal query receipt with `matchingEdges`, `supersededHistoryCount`, and `biTemporalMerkleRoot`."
+            "description": "Bi-temporal query receipt with `matchingEdges`, `contradictions`, `unrealisedCount`, `refinementsCount`, and `biTemporalMerkleRoot`."
           },
           "complexity": "O(E log E) where `E` is total `SPO` triples across `capsules`.",
-          "example": "const res = queryBiTemporalSpoGraph({ subject: 'Astropy.NDDataRef', asOfValidTime: '2026-03-01T00:00:00Z' });\n// res.matchingEdges[0].object => 'propagate_unmasked_raise_typeerror'",
+          "example": "const res = queryBiTemporalSpoGraph({ subject: 'Astropy.NDDataRef', asOfValidTime: '2026-03-01T00:00:00Z' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1046"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1129"
         },
         {
           "name": "createRejectedEditRecord",
@@ -6894,8 +7156,8 @@
           "isAsync": false,
           "signature": "function createRejectedEditRecord({ candidateCapsule = {}, hurtCheckIds = [], netGainPct = 0, reason = 'SOFT_HURT_REGRESSION_VETO', authorDid = 'did:chia:txch1agent', signerSeed = null, nowIso = null } = {})",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 1198,
-          "lineCount": 1508,
+          "line": 1399,
+          "lineCount": 1709,
           "summary": "Builds and signs a compact off-leaf `REJ-EDIT-*` Rejection Ledger digest.",
           "description": "Creates a compact (`<= 512` bytes), Ed25519-signed off-leaf Rejection Ledger digest (`REJ-EDIT-*`) so autonomous swarm nodes and community Second Brains never re-propose a previously refused regressive edit (`GUARD` §4.4).",
           "params": [
@@ -6915,7 +7177,7 @@
           "example": "const rej = createRejectedEditRecord({ candidateCapsule: { title: 'Broad rule', content: 'Always retry' }, hurtCheckIds: ['chk-2'] });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1198"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1399"
         },
         {
           "name": "verifyRejectedEditRecord",
@@ -6923,8 +7185,8 @@
           "isAsync": false,
           "signature": "function verifyRejectedEditRecord(record)",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 1252,
-          "lineCount": 1508,
+          "line": 1453,
+          "lineCount": 1709,
           "summary": "Verifies an Ed25519-signed `REJ-EDIT-*` Rejection Ledger digest.",
           "description": "Verifies the cryptographic `RFC-8032 Ed25519` signature of an off-leaf `REJ-EDIT-*` Rejection Ledger digest received over Morphic gossip.",
           "params": [
@@ -6944,7 +7206,7 @@
           "example": "const ok = verifyRejectedEditRecord(rej); // { valid: true, reason: 'VERIFIED_REJECTED_EDIT' }",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1252"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1453"
         },
         {
           "name": "evaluateSoftHurtPromotionGate",
@@ -6952,8 +7214,8 @@
           "isAsync": false,
           "signature": "function evaluateSoftHurtPromotionGate({ candidateCapsule = {}, replayTasks = [], lobe = '', tags = [], noiseFloorPct = 15, minMarginPct = 1.5, maxRepairableHurt = 2, enableGaussianStabilityProbe = false, sigmaProbe = 0.05, authorDid = 'did:chia:txch1agent', signerSeed = null } = {})",
           "sourceFile": "lib/pillars/pillar05-cognitive-vcs.js",
-          "line": 1284,
-          "lineCount": 1508,
+          "line": 1485,
+          "lineCount": 1709,
           "summary": "Runs tiered `Soft-HURT` directional regret gating and automatic `[iff]` Dentate scope repair.",
           "description": "Evaluates a candidate `.dig` capsule against a replay task buffer using `GUARD` (`arXiv:2611.23476`) paired directional regret (`pinned`, `helped`, `hurt`, `unsolvedGap`), NOUSGENT's tiered hurt budget (`h_max = 0` on `alignment`/security/consensus vs. `h_max = 1` on general skills), and one automatic in-round `[iff <condition>]` Dentate scope-repair pass.",
           "params": [
@@ -6973,7 +7235,7 @@
           "example": "const gate = evaluateSoftHurtPromotionGate({ candidateCapsule: { title: 'Fix retry', content: '...' }, replayTasks: [{ checkId: 'c1', beforeScorePct: 40, afterScorePct: 95 }] });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1284"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar05-cognitive-vcs.js#L1485"
         }
       ]
     },
@@ -7447,16 +7709,16 @@
           "filePath": "lib/pillars/pillar08/liquid-royalties.js",
           "title": "@dbrain/core/pillars/pillar08/liquid-royalties",
           "purpose": "In an open agent economy where expensive frontier reasoning models distill reusable procedural skills for thousands of cheap edge models, skill authors need cryptographic royalty enforcement—otherwise freeriders could paraphrase a capsule, strip its `citations` array, or spin up Sybil self-citation rings to drain ancestor royalty pools. This sub-module implements: 1. Multi-Probe LSH Uncited-Derivation Plagiarism Detection (`detectUncitedLshDerivations`), which indexes ancestral `BQ-1024` + `MinHash-16` signatures with 1-bit Hamming multi-probes to automatically detect paraphrased derivations and re-inject missing parent citations. 2. Recursive 4-Tier Citation-DAG Liquid Intelligence Royalty Streaming (`executeLiquidIntelligenceRoyaltyStream`), splitting `$DIG` CAT license pools across Direct Creators (`60%`), Cited Parents (`25%`), Foundational Root Discoveries (`10%`), and Ring-0 Canary/Bisect Verifiers (`5%`), collapsing Sybil self-citation loops onto genuine foundational ancestors and consolidating micro-royalty CAT UTXOs via CHIP-0035 WASM.",
-          "lineCount": 391,
-          "ownSymbolCount": 2,
+          "lineCount": 467,
+          "ownSymbolCount": 3,
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/liquid-royalties.js"
         },
         {
           "filePath": "lib/pillars/pillar08/mushroom-body-plasticity.js",
           "title": "@dbrain/core/pillars/pillar08/mushroom-body-plasticity",
           "purpose": "Continual learning in dense vector stores fails due to catastrophic interference: updating weights for Task B overwrites dimensions shared with Task A, while pure two-factor Hebbian co-occurrence (\"fire together, wire together\") reinforces buggy memories whenever they are recalled during a failed attempt. Modeled on the Drosophila Mushroom Body (`PN -> 2,048 KC -> MBON` modulated by `PAM`/`PPL1` Dopaminergic Neurons) and Mammalian CA3 collaterals, this sub-module implements: 1. `2,048`-Cell Sparse Kenyon Cell (`KC`) Tagging (`w = 64` Winner-Take-All, `3.125%` sparsity) fusing `48D` semantic hyperplane projections with `16D` Dentate Gyrus scope & Tulving task-phase facets so unrelated tasks overlap on `< 3.2%` of synapses (`O((w/M)^2)` non-interference). 2. Three-Factor Neo-Hebbian & Dopaminergic Eligibility Plasticity (`e_{i,j}(t) * delta_DA(t)`) across dual-opponent `PAM` appetitive (`W+`) and `PPL1` aversive (`W-`) `Int16`-quantized compartments, guarded by Biba provenance taint so untrusted external inputs can never hijack positive dopamine rewards. 3. Directed Causal STDP + Oja Multiplicative Homeostatic Normalization for predictive dendritic prefetching without hub saturation. 4. Three-Compartment Benna-Fusi Metaplastic Consolidation (`fast -> med -> slow`) drained during sleep-cycle Dream Consolidation.",
-          "lineCount": 898,
-          "ownSymbolCount": 14,
+          "lineCount": 1127,
+          "ownSymbolCount": 16,
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js"
         },
         {
@@ -8174,7 +8436,7 @@
           "signature": "function detectUncitedLshDerivations({ candidateCapsule = {}, existingCapsules = [], similarityThreshold = 0.65 } = {})",
           "sourceFile": "lib/pillars/pillar08/liquid-royalties.js",
           "line": 96,
-          "lineCount": 391,
+          "lineCount": 467,
           "summary": "Detects uncited paraphrased derivations via Multi-Probe `BQ-1024` + `MinHash-16` LSH and auto-injects parent citations.",
           "description": "Detects uncited paraphrased derivations via Multi-Probe `BQ-1024` + `MinHash-16` LSH and auto-injects parent citations.",
           "params": [
@@ -8218,15 +8480,44 @@
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/liquid-royalties.js#L96"
         },
         {
+          "name": "filterRoyaltyEligibleProvenance",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function filterRoyaltyEligibleProvenance(grades = [])",
+          "sourceFile": "lib/pillars/pillar08/liquid-royalties.js",
+          "line": 155,
+          "lineCount": 467,
+          "summary": "Filters episode provenance grades so usage-based `$DIG` Citation-DAG royalties enforce `>= REFERENCED` (`RETRIEVED` bystanders excluded).",
+          "description": "Filters episode provenance grades so usage-based `$DIG` Citation-DAG royalties enforce `>= REFERENCED` (`RETRIEVED` bystanders excluded).",
+          "params": [
+            {
+              "name": "grades",
+              "type": "Array<Object>",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Provenance grade descriptors (`{ capsuleId, provenanceStage, royaltyEligible? }`)."
+            }
+          ],
+          "returns": {
+            "type": "{ protocol: string, royaltyFloorStage: 'REFERENCED', totalEvaluated: number, eligibleCapsuleIds: string[], withheldBystanderCapsuleIds: string[] }",
+            "description": "Royalty eligibility partition across episode capsules."
+          },
+          "complexity": "O(C) where `C` is the number of recalled capsules in the episode.",
+          "example": "const gate = filterRoyaltyEligibleProvenance([{ capsuleId: 'CAP-1', provenanceStage: 'RETRIEVED' }]);\n// gate.withheldBystanderCapsuleIds => ['CAP-1']",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/liquid-royalties.js#L155"
+        },
+        {
           "name": "executeLiquidIntelligenceRoyaltyStream",
           "kind": "function",
           "isAsync": false,
-          "signature": "function executeLiquidIntelligenceRoyaltyStream({ capsuleId = 'CAP-SWE-103', authorDid = DEFAULT_CREATOR_DID, payoutAddress = 'xch1a37rq3cg558cdtw2ac40z6c68aaae92kch2cmk6j539y5x2paqdsqca6du', licenseTier = 'COMMERCIAL_SWARM_SLA', royaltyDigBaseUnits = 1000n, epochLicenseCount = 250, simulateSybilWashTrading = false, simulateUncitedPlagiarism = false } = {})",
+          "signature": "function executeLiquidIntelligenceRoyaltyStream({ capsuleId = 'CAP-SWE-103', authorDid = DEFAULT_CREATOR_DID, payoutAddress = 'xch1a37rq3cg558cdtw2ac40z6c68aaae92kch2cmk6j539y5x2paqdsqca6du', licenseTier = 'COMMERCIAL_SWARM_SLA', royaltyDigBaseUnits = 1000n, epochLicenseCount = 250, simulateSybilWashTrading = false, simulateUncitedPlagiarism = false, provenanceStage = 'EXECUTED' } = {})",
           "sourceFile": "lib/pillars/pillar08/liquid-royalties.js",
-          "line": 170,
-          "lineCount": 391,
-          "summary": "Executes a 4-tier recursive Citation-DAG `$DIG` royalty waterfall with Sybil wash-trading collapse and WASM CAT consolidation.",
-          "description": "Executes a 4-tier recursive Citation-DAG `$DIG` royalty waterfall with Sybil wash-trading collapse and WASM CAT consolidation.",
+          "line": 218,
+          "lineCount": 467,
+          "summary": "Executes a 4-tier recursive Citation-DAG `$DIG` royalty waterfall with Sybil wash-trading collapse, `>= REFERENCED` provenance gating, and WASM CAT consolidation.",
+          "description": "Executes a 4-tier recursive Citation-DAG `$DIG` royalty waterfall with Sybil wash-trading collapse, `>= REFERENCED` provenance gating, and WASM CAT consolidation.",
           "params": [
             {
               "name": "options",
@@ -8290,6 +8581,13 @@
               "optional": true,
               "defaultValue": "false",
               "description": "When `true`, strips explicit citations to verify Multi-Probe LSH auto-injection."
+            },
+            {
+              "name": "options.provenanceStage",
+              "type": "string",
+              "optional": true,
+              "defaultValue": "'EXECUTED'",
+              "description": "Episode provenance stage (`'RETRIEVED' | 'REFERENCED' | 'EXECUTED'`); `'RETRIEVED'` withholds usage payout."
             }
           ],
           "returns": {
@@ -8300,7 +8598,7 @@
           "example": "const stream = executeLiquidIntelligenceRoyaltyStream({\n  capsuleId: 'CAP-SWE-103',\n  simulateSybilWashTrading: false,\n  simulateUncitedPlagiarism: true\n});\n// stream.allTiersWasmMerkleVerified => true",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/liquid-royalties.js#L170"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/liquid-royalties.js#L218"
         },
         {
           "name": "compareSwarmMemoryArchitectures",
@@ -8785,7 +9083,7 @@
           "signature": "const CORTICAL_KC_INPUT_DIM",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
           "line": 67,
-          "lineCount": 898,
+          "lineCount": 1127,
           "summary": "Input projection dimensionality (`64D`) fed into the Kenyon Cell layer.",
           "description": "Dimensionality of the composite semantic + Dentate scope projection input (`64`).",
           "params": [],
@@ -8803,7 +9101,7 @@
           "signature": "const CORTICAL_KENYON_DIM",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
           "line": 76,
-          "lineCount": 898,
+          "lineCount": 1127,
           "summary": "Kenyon Cell expansion layer width (`2,048` cells).",
           "description": "Total Kenyon Cell population size (`2,048`) in the sparse expansion layer.",
           "params": [],
@@ -8821,7 +9119,7 @@
           "signature": "const CORTICAL_KC_WINNERS_W",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
           "line": 85,
-          "lineCount": 898,
+          "lineCount": 1127,
           "summary": "Sparse Winner-Take-All active Kenyon Cell count (`w = 64`).",
           "description": "Active Winner-Take-All Kenyon Cell count (`64`, `3.125%` sparsity) enforced by APL inhibition.",
           "params": [],
@@ -8839,7 +9137,7 @@
           "signature": "const CORTICAL_KC_SYNAPSES_PER_CELL",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
           "line": 94,
-          "lineCount": 898,
+          "lineCount": 1127,
           "summary": "Sparse random input synapses per Kenyon Cell (`c = 6`).",
           "description": "Number of deterministic sparse excitatory connections (`6`) per Kenyon Cell.",
           "params": [],
@@ -8857,7 +9155,7 @@
           "signature": "const INT16_WEIGHT_SCALE",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
           "line": 103,
-          "lineCount": 898,
+          "lineCount": 1127,
           "summary": "Positive `Int16` quantization scale (`32767`) for `[0, 1]` synaptic weights.",
           "description": "Full-scale `Int16` quantization denominator (`32,767`) mapping `[0.0, 1.0]` weights.",
           "params": [],
@@ -8869,13 +9167,109 @@
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L103"
         },
         {
+          "name": "PROVENANCE_STAGE_WEIGHTS",
+          "kind": "constant",
+          "isAsync": false,
+          "signature": "const PROVENANCE_STAGE_WEIGHTS",
+          "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
+          "line": 114,
+          "lineCount": 1127,
+          "summary": "Frozen 3-stage provenance credit and bystander-shielding weight table.",
+          "description": "Asymmetric 3-stage episode provenance multipliers (`DBRAIN-EPISTEMIC-ONTOLOGY-v1.0`) governing `PAM` appetitive potentiation (`W+`), `PPL1` aversive depression (`W-`, shielding `RETRIEVED`-only bystanders with `0.00x`), and `$DIG` royalty eligibility.",
+          "params": [],
+          "returns": null,
+          "complexity": null,
+          "example": null,
+          "valueType": "Readonly<Record<string, { pamMultiplier: number, ppl1Multiplier: number, royaltyEligible: boolean }>>",
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L114"
+        },
+        {
+          "name": "gradeEpisodeCapsuleProvenance",
+          "kind": "function",
+          "isAsync": false,
+          "signature": "function gradeEpisodeCapsuleProvenance({ recalledCapsules = [], touchedFiles = [], referencedSymbols = [], executedCommands = [], modHashes = [], sensorVerified = false, exitCode = 0 } = {})",
+          "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
+          "line": 161,
+          "lineCount": 1127,
+          "summary": "Grades recalled capsules into `RETRIEVED`, `REFERENCED`, or `EXECUTED` provenance stages.",
+          "description": "Deterministically grades each recalled capsule in an agent episode across three causal provenance stages (`RETRIEVED -> REFERENCED -> EXECUTED`) using workspace diffs (`touchedFiles`), AST/identifier references (`referencedSymbols`), shell/test invocations (`executedCommands`, `modHashes`), and Ring-0 host sensor verification (`sensorVerified`, `exitCode`). Without `sensorVerified === true`, claims cap at `'REFERENCED'` so untrusted prompts cannot spoof `'EXECUTED'` status.",
+          "params": [
+            {
+              "name": "params",
+              "type": "Object",
+              "optional": true,
+              "defaultValue": "{}",
+              "description": "Episode recall and Ring-0 execution sensor telemetry."
+            },
+            {
+              "name": "params.recalledCapsules",
+              "type": "Array<Object|string>",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Recalled capsule objects or IDs."
+            },
+            {
+              "name": "params.touchedFiles",
+              "type": "string[]",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Modified or inspected workspace file paths."
+            },
+            {
+              "name": "params.referencedSymbols",
+              "type": "string[]",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Code/domain symbols cited in reasoning or edits."
+            },
+            {
+              "name": "params.executedCommands",
+              "type": "string[]",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Commands run inside the sandbox during the episode."
+            },
+            {
+              "name": "params.modHashes",
+              "type": "string[]",
+              "optional": true,
+              "defaultValue": "[]",
+              "description": "Executed Chialisp/WASM module hashes (`0x...`)."
+            },
+            {
+              "name": "params.sensorVerified",
+              "type": "boolean",
+              "optional": true,
+              "defaultValue": "false",
+              "description": "True only when attested by a Ring-0 host execution receipt."
+            },
+            {
+              "name": "params.exitCode",
+              "type": "number",
+              "optional": true,
+              "defaultValue": "0",
+              "description": "Process exit code recorded by the Ring-0 host sensor."
+            }
+          ],
+          "returns": {
+            "type": "{ protocol: string, sensorVerified: boolean, exitCode: number, grades: Array<{ capsuleId: string, provenanceStage: 'RETRIEVED'|'REFERENCED'|'EXECUTED', pamMultiplier: number, ppl1Multiplier: number, royaltyEligible: boolean, executionFailedOnTouchedLocus: boolean, artifactFingerprint: string }>, provenanceByTargetId: Record<string, Object> }",
+            "description": "Structured 3-stage provenance grading report."
+          },
+          "complexity": "O(C * (F + S)) where `C` is recalled capsules (`<= 16`), `F` touched files, and `S` symbols (`< 0.1 ms`).",
+          "example": "const report = gradeEpisodeCapsuleProvenance({\n  recalledCapsules: [{ id: 'CAP-1', filePaths: ['src/auth.js'], symbols: ['verifyToken'] }],\n  touchedFiles: ['src/auth.js'],\n  sensorVerified: true,\n  exitCode: 0\n});",
+          "valueType": null,
+          "reExported": true,
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L161"
+        },
+        {
           "name": "quantizeSynapseWeightInt16",
           "kind": "function",
           "isAsync": false,
           "signature": "function quantizeSynapseWeightInt16(floatWeight)",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 150,
-          "lineCount": 898,
+          "line": 335,
+          "lineCount": 1127,
           "summary": "Quantizes a `[0, 1]` float synaptic weight into `0..32767` `Int16` units.",
           "description": "Quantizes a floating-point synaptic weight in `[0, 1]` into an unsigned `Int16`-compatible integer in `0..32767`.",
           "params": [
@@ -8895,7 +9289,7 @@
           "example": "const q = quantizeSynapseWeightInt16(0.5); // 16384",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L150"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L335"
         },
         {
           "name": "dequantizeSynapseWeightInt16",
@@ -8903,8 +9297,8 @@
           "isAsync": false,
           "signature": "function dequantizeSynapseWeightInt16(intWeight)",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 166,
-          "lineCount": 898,
+          "line": 351,
+          "lineCount": 1127,
           "summary": "Dequantizes an `Int16` weight (`0..32767`) back into `[0, 1]`.",
           "description": "Dequantizes an `Int16` synaptic weight (`0..32767`) back into a normalized floating-point weight in `[0, 1]`.",
           "params": [
@@ -8924,7 +9318,7 @@
           "example": "const w = dequantizeSynapseWeightInt16(32767); // 1",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L166"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L351"
         },
         {
           "name": "buildCorticalSensoryContext64D",
@@ -8932,8 +9326,8 @@
           "isAsync": false,
           "signature": "function buildCorticalSensoryContext64D(input = {})",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 183,
-          "lineCount": 898,
+          "line": 368,
+          "lineCount": 1127,
           "summary": "Constructs a `64D` semantic + Dentate scope sensory vector for Kenyon Cell projection.",
           "description": "Builds the `64D` composite cortical sensory vector combining `48D` rectified `computeSemanticEmbedding64` features (`0..47`) with `16D` Dentate Gyrus version/environment/polarity and Tulving `phaseMask`/`placeGrid` facets (`48..63`).",
           "params": [
@@ -8953,7 +9347,7 @@
           "example": "const v = buildCorticalSensoryContext64D({ query: 'Fix v2 mainnet mask bug', taskPhase: 'DEBUGGING' });",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L183"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L368"
         },
         {
           "name": "computeCorticalKenyonTag2048",
@@ -8961,8 +9355,8 @@
           "isAsync": false,
           "signature": "function computeCorticalKenyonTag2048(input = {}, { seed = 'DBRAIN-CORTICAL-KC-v1' } = {})",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 271,
-          "lineCount": 898,
+          "line": 456,
+          "lineCount": 1127,
           "summary": "Computes a `2,048`-bit (`w = 64` WTA) sparse cortical Kenyon Cell tag (`KC-...`).",
           "description": "Projects a cortical query or capsule context (`64D`) into a `2,048`-cell Kenyon Cell layer via `SHAKE256` sparse random wiring (`c = 6`) and global APL `w = 64` Winner-Take-All lateral inhibition (`3.125%` sparsity).",
           "params": [
@@ -8996,7 +9390,7 @@
           "example": "const tag = computeCorticalKenyonTag2048({ query: 'Chia v2 CAT2 puzzle hash', network: 'mainnet' });",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L271"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L456"
         },
         {
           "name": "computeKenyonTagOverlap",
@@ -9004,8 +9398,8 @@
           "isAsync": false,
           "signature": "function computeKenyonTagOverlap(tagA, tagB)",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 321,
-          "lineCount": 898,
+          "line": 506,
+          "lineCount": 1127,
           "summary": "Computes sparse Winner-Take-All overlap in `[0, 1]` between two `KC` tags.",
           "description": "Computes the normalized Winner-Take-All intersection ratio (`[0, 1]`) between two sparse `2,048`-cell Kenyon Cell tags.",
           "params": [
@@ -9032,7 +9426,7 @@
           "example": "const ov = computeKenyonTagOverlap(tagA, tagB);",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L321"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L506"
         },
         {
           "name": "computeDiversityAttenuationFactor",
@@ -9040,8 +9434,8 @@
           "isAsync": false,
           "signature": "function computeDiversityAttenuationFactor(priorSameDidCount = 0)",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 346,
-          "lineCount": 898,
+          "line": 531,
+          "lineCount": 1127,
           "summary": "Computes `1 / sqrt(priorSameDidCount + 1)` sublinear plasticity attenuation.",
           "description": "Computes the sublinear DID diversity plasticity factor `1 / sqrt(n + 1)` for repeated `PAM_APPETITIVE` reinforcements originating from the same agent DID, preventing a single sybil or looping agent from saturating `KC -> MBON` weights into cognitive monoculture.",
           "params": [
@@ -9061,7 +9455,7 @@
           "example": "const gain = computeDiversityAttenuationFactor(3); // 0.5",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L346"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L531"
         },
         {
           "name": "computeSynapseCompartmentReadout",
@@ -9069,8 +9463,8 @@
           "isAsync": false,
           "signature": "function computeSynapseCompartmentReadout(row = null)",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 363,
-          "lineCount": 898,
+          "line": 548,
+          "lineCount": 1127,
           "summary": "Computes 3-compartment `W+`, `W-`, and net `MBON` valence for an `Int16` synapse row.",
           "description": "Evaluates the composite `MBON` approach (`W+`), avoidance (`W-`), and net valence (`W+ - W-`) across the 3 Benna-Fusi metaplastic compartments (`0.50 * fast + 0.30 * med + 0.20 * slow`) of a quantized `Int16` synapse row.",
           "params": [
@@ -9090,7 +9484,7 @@
           "example": "const r = computeSynapseCompartmentReadout({ w_pos_fast: 16384, w_pos_med: 0, w_pos_slow: 0 });",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L363"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L548"
         },
         {
           "name": "computeCausalStdpOjaEdges",
@@ -9098,8 +9492,8 @@
           "isAsync": false,
           "signature": "function computeCausalStdpOjaEdges({ trajectoryTargetIds = [], deltaDa = 0, existingEdges = {}, etaStdp = 0.32, tauSteps = 2.5, alphaOja = 0.18 } = {})",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 400,
-          "lineCount": 898,
+          "line": 585,
+          "lineCount": 1127,
           "summary": "Computes directed Causal STDP + Oja-normalized edge updates for `co_recall_edges`.",
           "description": "Computes directed **Causal Spike-Timing-Dependent Plasticity (`STDP`)** paired with **Oja's Multiplicative Homeostatic Normalization** over an ordered episode trajectory of recalled/invoked capsule IDs (`A -> B` where `t_A < t_B`).",
           "params": [
@@ -9161,7 +9555,7 @@
           "example": "const edges = computeCausalStdpOjaEdges({ trajectoryTargetIds: ['CAP-A', 'CAP-B'], deltaDa: 0.8 });",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L400"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L585"
         },
         {
           "name": "createMushroomBodyPlasticityEngine",
@@ -9169,8 +9563,8 @@
           "isAsync": false,
           "signature": "function createMushroomBodyPlasticityEngine({ maxActiveEpisodes = 256, kcSeed = 'DBRAIN-CORTICAL-KC-v1' } = {})",
           "sourceFile": "lib/pillars/pillar08/mushroom-body-plasticity.js",
-          "line": 473,
-          "lineCount": 898,
+          "line": 658,
+          "lineCount": 1127,
           "summary": "Creates a stateful/hydratable `2,048`-KC Three-Factor Continual Learning Engine.",
           "description": "Creates a Mushroom Body Continual Learning Engine managing multi-turn sparse `KC -> MBON` eligibility traces (`e_{i,j}(t)`), Biba-guarded Three-Factor Dopaminergic `RPE` (`PAM` `W+` / `PPL1` `W-`) updates, Causal STDP + Oja co-recall edges, and 3-compartment Benna-Fusi metaplastic consolidation.",
           "params": [
@@ -9204,7 +9598,7 @@
           "example": "const mb = createMushroomBodyPlasticityEngine();\nmb.stepEpisodeEligibility({ episodeId: 'ep-1', queryInput: 'Fix v2 mask', targetIds: ['CAP-V2'] });\nconst fb = mb.applyDopaminergicFeedback({ episodeId: 'ep-1', reward: 1.0, trustedHostOracle: true });",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L473"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar08/mushroom-body-plasticity.js#L658"
         },
         {
           "name": "DBRAIN_ES_PROTOCOL",
@@ -10436,7 +10830,7 @@
           "filePath": "lib/pillars/pillar11/agentic-discovery.js",
           "title": "@dbrain/core/pillars/pillar11/agentic-discovery",
           "purpose": "For autonomous AI agents browsing the Agentic Internet to hire `dbrain.to` without human intervention, they need standardized, machine-verifiable service discovery manifests and trust/SLO scoring metadata. This sub-module publishes the canonical counterparty DID, primary `CHIP-0035` singleton store, the 6-blueprint autonomous Business-to-Agent / Agent-to-Agent (`B2A`/`A2A`) service catalog, and the four discovery endpoints: 1. `/.well-known/agent.json` (`buildAgenticInternetManifest`) advertising Wyoming DUNA legal counterparty identity, `$DIG` CAT asset IDs, P99 benchmark SLOs (`0.29 ms`), and Chialisp escrow safety opcodes. 2. `/.well-known/mcp.json` (`buildMcpDiscoveryManifest`) listing HTTP JSON-RPC and `stdio` transports alongside core + extended MCP tools. 3. `/llms.txt` & `/llms-full.txt` (`buildLlmsTxtManifest`) summarizing the 4-step smart-contract handshake in clean Markdown for LLM crawlers. 4. Multi-predicate capability & budget discovery (`discoverAgenticServices`).",
-          "lineCount": 643,
+          "lineCount": 653,
           "ownSymbolCount": 5,
           "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js"
         }
@@ -10504,7 +10898,7 @@
           "signature": "const AGENTIC_SERVICE_CATALOG",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
           "line": 97,
-          "lineCount": 643,
+          "lineCount": 653,
           "summary": "Autonomous 6-blueprint `B2A`/`A2A` service catalog with `$DIG`/`XCH` pricing, P99 SLOs, and Merkle contracts.",
           "description": "Autonomous 6-blueprint `B2A`/`A2A` service catalog with `$DIG`/`XCH` pricing, P99 SLOs, and Merkle contracts.",
           "params": [],
@@ -10525,7 +10919,7 @@
           "signature": "function buildAgenticInternetManifest(originInput)",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
           "line": 242,
-          "lineCount": 643,
+          "lineCount": 653,
           "summary": "Builds the `/.well-known/agent.json` Agentic Internet discovery manifest with trust identity, SLOs, and settlement rails.",
           "description": "Builds the `/.well-known/agent.json` Agentic Internet discovery manifest with trust identity, SLOs, and settlement rails.",
           "params": [
@@ -10553,8 +10947,8 @@
           "isAsync": false,
           "signature": "function buildMcpDiscoveryManifest(originInput)",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
-          "line": 410,
-          "lineCount": 643,
+          "line": 419,
+          "lineCount": 653,
           "summary": "Builds the `/.well-known/mcp.json` Model Context Protocol discovery manifest for HTTP JSON-RPC and `stdio` clients.",
           "description": "Builds the `/.well-known/mcp.json` Model Context Protocol discovery manifest for HTTP JSON-RPC and `stdio` clients.",
           "params": [
@@ -10574,7 +10968,7 @@
           "example": "const mcp = buildMcpDiscoveryManifest('https://dbrain.to');\n// mcp.coreCognitiveTools.includes('dbrain_recall') => true",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L410"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L419"
         },
         {
           "name": "buildLlmsTxtManifest",
@@ -10582,8 +10976,8 @@
           "isAsync": false,
           "signature": "function buildLlmsTxtManifest(originInput, fullMode = false)",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
-          "line": 493,
-          "lineCount": 643,
+          "line": 502,
+          "lineCount": 653,
           "summary": "Builds the `/llms.txt` (compact) or `/llms-full.txt` (catalog-expanded) Markdown brief for autonomous LLM agents.",
           "description": "Builds the `/llms.txt` (compact) or `/llms-full.txt` (catalog-expanded) Markdown brief for autonomous LLM agents.",
           "params": [
@@ -10610,7 +11004,7 @@
           "example": "const txt = buildLlmsTxtManifest('https://dbrain.to', true);\n// txt.includes('SVC-SOVEREIGN-STORE-PROVISION') => true",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L493"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L502"
         },
         {
           "name": "discoverAgenticServices",
@@ -10618,8 +11012,8 @@
           "isAsync": false,
           "signature": "function discoverAgenticServices(filter = {})",
           "sourceFile": "lib/pillars/pillar11/agentic-discovery.js",
-          "line": 581,
-          "lineCount": 643,
+          "line": 591,
+          "lineCount": 653,
           "summary": "Filters the autonomous `B2A`/`A2A` service catalog by service ID, category, capability, `$DIG`/`XCH` budget, and search query.",
           "description": "Filters the autonomous `B2A`/`A2A` service catalog by service ID, category, capability, `$DIG`/`XCH` budget, and search query.",
           "params": [
@@ -10681,7 +11075,7 @@
           "example": "const res = discoverAgenticServices({ capability: 'writer-delegation', maxDigCost: 30 });\n// res.count => 1",
           "valueType": null,
           "reExported": true,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L581"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar11/agentic-discovery.js#L591"
         },
         {
           "name": "synthesizeAgentServiceSmartContract",
@@ -11647,7 +12041,7 @@
         "Deterministic Promotion Policy: Model probabilities never write directly to storage; versioned threshold code (`computeQualificationPolicyHash`) makes the final 4-way routing decision.",
         "Zero Cloud Dependency by Default: Gate-0 hygiene and Tier-A `64D` Platt- calibrated cortical scoring execute locally in microseconds, with an optional injectable `Jev` / local-SLM provider for Tier-B escalation."
       ],
-      "lineCount": 1134,
+      "lineCount": 1169,
       "subModules": [],
       "symbols": [
         {
@@ -11657,7 +12051,7 @@
           "signature": "const DEFAULT_QUALIFICATION_POLICY",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
           "line": 71,
-          "lineCount": 1134,
+          "lineCount": 1169,
           "summary": "Canonical frozen `DBRAIN-QUALIFY-v1.0` pre-ingestion promotion thresholds.",
           "description": "Default deterministic `</>` Promotion Policy thresholds governing pre-ingestion memory qualification across `DURABLE_CORTEX_MEMORY`, `SCOPED_MEMORY`, `SESSION_ONLY`, and `REJECT`.",
           "params": [],
@@ -11675,7 +12069,7 @@
           "signature": "function computeQualificationPolicyHash(policy = DEFAULT_QUALIFICATION_POLICY)",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
           "line": 190,
-          "lineCount": 1134,
+          "lineCount": 1169,
           "summary": "Computes the deterministic SHA-256 hash of a `</>` Promotion Policy.",
           "description": "Computes a canonical `0x`-prefixed SHA-256 digest over a pre-ingestion qualification policy object so promotion thresholds can be Merkle-pinned in the `alignment` lobe and stamped onto qualification audit receipts.",
           "params": [
@@ -11704,7 +12098,7 @@
           "signature": "function evaluateCalibratedDecisions({ state = {}, evidence = '', questions = {}, calibrationTemperature = 1.0, tierBThreshold = 0.60, provider = null } = {})",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
           "line": 230,
-          "lineCount": 1134,
+          "lineCount": 1169,
           "summary": "Evaluates parallel `noul`, `choice`, and `score` System-1 calibrated decisions.",
           "description": "Evaluates a map of independent bounded System-1 decision questions (`noul`, `choice`, `score`) in parallel over shared `(state, evidence)` context, returning typed answers, calibrated probability distributions, and epistemic `confidence` margins without generating prose tokens.",
           "params": [
@@ -11775,7 +12169,7 @@
           "signature": "function evaluateCollectiveCorroboration({ authorDid = '', peerApprovals = [], requirePeerCorroboration = false, minIndependentPeers = 1 } = {})",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
           "line": 446,
-          "lineCount": 1134,
+          "lineCount": 1169,
           "summary": "Verifies independent cross-DID peer corroboration for collective memory promotion.",
           "description": "Evaluates independent cross-DID peer corroboration so a single hallucinating or sybil-looping agent cannot unilaterally promote memories into a shared collective store without adversarial review from a distinct Chia DID.",
           "params": [
@@ -11832,7 +12226,7 @@
           "signature": "function qualifyMemoryCandidate({ candidate = {}, sourceEvidence = {}, sessionState = {}, policy = DEFAULT_QUALIFICATION_POLICY, esPolicy = null, antibodyRegistry = [], sessionBuffer = null, provider = null } = {})",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
           "line": 494,
-          "lineCount": 1134,
+          "lineCount": 1169,
           "summary": "Pre-ingestion memory qualification (`support · reuse · scope · risk`) + 4-way Promotion Policy.",
           "description": "Evaluates a proposed memory candidate BEFORE `@dbrain/core` ingestion across `support · reuse · scope · risk`, then enforces the deterministic `</>` Promotion Policy (`DURABLE_CORTEX_MEMORY`, `SCOPED_MEMORY`, `SESSION_ONLY`, or `REJECT`) without duplicating provenance, entity resolution, or 4D bi-temporal tracking.",
           "params": [
@@ -11909,8 +12303,8 @@
           "isAsync": false,
           "signature": "function createSessionQualificationBuffer({ maxEntries = 128, defaultTtlSeconds = 3600 } = {})",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
-          "line": 847,
-          "lineCount": 1134,
+          "line": 882,
+          "lineCount": 1169,
           "summary": "Creates the ephemeral working-memory & `PENDING_CONFIRMATION` session buffer.",
           "description": "Creates a bounded in-memory RAM buffer holding `SESSION_ONLY` items (`EPHEMERAL_WORKING_FACT` and `PENDING_CONFIRMATION`) with automatic TTL eviction and operator/corroboration confirmation promotion.",
           "params": [
@@ -11944,7 +12338,7 @@
           "example": "const buf = createSessionQualificationBuffer({ maxEntries: 32 });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar15-calibrated-decisions.js#L847"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar15-calibrated-decisions.js#L882"
         },
         {
           "name": "evaluateExpectedCalibrationError",
@@ -11952,8 +12346,8 @@
           "isAsync": false,
           "signature": "function evaluateExpectedCalibrationError(outcomes = [], { bucketCount = 10 } = {})",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
-          "line": 952,
-          "lineCount": 1134,
+          "line": 987,
+          "lineCount": 1169,
           "summary": "Computes Expected Calibration Error (`ECE`), Brier score, and optimal Platt temperature `T*`.",
           "description": "Computes Expected Calibration Error (`ECE`) and Brier score across historical `(probability, outcome)` pairs and fits an optimal Platt scaling temperature `T*` during `dbrain dream` consolidation so `confidence === 0.85` reflects an empirical `85%` ground-truth accuracy rate.",
           "params": [
@@ -11987,7 +12381,7 @@
           "example": "const cal = evaluateExpectedCalibrationError([{ probability: 0.9, outcome: true }, { probability: 0.2, outcome: false }]);",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar15-calibrated-decisions.js#L952"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar15-calibrated-decisions.js#L987"
         },
         {
           "name": "createJevHttpDecisionProvider",
@@ -11995,8 +12389,8 @@
           "isAsync": false,
           "signature": "function createJevHttpDecisionProvider({ endpointUrl = 'https://api.typesafe.ai/v1/decide', apiKey = '', model = 'jev-latest', allowLocalhost = false, fetchImpl = globalThis.fetch } = {})",
           "sourceFile": "lib/pillars/pillar15-calibrated-decisions.js",
-          "line": 1072,
-          "lineCount": 1134,
+          "line": 1107,
+          "lineCount": 1169,
           "summary": "Creates an SSRF-safe injectable HTTP adapter for external `Jev` / local-SLM decision servers.",
           "description": "Creates an optional injectable HTTP System-1 decision adapter compatible with external `Jev`-class (`typesafe.ai`) or self-hosted vLLM/Ollama single-token logit endpoints, enforcing SSRF-safe HTTPS URL validation by default.",
           "params": [
@@ -12051,7 +12445,7 @@
           "example": "const jev = createJevHttpDecisionProvider({ endpointUrl: 'https://api.typesafe.ai/v1/decide' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar15-calibrated-decisions.js#L1072"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/pillars/pillar15-calibrated-decisions.js#L1107"
         }
       ]
     }
@@ -13331,7 +13725,7 @@
         "Bounded Low-Cardinality Labels: Never embeds raw `storeId`, `capsuleId`, or attacker-controlled strings inside Prometheus label sets.",
         "Fail-Closed GDPR & Custody Verdict: `auditDbrainCoreSecurityPosture` returns `healthy: false` immediately if any tombstoned capsule retains a wrapped DEK, `secure_delete` is disabled, or a WOTS+ OTS key was reused."
       ],
-      "lineCount": 476,
+      "lineCount": 489,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/core-metrics.js",
       "symbols": [
         {
@@ -13341,7 +13735,7 @@
           "signature": "const DBRAIN_PROMETHEUS_CONTENT_TYPE",
           "sourceFile": "lib/server/core-metrics.js",
           "line": 54,
-          "lineCount": 476,
+          "lineCount": 489,
           "summary": "Canonical Prometheus `0.0.4` text exposition `Content-Type`.",
           "description": "Canonical Prometheus `0.0.4` HTTP `Content-Type` header string emitted by standalone `dbrain serve` (`GET /metrics` and `GET /api/dbrain/metrics`).",
           "params": [],
@@ -13359,7 +13753,7 @@
           "signature": "function escapeCorePromLabel(raw)",
           "sourceFile": "lib/server/core-metrics.js",
           "line": 67,
-          "lineCount": 476,
+          "lineCount": 489,
           "summary": "Escapes a label value string for Prometheus text exposition.",
           "description": "Escapes backslashes, double quotes, and newlines inside a Prometheus label value per the Prometheus `0.0.4` & OpenMetrics `1.0` specification.",
           "params": [
@@ -13388,7 +13782,7 @@
           "signature": "function auditDbrainCoreSecurityPosture({ walStore = null, gossipMesh = null, securityStats = null, peerMerkleDivergenceStores = 0 } = {})",
           "sourceFile": "lib/server/core-metrics.js",
           "line": 98,
-          "lineCount": 476,
+          "lineCount": 489,
           "summary": "Audits `@dbrain/core` storage, GDPR erasure, DID custody, WOTS+ OTS, gossip, and sequencer invariants.",
           "description": "Executes a deterministic security & cryptographic invariant audit over a `@dbrain/core` node's SQLite WAL storage engine, Morphic Gossip mesh, Singleton UTXO sequencer, synaptic plasticity overlay, and HTTP Gate-0 guards.",
           "params": [
@@ -13444,8 +13838,8 @@
           "isAsync": false,
           "signature": "function renderDbrainCorePrometheusMetrics({ audit = null, walStore = null, gossipMesh = null, securityStats = null, totalStores = 0, totalCapsules = 0, l1DiscoveredStores = 0, l1SyncCursorHeight = 0, dataLayerWalletReady = false, recallLatencyStats = null, omitStoreCapsulesHeader = false } = {})",
           "sourceFile": "lib/server/core-metrics.js",
-          "line": 234,
-          "lineCount": 476,
+          "line": 240,
+          "lineCount": 489,
           "summary": "Serializes `@dbrain/core` security, consensus, and storage metrics in Prometheus `0.0.4` exposition format.",
           "description": "Renders `@dbrain/core`-native storage, cryptographic, GDPR erasure, DID custody, WOTS+ OTS, Morphic Gossip, Chia Singleton UTXO sequencer, Gate-0 admission, synaptic plasticity, and recall latency telemetry in Prometheus `0.0.4` / OpenMetrics `1.0` text format.",
           "params": [
@@ -13542,7 +13936,7 @@
           "example": "const prom = renderDbrainCorePrometheusMetrics({ totalStores: 2, totalCapsules: 14 });\n// prom.includes('dbrain_dek_unshredded_tombstone_anomalies 0') === true",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/core-metrics.js#L234"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/core-metrics.js#L240"
         }
       ]
     },
@@ -13554,7 +13948,7 @@
         "Defensive HTTP hardening: enforces `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and a 2 MiB JSON request body cap.",
         "Instance isolation: two `createDbrainNodeServer()` instances never contaminate each other's store state or LRU caches."
       ],
-      "lineCount": 1157,
+      "lineCount": 1238,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js",
       "symbols": [
         {
@@ -13564,7 +13958,7 @@
           "signature": "const STANDALONE_HTTP_ENDPOINTS",
           "sourceFile": "lib/server/http-router.js",
           "line": 65,
-          "lineCount": 1157,
+          "lineCount": 1238,
           "summary": "Declarative catalog of standalone `dbrain` HTTP node endpoints.",
           "description": "Canonical list of HTTP endpoints exposed by a standalone `dbrain` node, surfaced both in the root discovery JSON and in generated documentation.",
           "params": [],
@@ -13581,8 +13975,8 @@
           "isAsync": false,
           "signature": "function sendJson(res, status, payload)",
           "sourceFile": "lib/server/http-router.js",
-          "line": 113,
-          "lineCount": 1157,
+          "line": 116,
+          "lineCount": 1238,
           "summary": "Write a hardened JSON HTTP response.",
           "description": "Serializes `payload` as formatted UTF-8 JSON with baseline security headers.",
           "params": [
@@ -13616,7 +14010,7 @@
           "example": null,
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L113"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L116"
         },
         {
           "name": "readJsonBody",
@@ -13624,8 +14018,8 @@
           "isAsync": false,
           "signature": "function readJsonBody(req, maxBytes = MAX_JSON_BODY_BYTES)",
           "sourceFile": "lib/server/http-router.js",
-          "line": 134,
-          "lineCount": 1157,
+          "line": 138,
+          "lineCount": 1238,
           "summary": "Safely buffer and parse a bounded JSON HTTP request body.",
           "description": "Reads and parses a UTF-8 JSON HTTP request body up to `maxBytes` (default 2 MiB), returning `{}` for empty bodies and rejecting malformed or oversized payloads cleanly.",
           "params": [
@@ -13652,7 +14046,7 @@
           "example": null,
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L134"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L138"
         },
         {
           "name": "createDbrainNodeServer",
@@ -13660,8 +14054,8 @@
           "isAsync": false,
           "signature": "function createDbrainNodeServer(options = {})",
           "sourceFile": "lib/server/http-router.js",
-          "line": 192,
-          "lineCount": 1157,
+          "line": 196,
+          "lineCount": 1238,
           "summary": "Create an isolated HTTP REST + MCP `2024-11-05` `dbrain` node server.",
           "description": "Creates a standalone open-source `dbrain` HTTP + MCP `2024-11-05` server configured for a `homelab`, `community`, or `city` topology profile.",
           "params": [
@@ -13681,7 +14075,7 @@
           "example": "const { createDbrainNodeServer } = require('./lib/server/http-router');\nconst { server, state } = createDbrainNodeServer({ profile: 'homelab' });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L192"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/http-router.js#L196"
         }
       ]
     },
@@ -13735,7 +14129,7 @@
         "Every tool entry in `DBRAIN_MCP_TOOLS` includes a complete JSON Schema `inputSchema` conforming to the MCP `2024-11-05` specification.",
         "Every `serverInfo.version` response dynamically reflects `PACKAGE_VERSION` from `package.json` via `lib/adapters/pkg-meta.js`."
       ],
-      "lineCount": 617,
+      "lineCount": 645,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js",
       "symbols": [
         {
@@ -13745,7 +14139,7 @@
           "signature": "const DBRAIN_MCP_TOOLS",
           "sourceFile": "lib/server/mcp-registry.js",
           "line": 58,
-          "lineCount": 617,
+          "lineCount": 645,
           "summary": "Canonical MCP `2024-11-05` tool descriptors with JSON Schema `inputSchema`.",
           "description": "Canonical frozen list of all 7 open-source `@dbrain/core` Model Context Protocol (`2024-11-05`) tools and their JSON Schema input contracts.",
           "params": [],
@@ -13762,8 +14156,8 @@
           "isAsync": false,
           "signature": "function dispatchMcpToolCall(toolName, rawArgs = {}, state, recallCache)",
           "sourceFile": "lib/server/mcp-registry.js",
-          "line": 250,
-          "lineCount": 617,
+          "line": 256,
+          "lineCount": 645,
           "summary": "Execute an open-source `dbrain_*` MCP tool call against node state.",
           "description": "Executes a single named MCP tool (`tools/call`) against the supplied node `state`, incrementing `state.stateEpoch` whenever a write tool (`dbrain_remember`) mutates the active store.",
           "params": [
@@ -13804,7 +14198,7 @@
           "example": "const { dispatchMcpToolCall } = require('./lib/server/mcp-registry');\nconst { loadNodeProfile } = require('./lib/server/node-state');\nconst stores = dispatchMcpToolCall('dbrain_list_stores', {}, loadNodeProfile());",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L250"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L256"
         },
         {
           "name": "handleMcpJsonRpcRequest",
@@ -13812,8 +14206,8 @@
           "isAsync": false,
           "signature": "function handleMcpJsonRpcRequest(rpc, state, options = {})",
           "sourceFile": "lib/server/mcp-registry.js",
-          "line": 451,
-          "lineCount": 617,
+          "line": 479,
+          "lineCount": 645,
           "summary": "Handle an MCP `2024-11-05` JSON-RPC 2.0 envelope over HTTP or stdio.",
           "description": "Processes a full JSON-RPC 2.0 Model Context Protocol (`2024-11-05`) request (`initialize`, `notifications/initialized`, `tools/list`, or `tools/call`) and returns a spec-compliant JSON-RPC 2.0 response envelope (or `null` for one-way notifications without an `id`).",
           "params": [
@@ -13847,7 +14241,7 @@
           "example": "const { handleMcpJsonRpcRequest } = require('./lib/server/mcp-registry');\nconst { loadNodeProfile } = require('./lib/server/node-state');\nconst res = handleMcpJsonRpcRequest({ jsonrpc: '2.0', id: 1, method: 'initialize' }, loadNodeProfile());",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L451"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/mcp-registry.js#L479"
         }
       ]
     },
@@ -14244,7 +14638,7 @@
         "Every normalized capsule carries a verified `contentHash`, `merkleRoot`, `clearSignature`, `bpcEnvelope`, and `pqcSignature`.",
         "Recall cache keys bind to `stateEpoch`, capsule count, head capsule ID, and head `merkleRoot`, guaranteeing zero stale reads after a mint/revert."
       ],
-      "lineCount": 403,
+      "lineCount": 409,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/node-state.js",
       "symbols": [
         {
@@ -14254,7 +14648,7 @@
           "signature": "const TEMPLATES_DIR",
           "sourceFile": "lib/server/node-state.js",
           "line": 41,
-          "lineCount": 403,
+          "lineCount": 409,
           "summary": "Constant TEMPLATES_DIR.",
           "description": "Constant TEMPLATES_DIR.",
           "params": [],
@@ -14272,7 +14666,7 @@
           "signature": "function buildCapsuleSearchHaystack(cap)",
           "sourceFile": "lib/server/node-state.js",
           "line": 61,
-          "lineCount": 403,
+          "lineCount": 409,
           "summary": "Build a pre-lowercased lexical search haystack for a capsule.",
           "description": "Concatenates a capsule's searchable text fields (`title`, `summary`, `content`, and `tags`) into a single lowercased lexical haystack string.",
           "params": [
@@ -14301,7 +14695,7 @@
           "signature": "function normalizeTemplateCapsule(cap, stores)",
           "sourceFile": "lib/server/node-state.js",
           "line": 81,
-          "lineCount": 403,
+          "lineCount": 409,
           "summary": "Hydrate a raw capsule JSON object with full `DBRAIN-v1.3` cryptographic fields.",
           "description": "Normalizes a raw JSON template or disk capsule into a full `DBRAIN-v1.3` capsule record complete with SHA-256 content digest, hex key, deterministic semantic embedding vector, `CHIP-0028` Clear Signature, `BPC1` leaf metadata, and `ML-DSA-65 + Ed25519` hybrid Post-Quantum signature.",
           "params": [
@@ -14337,7 +14731,7 @@
           "signature": "function loadNodeProfile(options = {})",
           "sourceFile": "lib/server/node-state.js",
           "line": 156,
-          "lineCount": 403,
+          "lineCount": 409,
           "summary": "Load and cryptographically hydrate a Homelab, Community, or City node profile.",
           "description": "Loads a node's topology profile, DataLayer stores, and `DBRAIN-v1.3` capsules from `options.dataDir` (if initialized via `dbrain init`) or from the built-in `templates/` directory, then recomputes and attaches authentic SHA-256 Merkle roots across every store and capsule.",
           "params": [
@@ -14366,7 +14760,7 @@
           "signature": "function recallNodeCapsules(capsules, options = {})",
           "sourceFile": "lib/server/node-state.js",
           "line": 241,
-          "lineCount": 403,
+          "lineCount": 409,
           "summary": "Perform hybrid lexical + deterministic vector recall across node capsules.",
           "description": "Executes a sub-millisecond hybrid lexical + semantic cosine recall scan over a node's active (non-reverted) memory capsules, backed by an epoch-keyed bounded LRU cache.",
           "params": [
@@ -15062,7 +15456,7 @@
         "Portable `WITHOUT ROWID` B-Tree Indexing: Zero reliance on optional SQLite compile flags (`ENABLE_FTS5`), guaranteeing portability on stock Node 22+.",
         "True Per-Capsule DEK Key-Shredding: `persistTombstoneErasure` permanently deletes the capsule's wrapped `AES-256-GCM` DEK, removes all inverted/LSH index postings, nulls neural vector BLOBs, and checkpoints the WAL journal."
       ],
-      "lineCount": 2454,
+      "lineCount": 2549,
       "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js",
       "symbols": [
         {
@@ -15071,8 +15465,8 @@
           "isAsync": false,
           "signature": "function coalesceSingletonChangelistOps(queuedRows = [])",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 95,
-          "lineCount": 2454,
+          "line": 102,
+          "lineCount": 2549,
           "summary": "Coalesces queued DataLayer `insert`/`delete` operations per `keyHex` into a single atomic spend changelist.",
           "description": "Coalesces an ordered sequence of queued Chia DataLayer KV operations for a single Singleton `storeId` into a minimal conflict-free changelist (`<= 1` action per `keyHex`), preventing redundant L1 coin spends and mempool UTXO collisions when multiple agents update or delete keys within the same block.",
           "params": [
@@ -15092,7 +15486,7 @@
           "example": "const res = coalesceSingletonChangelistOps([\n  { action: 'insert', key_hex: '6b31', value_hex: '7631' },\n  { action: 'insert', key_hex: '6b31', value_hex: '7632' }\n]); // res.coalescedOpCount === 1 && res.changelist[0].value === '7632'",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L95"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L102"
         },
         {
           "name": "encodeNeuralFloat32Blob",
@@ -15100,8 +15494,8 @@
           "isAsync": false,
           "signature": "function encodeNeuralFloat32Blob(vector = null)",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 130,
-          "lineCount": 2454,
+          "line": 137,
+          "lineCount": 2549,
           "summary": "Encodes a dense neural embedding vector into a packed little-endian `Float32` `Buffer`.",
           "description": "Packs a numeric dense vector (`number[]` or `Float32Array`) into a compact little-endian IEEE-754 `Float32` SQLite `BLOB` (`Buffer` of `4 * D` bytes).",
           "params": [
@@ -15121,7 +15515,7 @@
           "example": "const blob = encodeNeuralFloat32Blob([0.5, -0.25, 0.75]); // Buffer(12)",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L130"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L137"
         },
         {
           "name": "decodeNeuralFloat32Blob",
@@ -15129,8 +15523,8 @@
           "isAsync": false,
           "signature": "function decodeNeuralFloat32Blob(blob = null)",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 153,
-          "lineCount": 2454,
+          "line": 160,
+          "lineCount": 2549,
           "summary": "Decodes a SQLite little-endian `Float32` `BLOB` into a `Float32Array`.",
           "description": "Unpacks a SQLite `BLOB` (`Buffer` or `Uint8Array`) produced by `encodeNeuralFloat32Blob` back into a native `Float32Array`.",
           "params": [
@@ -15150,7 +15544,7 @@
           "example": "const vec = decodeNeuralFloat32Blob(encodeNeuralFloat32Blob([1, 0])); // Float32Array [1, 0]",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L153"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L160"
         },
         {
           "name": "cosineSimilarityFloat32",
@@ -15158,8 +15552,8 @@
           "isAsync": false,
           "signature": "function cosineSimilarityFloat32(vecA, vecB)",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 178,
-          "lineCount": 2454,
+          "line": 185,
+          "lineCount": 2549,
           "summary": "Computes cosine similarity between two equal-dimension dense `Float32` vectors.",
           "description": "Computes exact cosine similarity across full-dimension neural vectors (`384D`, `768D`, `1536D`, etc.) stored as `Float32Array` or numeric arrays.",
           "params": [
@@ -15186,7 +15580,7 @@
           "example": "const sim = cosineSimilarityFloat32(new Float32Array([1, 0]), new Float32Array([1, 0])); // 1",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L178"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L185"
         },
         {
           "name": "tokenizeSearchTerms",
@@ -15194,8 +15588,8 @@
           "isAsync": false,
           "signature": "function tokenizeSearchTerms(text = '', maxUniqueTerms = 96)",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 209,
-          "lineCount": 2454,
+          "line": 216,
+          "lineCount": 2549,
           "summary": "Tokenizes text into normalized terms and BM25-ready relative term frequencies.",
           "description": "Extracts normalized alphanumeric search tokens (`length >= 2`) and relative term frequencies (`tf`) for disk-backed SQLite `WITHOUT ROWID` B-tree BM25 indexing without relying on `FTS5`.",
           "params": [
@@ -15222,7 +15616,7 @@
           "example": "const terms = tokenizeSearchTerms('PostgreSQL deadlockPostgreSQL lock');",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L209"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L216"
         },
         {
           "name": "extractTextLshBands16",
@@ -15230,8 +15624,8 @@
           "isAsync": false,
           "signature": "function extractTextLshBands16(text = '')",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 243,
-          "lineCount": 2454,
+          "line": 250,
+          "lineCount": 2549,
           "summary": "Extracts 16 deterministic 16-bit LSH band bucket hashes from text shingles.",
           "description": "Computes 16 deterministic 16-bit Locality-Sensitive Hashing (LSH) band buckets (`bandIdx: 0..15`, `bucketHash: 4-hex-char`) from overlapping token/character shingles so SQLite `WITHOUT ROWID` B-trees can narrow candidate capsules in `O(log N)` disk seeks.",
           "params": [
@@ -15251,7 +15645,7 @@
           "example": "const bands = extractTextLshBands16('mutex deadlock contention'); // length === 16",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L243"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L250"
         },
         {
           "name": "buildDidCustodyProofPreimage",
@@ -15259,8 +15653,8 @@
           "isAsync": false,
           "signature": "function buildDidCustodyProofPreimage(did, ed25519PublicKeyHex)",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 297,
-          "lineCount": 2454,
+          "line": 304,
+          "lineCount": 2549,
           "summary": "Builds the `DBRAIN-DID-CUSTODY-v1.3` ownership proof preimage for `DID -> PubKey` pinning.",
           "description": "Builds the canonical domain-separated UTF-8 signing preimage used by clients to prove ownership of an `RFC-8032 Ed25519` public key for a Chia DID when registering in `did_custody_registry`.",
           "params": [
@@ -15287,7 +15681,7 @@
           "example": "const msg = buildDidCustodyProofPreimage('did:chia:1abc', 'aa'.repeat(32));",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L297"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L304"
         },
         {
           "name": "createSqliteWalBrainStore",
@@ -15295,8 +15689,8 @@
           "isAsync": false,
           "signature": "function createSqliteWalBrainStore(options = {})",
           "sourceFile": "lib/server/sqlite-wal-store.js",
-          "line": 321,
-          "lineCount": 2454,
+          "line": 328,
+          "lineCount": 2549,
           "summary": "Creates a disk-indexed SQLite `WAL` brain store with B-tree BM25/LSH, per-capsule DEK shredding, and DID custody registry.",
           "description": "Opens and initializes a disk-indexed SQLite `WAL` persistent brain database (on disk or `:memory:`), creates store, capsule, `WITHOUT ROWID` B-tree BM25/LSH index, per-capsule `AES-256-GCM` DEK keyring, `DID -> PubKey` custody registry, GDPR tombstone, and Singleton UTXO sequencer tables.",
           "params": [
@@ -15351,7 +15745,7 @@
           "example": "const wal = createSqliteWalBrainStore({ dbPath: ':memory:', seedStores: [], seedCapsules: [] });",
           "valueType": null,
           "reExported": false,
-          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L321"
+          "githubUrl": "https://github.com/dcarrith/dbrain/blob/main/lib/server/sqlite-wal-store.js#L328"
         }
       ]
     },
@@ -16304,9 +16698,21 @@
             "type": "string",
             "enum": [
               "qualify",
-              "decide"
+              "decide",
+              "coverage"
             ],
-            "description": "Run pre-ingestion memory qualification (\"qualify\") or custom decision questions (\"decide\")."
+            "description": "Run pre-ingestion memory qualification (\"qualify\"), custom decision questions (\"decide\"), or pre-flight epistemic coverage (\"coverage\")."
+          },
+          "query": {
+            "type": "string",
+            "description": "Candidate question or task prompt when mode=\"coverage\"."
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional AST code symbols or entity names when mode=\"coverage\"."
           },
           "candidate": {
             "type": "object",
@@ -16519,6 +16925,9 @@
     "POST /api/dbrain/qualify",
     "GET  /api/dbrain/ontology",
     "POST /api/dbrain/ontology",
+    "GET  /api/dbrain/ontology/coverage",
+    "POST /api/dbrain/ontology/coverage",
+    "POST /api/dbrain/ontology/reconcile",
     "POST /api/dbrain/bootstrap",
     "GET  /api/dbrain/docs",
     "GET  /api/dbrain/mcp/skills",

@@ -1,7 +1,7 @@
 {
   "protocol": "DIG-DAPP-MANIFEST-v1",
   "name": "nousgent.ai",
-  "version": "1.18.0",
+  "version": "1.19.0",
   "canonicalOrigin": "https://nousgent.ai",
   "m2mSwarmOrigin": "https://ia.nousgent.ai",
   "sisterOrgans": {
@@ -11,17 +11,17 @@
     "observatory": "https://cbrain.to",
     "exchange": "https://shi.liquidi.sh"
   },
-  "builtAt": "2026-11-25T22:44:28.700Z",
+  "builtAt": "2026-11-28T07:27:23.140Z",
   "contentAddressing": {
-    "manifestTreeSha256": "0xab5e325dbc6bb541860d9ab2065d4c3d3dda24b3f679d7253ad48c108c49deb0",
+    "manifestTreeSha256": "0xb5a38b92a9a1442d8bcd3e56c18c4b9e4691a754de5cdb5f6e2019bd0ce0ad9a",
     "totalFiles": 23,
-    "totalBytes": 3391411
+    "totalBytes": 3415056
   },
   "files": [
     {
       "path": "api/dbrain-core-docs.json",
-      "bytes": 960004,
-      "sha256": "b1c66f795cdfd38de4aa45c70d32e21e53ae6300d53ce9fb77f7c9e14feae397"
+      "bytes": 981469,
+      "sha256": "a849910964eb1b0089f22d47b0b4d077c30b0f16b77c90fc906380a5ac2fc843"
     },
     {
       "path": "apple-touch-icon.png",
@@ -29,14 +29,14 @@
       "sha256": "ff5bc6c261999264bdc32d1ebb1d40a551b0f585c6c86ac5da0ae23a359c7332"
     },
     {
-      "path": "assets/cbrain-4d-CDjpAIqt.js",
-      "bytes": 43427,
-      "sha256": "0d4e24a6da065e932043e517df5daf57c04f86736f1caedcf9841367b84baa7c"
+      "path": "assets/cbrain-4d-DVxh3ljj.js",
+      "bytes": 43452,
+      "sha256": "c18b4823365c4ca997d85fec0534ec79030a43238e5b7b04009a87882ba09e4e"
     },
     {
-      "path": "assets/index-BBzcrmj6.js",
-      "bytes": 148846,
-      "sha256": "c89fa3347e5305712c294f8a4eb2173e700ef3e8728d43561d223f6695ec08d7"
+      "path": "assets/index-DVXnJt21.js",
+      "bytes": 151001,
+      "sha256": "b06fc3982b4da556b6e84cc20603e57b30b509e60797ba36db8bd2df78b61d51"
     },
     {
       "path": "assets/index-znChmGui.css",
@@ -96,7 +96,7 @@
     {
       "path": "index.html",
       "bytes": 5927,
-      "sha256": "34f7701747e0f1514b0e235f015528c5c4da78db307bc3518dd981d1519d3b88"
+      "sha256": "dc504af98d28fac17315b378f38a40acddbd474adb3ba0c1076199fd53662f0b"
     },
     {
       "path": "logo-wordmark.svg",
